@@ -10,8 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      CI: true
-      # Map any secrets your build needs. Add them in Repo Settings → Secrets and variables → Actions
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
@@ -19,11 +17,37 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
       RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME }}
-      # Add any others your env validator requires
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Check required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          required=(
+            NEXT_PUBLIC_SUPABASE_URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY
+            NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+            PAYSTACK_SECRET_KEY
+            RESEND_API_KEY
+            RESEND_FROM_EMAIL
+            RESEND_FROM_NAME
+          )
+          for v in "${required[@]}"; do
+            if [ -z "${!v:-}" ]; then
+              echo "::error title=Missing secret::$v is not set (add it in Settings → Secrets and variables → Actions)"
+              missing+=("$v")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing ${#missing[@]} secret(s): ${missing[*]}"
+            exit 1
+          else
+            echo "✅ All required secrets are present."
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,15 +55,10 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies (npm ci if lockfile present)
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Lint (if present)
+      - name: Lint
         run: npm run lint --if-present
 
       - name: Build
