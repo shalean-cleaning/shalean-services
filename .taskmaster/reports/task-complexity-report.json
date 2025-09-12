@@ -1,0 +1,125 @@
+{
+	"meta": {
+		"generatedAt": "2025-09-12T12:59:28.044Z",
+		"tasksAnalyzed": 14,
+		"totalTasks": 14,
+		"analysisCount": 14,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Project Initialization and Core Dependency Setup",
+			"complexityScore": 2,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the 'Project Initialization and Core Dependency Setup' task into smaller, actionable subtasks. Focus on the sequential steps: initializing the Next.js project, setting up the UI library (shadcn/ui) including Tailwind configuration, and finally integrating the Supabase client with environment variable management.",
+			"reasoning": "This is a foundational task that involves following well-documented procedures for standard tools. The complexity is low as it doesn't require novel logic, but it's critical to get right. Breaking it into three steps (project, UI, data client) ensures a clean, sequential setup."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement Database Schema in Supabase",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Implement Database Schema in Supabase' task. Create separate subtasks for each logical group of tables (e.g., 'Service & Pricing Schema', 'User & Cleaner Schema', 'Booking & Quote Schema'). Also, create a dedicated subtask for implementing the initial set of Row Level Security policies.",
+			"reasoning": "This task involves significant data modeling which requires careful thought about relationships, constraints, and future scalability. The scope is large with 8+ tables. Breaking it down by related data models (services, users, bookings) and separating the RLS setup makes it more manageable and reduces cognitive load."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Set Up Supabase Authentication and User Roles",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the 'Set Up Supabase Authentication and User Roles' task. Create subtasks for: 1. Building the UI for signup and login forms. 2. Implementing the client-side logic to call Supabase Auth functions. 3. Setting up Next.js middleware for session management and route protection. 4. Creating the `profiles` table and a database trigger to populate it on user signup. 5. Implementing role-based RLS policies on key tables.",
+			"reasoning": "This task is complex as it integrates multiple parts of the stack: UI, client-side logic, server-side middleware, database schema, and security rules (RLS). Each of these is a distinct and significant piece of work that warrants its own subtask for clarity and focused implementation."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Build Global Layout and Static Pages",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Build Global Layout and Static Pages' task. Create subtasks for creating the main `layout.tsx`, developing the auth-aware `<Header>` component, building the static `<Footer>` component, and implementing the content for the '/how-it-works' and '/contact' pages.",
+			"reasoning": "This is a standard frontend task. The complexity is moderate due to the auth-aware header. The task can be clearly divided into building the structural components (Layout, Header, Footer) and creating the content pages. The dynamic nature of the header makes it a distinct subtask from the static footer."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Implement Dynamic Homepage Content",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the 'Implement Dynamic Homepage Content' task into subtasks, one for each major section of the homepage. For example: 'Build Hero Section Component and Fetch Data', 'Build Testimonials Slider and Fetch Data', 'Implement Team Grid Component', etc. Include a subtask for creating the `content_blocks` table if it doesn't exist.",
+			"reasoning": "The homepage is composed of multiple, distinct sections, each with its own data source and presentation. While the pattern of creating a component and fetching data is repetitive, breaking the task down by section allows for clear progress tracking and parallel development."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Develop Quick Quote Flow",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Develop Quick Quote Flow' task. Create subtasks for: 1. Building the UI form with selectors for service, rooms, extras, and location. 2. Implementing the data fetching logic to populate the form options from Supabase. 3. Developing the client-side state management and real-time price calculation engine. 4. Creating the server action to save the generated quote to the `quotes` table.",
+			"reasoning": "This task's complexity lies in the real-time price calculation and client-side state management. It has clear logical separations: UI construction, data fetching for options, the core client-side calculation engine, and the final persistence logic. Separating these concerns into subtasks is essential."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Booking Flow Stepper: Service, Rooms & Extras",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the 'Booking Flow Stepper: Service, Rooms & Extras' task. Create subtasks for: 1. Establishing the multi-step form state management solution (e.g., using Zustand or React Context). 2. Building the UI and data fetching for the 'Select Service' step. 3. Building the UI for the 'Select Rooms & Extras' step. 4. Developing the sticky summary component that reads from the shared state and displays a live total.",
+			"reasoning": "The core challenge is managing state across a multi-step process. A subtask should be dedicated to establishing this state management pattern first. The other subtasks can then focus on the UI and logic for each individual step and the shared summary component, which all depend on the shared state."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Booking Flow Stepper: Location & Date/Time Selection",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Booking Flow Stepper: Location & Date/Time Selection' task. Create subtasks for: 1. Building the location selection UI. 2. Developing the core availability logic as a Supabase Edge Function that takes date/area and returns available time slots. 3. Building a dynamic Date & Time picker UI component. 4. Integrating the UI with the Edge Function to fetch and display availability in real-time.",
+			"reasoning": "This is one of the most complex tasks. The core complexity is concentrated in the performant, backend logic for calculating availability. This logic should be its own subtask (as a Supabase Edge Function). The UI components (location selector, date picker) are separate concerns, and a final subtask is needed to wire the UI to the backend logic."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Booking Flow Stepper: Cleaner Selection",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the 'Booking Flow Stepper: Cleaner Selection' task. Create subtasks for: 1. Implementing the database query to fetch available cleaners based on the selected area and time slot. 2. Building the UI to display the returned cleaners in a card-based layout. 3. Implementing the selection logic to store the chosen cleaner's ID in the booking state, including the 'Auto-assign' feature.",
+			"reasoning": "The complexity is moderate, involving a specific database query and UI rendering. The task can be broken into the data-retrieval part (querying for cleaners), the presentation part (UI cards), and the interaction part (selecting a cleaner or auto-assigning). This separates backend, frontend, and state management logic."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Booking Flow: Review & Paystack Payment Integration",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Booking Flow: Review & Paystack Payment Integration' task. Create subtasks for: 1. Building the final review UI. 2. Creating a server action to initiate a payment with the Paystack API. 3. Implementing a webhook or callback route to handle Paystack's response. 4. Upon successful payment confirmation, creating the final record in the `bookings` table. 5. Implementing the redirect to a success/confirmation page.",
+			"reasoning": "Payment gateway integration is highly complex and critical. It involves a multi-stage, secure process that must handle numerous edge cases. It must be broken down carefully: preparing the payment, handling the third-party interaction (API call and callback), and post-payment actions (saving data, redirecting). Each step is crucial for a robust implementation."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Admin Portal: Core Management Dashboards",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the 'Admin Portal: Core Management Dashboards' task. Create a subtask for setting up the protected `/admin` layout. Then, create separate subtasks for implementing the full CRUD interface (using shadcn/ui's DataTable and Server Actions) for each of the following: Services, Pricing, and Locations.",
+			"reasoning": "While the work is repetitive, building robust CRUD interfaces for multiple data entities is a significant effort. The task is naturally divisible by the data entity being managed. Each CRUD interface is a self-contained unit of work. A foundational subtask is needed for the admin-only layout and security."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Cleaner Portal: Dashboard and Job Management",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Expand the 'Cleaner Portal: Dashboard and Job Management' task. Create subtasks for: 1. Setting up the protected `/dashboard/cleaner` route and layout. 2. Developing the component to fetch and display a list of jobs assigned to the logged-in cleaner. 3. Implementing the server actions and corresponding UI buttons to allow cleaners to update a job's status.",
+			"reasoning": "This task is less complex than a full admin portal, focusing on read-heavy operations and specific actions. It can be split into setting up the secure area, fetching and displaying the relevant data (the core of the dashboard), and implementing the specific actions a cleaner can perform."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Implement SEO Best Practices and URL Structure",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the 'Implement SEO Best Practices' task into three subtasks: 1. Create the `robots.txt` file to control crawler access. 2. Implement the dynamic `sitemap.ts` file to generate a sitemap for all public pages and content. 3. Add appropriate `metadata` exports to page and layout files to set canonical URLs and other meta tags.",
+			"reasoning": "This is a low-complexity task that primarily involves configuration and leveraging built-in Next.js features. The three main components—`robots.txt`, `sitemap.xml`, and per-page metadata—are distinct and represent the standard trifecta of technical SEO setup, making them ideal subtasks."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Integrate Email Service for Notifications",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand the 'Integrate Email Service for Notifications' task. Create subtasks for: 1. Setting up the Resend SDK and API keys. 2. Creating the booking confirmation email template using React Email. 3. Writing a server action that accepts booking details and sends the email. 4. Integrating this server action to be called after a booking is successfully created and paid for.",
+			"reasoning": "This is a standard third-party API integration. The complexity is moderate. A clean separation exists between setting up the service, designing the content (the email template), writing the logic to send the email, and finally, hooking that logic into the correct place in the application flow."
+		}
+	]
+}

@@ -1,0 +1,43 @@
+# Task ID: 14
+# Title: Integrate Email Service for Notifications
+# Status: pending
+# Dependencies: 10
+# Priority: medium
+# Description: Integrate an email service provider (e.g., Resend) to send transactional emails, starting with the booking confirmation email.
+# Details:
+Install the Resend SDK. Add API keys to environment variables. Create a server action or API route that is triggered after a successful booking is saved (Task 10). This action will use Resend to send a confirmation email to the customer with their booking details. Use a library like React Email to build email templates.
+
+# Test Strategy:
+After completing a test booking, check the recipient's inbox (or a service like Mailtrap) to verify the confirmation email was sent. Check the email content to ensure it's correctly populated with the booking details.
+
+# Subtasks:
+## 1. Set Up Resend and React Email Environment [pending]
+### Dependencies: None
+### Description: Configure the project to use Resend for sending emails and React Email for templating. This includes signing up for the service, obtaining API keys, and installing the required libraries.
+### Details:
+Sign up for a Resend account and generate an API key. Install the `resend` and `react-email` npm packages. Add the Resend API key to the project's environment variables (`.env.local`) as `RESEND_API_KEY`.
+
+## 2. Create Booking Confirmation Email Template [pending]
+### Dependencies: 14.1
+### Description: Develop a reusable React component for the booking confirmation email using the React Email library. The template should be designed to accept dynamic booking data.
+### Details:
+Create a new file, e.g., `/emails/BookingConfirmation.tsx`. Design the email layout to include placeholders for customer name, booking ID, service details, date, time, and total price. Style the email for a professional appearance using React Email components.
+
+## 3. Implement Email Sending Server Action [pending]
+### Dependencies: 14.1, 14.2
+### Description: Create a dedicated server action that takes booking data, renders the email template to HTML, and uses the Resend SDK to dispatch the email.
+### Details:
+Create a new server action file (e.g., `app/actions/send-booking-confirmation.ts`). This action will accept an object containing booking and customer details. It will import the `BookingConfirmation` template, render it to an HTML string using React Email's `render` function, and then call `resend.emails.send()` with the recipient's email, subject line, and the rendered HTML.
+
+## 4. Integrate Email Action into Booking Flow [pending]
+### Dependencies: 14.3
+### Description: Modify the booking finalization logic to trigger the email sending action immediately after a new booking is successfully saved to the database.
+### Details:
+In the server action or API route that handles the final step of a booking (related to Task 10), locate the point after the database insertion is confirmed successful. At this point, call the `sendBookingConfirmation` server action created in the previous subtask. Pass the relevant data from the newly created booking record and associated user.
+
+## 5. End-to-End Test of Booking Confirmation Email [pending]
+### Dependencies: 14.4
+### Description: Conduct a full test of the booking and email notification flow to ensure the confirmation email is correctly sent, received, and populated with accurate data.
+### Details:
+Using a test user account, complete the entire booking flow in the application. The test should trigger the database write and the subsequent email notification.
+

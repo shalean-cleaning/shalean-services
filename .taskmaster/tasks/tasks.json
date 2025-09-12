@@ -1,0 +1,954 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Project Initialization and Core Dependency Setup",
+        "description": "Initialize the Next.js project with the App Router. Install and configure core dependencies including Supabase client, shadcn/ui, and SWR. Set up environment variables for Supabase URL and anon key.",
+        "details": "Run `npx shadcn-ui@latest init` to set up the component library. Create a Supabase client helper in `lib/supabase.ts`. Configure TailwindCSS theme and globals according to shadcn/ui documentation. Add `.env.local` to `.gitignore` and populate it with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.",
+        "testStrategy": "Verify that the Next.js application runs without errors. Confirm that shadcn/ui components can be added and rendered correctly. Test the Supabase client by making a simple query in a server component.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Next.js Project with App Router",
+            "description": "Create a new Next.js project using the `create-next-app` command-line tool. Ensure the project is configured to use the App Router, TypeScript, and Tailwind CSS.",
+            "dependencies": [],
+            "details": "Run `npx create-next-app@latest --typescript --tailwind --eslint --app .` in the target directory to scaffold the project with the recommended configuration.",
+            "status": "pending",
+            "testStrategy": "Run `npm run dev` and confirm that the default Next.js application page loads successfully in a web browser at `http://localhost:3000`."
+          },
+          {
+            "id": 2,
+            "title": "Set Up Environment Variables and Gitignore",
+            "description": "Create the local environment file to store Supabase credentials securely and update the `.gitignore` file to prevent committing sensitive information to version control.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Create a `.env.local` file in the project root. Add the `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` variables with their corresponding values from your Supabase project dashboard. Add the line `.env.local` to the `.gitignore` file.",
+            "status": "pending",
+            "testStrategy": "Run `git status` to confirm that the `.env.local` file is not staged for commit and is correctly ignored by Git."
+          },
+          {
+            "id": 3,
+            "title": "Install and Configure shadcn/ui",
+            "description": "Initialize the shadcn/ui component library, which involves setting up its configuration file and automatically modifying the TailwindCSS theme and global styles.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Run `npx shadcn-ui@latest init` in the terminal. Follow the interactive prompts to configure the `components.json` file, update `tailwind.config.ts`, and modify `app/globals.css` according to the library's requirements.",
+            "status": "pending",
+            "testStrategy": "Add a sample component like a Button using `npx shadcn-ui@latest add button`. Import and render this component on the homepage (`app/page.tsx`) to verify it displays with the correct styling."
+          },
+          {
+            "id": 4,
+            "title": "Create Supabase Client Helper",
+            "description": "Install the Supabase JavaScript client library and create a reusable helper module to instantiate a singleton client for use throughout the application.",
+            "dependencies": [
+              "1.2"
+            ],
+            "details": "Install the Supabase client via `npm install @supabase/supabase-js`. Create a new file at `lib/supabase.ts`. In this file, import `createClient` from `@supabase/supabase-js` and export a new client instance initialized using the environment variables `process.env.NEXT_PUBLIC_SUPABASE_URL` and `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY`.",
+            "status": "pending",
+            "testStrategy": "Create a temporary server component that imports the client. Attempt a simple, non-existent query. Verify that the code compiles and runs without throwing an error related to client initialization, confirming it can access the environment variables."
+          },
+          {
+            "id": 5,
+            "title": "Install SWR for Data Fetching",
+            "description": "Install the SWR library, which will be used for client-side data fetching and state management throughout the application.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Run the command `npm install swr` to add the SWR library to the project's dependencies.",
+            "status": "pending",
+            "testStrategy": "Check the `package.json` file to confirm that `swr` has been added to the `dependencies` list. The application should continue to build and run without errors after the installation."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Database Schema in Supabase",
+        "description": "Create all required database tables in Supabase as specified in the PRD. This includes `services`, `service_pricing`, `extras`, `areas`, `cleaners`, `bookings`, `quotes`, and all related join tables.",
+        "details": "Use the Supabase SQL editor or migrations to define the schema. Ensure all columns, data types, foreign key relationships, and constraints match the PRD. Set up Row Level Security (RLS) policies for basic access control, starting with public read access for non-sensitive tables like `services` and `areas`.",
+        "testStrategy": "Manually inspect the schema in the Supabase dashboard. Write simple SQL queries to insert and select data from each table to ensure relationships are correctly configured. Verify that initial RLS policies are active.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Core Service and Public Content Tables",
+            "description": "Define the schema for tables that store the company's core service offerings, pricing, geographic areas, and public-facing website content. These tables are generally non-sensitive and foundational for the application.",
+            "dependencies": [],
+            "details": "Using the Supabase SQL editor, create the following tables: `services`, `service_pricing`, `extras`, `areas`, `testimonials`, `blog_posts`, and `content_blocks`. Define all columns, data types, and primary keys as specified in the PRD.",
+            "status": "pending",
+            "testStrategy": "Manually inspect the created tables in the Supabase dashboard. Run `SELECT` and `INSERT` statements on each table to ensure columns and data types are correct."
+          },
+          {
+            "id": 2,
+            "title": "Define User, Profile, and Staff Tables",
+            "description": "Implement the database tables required for user authentication, role management, and staff information. This includes the custom `profiles` table that extends Supabase's built-in `auth.users` table.",
+            "dependencies": [],
+            "details": "Create the `profiles` table with a primary key that is also a one-to-one foreign key to `auth.users.id`. Add a `role` column with a CHECK constraint for 'customer', 'cleaner', or 'admin'. Create the `cleaners` and `team_members` tables for staff-specific information.",
+            "status": "pending",
+            "testStrategy": "Verify the `profiles` table is created and can be linked to a new user in `auth.users`. Check that the `role` column only accepts the specified values."
+          },
+          {
+            "id": 3,
+            "title": "Implement Transactional and Scheduling Tables",
+            "description": "Create the tables for managing customer quotes, bookings, cleaner schedules, and the relationships between them. These tables form the core of the application's business logic.",
+            "dependencies": [
+              "2.1",
+              "2.2"
+            ],
+            "details": "Define the schema for `quotes`, `bookings`, and `cleaner_availability`. Create necessary join tables, such as `booking_extras`, to link bookings to selected extras. These tables will have foreign key references to tables created in previous subtasks (e.g., `profiles`, `services`, `areas`).",
+            "status": "pending",
+            "testStrategy": "Attempt to insert a sample booking that references a user, service, and area to ensure the table structure supports the core business transaction."
+          },
+          {
+            "id": 4,
+            "title": "Apply All Foreign Key Constraints and Relationships",
+            "description": "Systematically apply all foreign key constraints to establish the relationships between all created tables, ensuring relational integrity across the database schema.",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Using `ALTER TABLE` statements, add all foreign key constraints specified in the PRD. For example, link `bookings.user_id` to `profiles.id`, `service_pricing.service_id` to `services.id`, and `cleaner_availability.cleaner_id` to `cleaners.id`. Add any remaining `NOT NULL` or other constraints.",
+            "status": "pending",
+            "testStrategy": "Manually inspect the table relationships in the Supabase dashboard. Attempt to insert data that violates a foreign key constraint (e.g., a booking with a non-existent `service_id`) and verify that the database returns an error."
+          },
+          {
+            "id": 5,
+            "title": "Configure Initial Row Level Security (RLS) Policies",
+            "description": "Set up the initial set of Row Level Security (RLS) policies to enable basic access control, starting with public read access for non-sensitive tables.",
+            "dependencies": [
+              "2.4"
+            ],
+            "details": "Enable RLS on all tables. Create a `POLICY` for public read-only (`SELECT`) access for the `anon` role on `services`, `areas`, `testimonials`, and `blog_posts`. Create a basic policy allowing authenticated users to read their own data in the `profiles` table.",
+            "status": "pending",
+            "testStrategy": "Use the Supabase SQL editor to switch to the `anon` role and run a `SELECT` query on the `services` table (should succeed) and the `bookings` table (should fail). Switch to an `authenticated` role and verify access to their own profile."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Set Up Supabase Authentication and User Roles",
+        "description": "Configure Supabase Auth to handle user signup, login, and session management. Implement a system to manage user roles (Customer, Cleaner, Admin) using a custom `profiles` table with a `role` column linked to the `auth.users` table.",
+        "details": "Create login and signup forms. Use Supabase's middleware helper (`@supabase/auth-helpers-nextjs`) to manage sessions. Create a public `profiles` table with a one-to-one relationship to `auth.users`. Add a `role` text column with a check constraint for 'customer', 'cleaner', or 'admin'. Implement RLS policies on tables like `bookings` based on the user's role from the `profiles` table.",
+        "testStrategy": "Test the full signup flow, ensuring a new entry is created in both `auth.users` and `profiles`. Test login and logout. Create test users for each role and verify that RLS policies correctly restrict access to data.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create `profiles` Table and Signup Trigger",
+            "description": "Set up the database schema for user profiles, including the table itself and an automated trigger to populate it when a new user signs up in `auth.users`.",
+            "dependencies": [],
+            "details": "Using the Supabase SQL editor, create a public `profiles` table with an `id` column (UUID, primary key, referencing `auth.users.id`) and a `role` column (TEXT). Add a CHECK constraint to the `role` column to only allow 'customer', 'cleaner', or 'admin'. Create a PostgreSQL function and trigger that automatically inserts a new row into `profiles` upon a new user insertion into `auth.users`, setting the default role to 'customer'.",
+            "status": "pending",
+            "testStrategy": "After creating the trigger, use the Supabase dashboard's Auth section to manually add a new user. Verify that a corresponding entry is automatically created in the `profiles` table with the correct user ID and the default role 'customer'."
+          },
+          {
+            "id": 2,
+            "title": "Configure Next.js Middleware for Session Management",
+            "description": "Implement Next.js middleware using `@supabase/auth-helpers-nextjs` to manage user sessions and refresh tokens automatically on every request, making the session available across the application.",
+            "dependencies": [],
+            "details": "Install the `@supabase/auth-helpers-nextjs` package. Create a `middleware.ts` file in the Next.js project root. Use the `createMiddlewareClient` function to handle the request and response, ensuring the user's session cookie is managed correctly. This setup is essential for server components and API routes to access the user's session.",
+            "status": "pending",
+            "testStrategy": "After setting up the middleware, run the application and check the browser's developer tools to confirm the `sb-*-auth-token` cookie is being set upon login and cleared upon logout. Verify that accessing a protected route without a session redirects the user."
+          },
+          {
+            "id": 3,
+            "title": "Implement Signup and Login UI Components",
+            "description": "Create the user interface components for user registration and login, including the necessary forms and client-side logic to interact with Supabase Auth.",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "Develop React components for `SignupForm` and `LoginForm`. Use a UI library for form elements and manage form state with `useState` or `react-hook-form`. The form submission handlers will call `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()` from a client-side Supabase client instance. Implement logic to handle loading states and display API errors to the user.",
+            "status": "pending",
+            "testStrategy": "Test the signup form with a new email; verify the user is created in `auth.users` and the `profiles` trigger works. Test the login form with correct and incorrect credentials. Confirm successful login creates a session and redirects the user appropriately."
+          },
+          {
+            "id": 4,
+            "title": "Implement Role-Based Row Level Security (RLS) Policies",
+            "description": "Define and apply RLS policies on key tables like `bookings` to restrict data access based on the user's role stored in their `profiles` record.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "First, create a PostgreSQL helper function, e.g., `get_user_role()`, that returns the `role` from the `profiles` table for the currently authenticated user (`auth.uid()`). On the `bookings` table, enable RLS. Create policies: an 'Admin' policy for full access, a 'Customer' policy allowing access only to their own bookings (`USING (user_id = auth.uid())`), and a 'Cleaner' policy for assigned bookings.",
+            "status": "pending",
+            "testStrategy": "Manually set the roles for test users in the `profiles` table. Log in as a 'customer' and verify they can only fetch their own bookings. Log in as a 'cleaner' and verify they can only see assigned bookings. Log in as an 'admin' and verify they can see all bookings."
+          },
+          {
+            "id": 5,
+            "title": "Create User Account Page and Logout Functionality",
+            "description": "Develop a protected user account page to display profile information and implement a secure logout mechanism. Integrate the auth state into the global UI.",
+            "dependencies": [
+              "3.2",
+              "3.3"
+            ],
+            "details": "Create a protected route at `/account`. This page will fetch and display data from the user's `profiles` record. Add a 'Logout' button that calls the `supabase.auth.signOut()` method and redirects the user to the homepage. Update the global `<Header>` component to conditionally render 'Login/Signup' links or a user menu with 'Account' and 'Logout' options based on the session status.",
+            "status": "pending",
+            "testStrategy": "Log in and navigate to the `/account` page; verify profile data is displayed correctly. Click the logout button and confirm the session is terminated and the user is redirected. Verify the header UI updates to show the 'Login' link again."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Build Global Layout and Static Pages",
+        "description": "Create the main application layout including the dynamic header and footer. Implement the static pages: 'How It Works' and 'Contact', ensuring they use the shared layout.",
+        "details": "In `app/layout.tsx`, build the main structure. Create a `<Header>` component that dynamically displays 'Login/Signup' or a user menu based on auth state. The header links should use `<Link>` from `next/link`. Create a `<Footer>` component with quick links and contact info. Build the content for `/how-it-works` and `/contact` pages.",
+        "testStrategy": "Navigate between the homepage and the new static pages. Verify the header and footer are present on all pages. Confirm the header's auth-aware state changes upon login/logout.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Root Layout and Footer Component",
+            "description": "Establish the main application structure in `app/layout.tsx` and create the static `<Footer>` component. This forms the foundational shell for all pages.",
+            "dependencies": [],
+            "details": "In `app/layout.tsx`, define the root HTML structure, import global styles, and set up metadata. Create a new component file `components/layout/Footer.tsx`. Populate the footer with quick links (e.g., Home, How It Works, Contact) and company contact information. Render this `<Footer>` component within the `<body>` of the root layout.",
+            "status": "pending",
+            "testStrategy": "Run the application and verify the footer is rendered on the homepage. Inspect the page source to confirm the basic layout structure is correct."
+          },
+          {
+            "id": 2,
+            "title": "Implement Static Header Component Structure",
+            "description": "Create the initial `<Header>` component with a logo, primary navigation links, and a static placeholder for authentication actions, ensuring it is responsive.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Create the file `components/layout/Header.tsx`. Add the company logo and the main navigation links ('How It Works', 'Contact') using the Next.js `<Link>` component. Add a static 'Login / Signup' button group as a placeholder. Implement responsive styles using TailwindCSS. Render the `<Header>` component in `app/layout.tsx`.",
+            "status": "pending",
+            "testStrategy": "Verify the header appears on the homepage. Confirm that navigation links point to the correct (even if not yet created) routes. Check the header's responsiveness across different screen sizes."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Dynamic Authentication State into Header",
+            "description": "Enhance the `<Header>` to conditionally render UI elements based on the user's authentication status from Supabase.",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Modify the `<Header>` to be a server component that checks for an active user session via the Supabase client. If a user is logged in, display a user profile avatar and a dropdown menu with 'Dashboard' and 'Logout' links. If the user is not authenticated, display the 'Login / Signup' buttons.",
+            "status": "pending",
+            "testStrategy": "With auth implemented (from Task 3), test the login and logout flows. Verify the header correctly switches between the guest view ('Login/Signup') and the authenticated user view (profile menu)."
+          },
+          {
+            "id": 4,
+            "title": "Build 'How It Works' Static Page",
+            "description": "Create the content and page file for the '/how-it-works' route, ensuring it correctly uses the shared application layout.",
+            "dependencies": [
+              "4.1",
+              "4.2"
+            ],
+            "details": "Create a new page file at `app/how-it-works/page.tsx`. Populate the page with content that explains the service process, using semantic HTML and styled with TailwindCSS. The page should automatically inherit the global Header and Footer from the root layout.",
+            "status": "pending",
+            "testStrategy": "Navigate directly to the `/how-it-works` URL. Verify that the page-specific content is rendered correctly between the shared header and footer."
+          },
+          {
+            "id": 5,
+            "title": "Build 'Contact' Static Page",
+            "description": "Create the content and page file for the '/contact' route, including contact details and ensuring it uses the shared application layout.",
+            "dependencies": [
+              "4.1",
+              "4.2"
+            ],
+            "details": "Create a new page file at `app/contact/page.tsx`. Add the company's contact information, such as an address, email, and phone number. Include a placeholder for a future contact form. This page must also inherit the global Header and Footer.",
+            "status": "pending",
+            "testStrategy": "Navigate to the `/contact` URL. Verify the contact information is displayed correctly and that the shared header and footer are present and functional."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement Dynamic Homepage Content",
+        "description": "Develop the components for the homepage and fetch their content dynamically from Supabase. This includes the Hero section, 'How It Works' steps, 'Why Choose Shalean' features, Team grid, Blog Preview, and Testimonials.",
+        "details": "Create separate server components for each section. Fetch data from Supabase tables like `team_members`, `testimonials`, and `blog_posts`. For the 'How It Works' and 'Why Choose Shalean' sections, create a generic `content_blocks` table in Supabase to store this data. Use Next.js Image component for optimized image loading.",
+        "testStrategy": "Verify that all homepage sections render with data fetched from Supabase. Add, edit, and delete content in Supabase and confirm the homepage updates on the next load. Check browser network tab to ensure images are optimized.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define `content_blocks` Table and Seed Homepage Data",
+            "description": "Create the `content_blocks` table in Supabase for storing generic homepage content like for the 'How It Works' and 'Why Choose Us' sections. Seed this table, along with `team_members`, `testimonials`, and `blog_posts`, with initial data for development.",
+            "dependencies": [],
+            "details": "The `content_blocks` table should include columns for `id`, `section_key` (e.g., 'hero', 'how-it-works'), `title`, `description`, `icon_name`, and an `order` field. Use the Supabase SQL editor or a migration file to create the table. Populate all relevant tables with 3-5 sample records each.",
+            "status": "pending",
+            "testStrategy": "Verify the `content_blocks` table exists in the Supabase dashboard. Run `SELECT` queries to confirm that seed data is present and retrievable from `content_blocks`, `team_members`, `testimonials`, and `blog_posts`."
+          },
+          {
+            "id": 2,
+            "title": "Build 'How It Works' and 'Why Choose Us' Components",
+            "description": "Create two separate server components, `HowItWorks.tsx` and `WhyChooseUs.tsx`. Both components will fetch their respective content from the `content_blocks` table based on a unique `section_key`.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Create a Supabase client helper function for server-side data fetching. In each component, query the `content_blocks` table, filtering by the appropriate `section_key` (e.g., 'how-it-works') and ordering by the `order` column. Render the fetched data (title, description, icon) in a card-based or step-by-step layout.",
+            "status": "pending",
+            "testStrategy": "Render the components on a test page. Verify both sections display the correct data from Supabase. Update a record in the `content_blocks` table and confirm the component's content updates on a page refresh."
+          },
+          {
+            "id": 3,
+            "title": "Build Team Grid and Testimonials Components",
+            "description": "Develop the `TeamGrid.tsx` and `Testimonials.tsx` server components. These components will fetch and display data from the `team_members` and `testimonials` tables, respectively.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "For the `TeamGrid`, fetch all members and display their name, role, and image using the Next.js `Image` component for optimization. For `Testimonials`, fetch all entries and display the quote, author's name, and role. Consider implementing a simple slider or carousel for the testimonials.",
+            "status": "pending",
+            "testStrategy": "Confirm both components render with data from their respective tables. Check the browser's network tab to ensure images are being served in a modern format (e.g., .webp) by the Next.js Image component. Add/remove a record in Supabase and verify the UI updates."
+          },
+          {
+            "id": 4,
+            "title": "Build Hero Section and Blog Preview Components",
+            "description": "Create the `Hero.tsx` and `BlogPreview.tsx` server components. The Hero will display primary marketing content, and the Blog Preview will show the most recent posts.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "The `Hero` component will fetch its content (headline, sub-headline, CTA text) from the `content_blocks` table using the 'hero' key. The `BlogPreview` component will fetch the 3 most recent posts from the `blog_posts` table by ordering by `created_at` descending and applying a `limit(3)`. Use Next.js `Image` for any background or post images.",
+            "status": "pending",
+            "testStrategy": "Verify the Hero section displays its text from Supabase. Confirm the Blog Preview shows the three latest posts. Add a new post to the `blog_posts` table and ensure it appears in the preview on the next load, pushing the oldest one out."
+          },
+          {
+            "id": 5,
+            "title": "Assemble Homepage and Finalize Layout",
+            "description": "Integrate all the newly created section components (`Hero`, `HowItWorks`, `WhyChooseUs`, `TeamGrid`, `Testimonials`, `BlogPreview`) into the main homepage file (`app/page.tsx`).",
+            "dependencies": [
+              "5.2",
+              "5.3",
+              "5.4"
+            ],
+            "details": "In `app/page.tsx`, import and arrange all the section components in the correct visual order. Ensure the page is wrapped in the global layout to include the header and footer. The page itself should be a server component to allow its children to fetch data.",
+            "status": "pending",
+            "testStrategy": "Load the root URL ('/'). Verify that all homepage sections are present, in the correct order, and populated with dynamic data from Supabase. Perform a visual check for consistent styling and responsiveness across different screen sizes."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Develop Quick Quote Flow",
+        "description": "Create the Quick Quote component, which can be triggered as a modal or on the `/quote` page. It will allow users to select a service, rooms, extras, and location to see a live price estimate.",
+        "details": "The component will fetch pricing data from `service_pricing`, `extras`, and `areas`. Implement client-side state management (e.g., `useState` or `useReducer`) to calculate the total in real-time. On 'Email me this Quote', save the configuration and email to the `quotes` table in Supabase. The 'Continue to Booking' CTA should redirect to the booking flow with the state pre-filled.",
+        "testStrategy": "Test all combinations of inputs and verify the live total is calculated correctly. Test the 'Email me this Quote' functionality and confirm a new record appears in the `quotes` table. Ensure the 'Continue to Booking' CTA works as expected.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Build Quick Quote UI and Fetch Pricing Data",
+            "description": "Create the user interface for the Quick Quote component, including selectors for service, rooms, extras, and location. Implement the data fetching logic to retrieve all necessary pricing and area information from the Supabase tables: `service_pricing`, `extras`, and `areas`.",
+            "dependencies": [],
+            "details": "This subtask involves creating a client component for the quote form. Use server-side fetching in a parent component to get the initial data and pass it down as props. The UI should be structured to accommodate all required user inputs.",
+            "status": "pending",
+            "testStrategy": "Verify that the component renders with all input fields. Check the browser's network tab to confirm that data for services, extras, and areas is successfully fetched from Supabase on component load. Ensure dropdowns and selectors are populated correctly."
+          },
+          {
+            "id": 2,
+            "title": "Implement Client-Side State and Real-Time Price Calculation",
+            "description": "Manage the user's selections using client-side state hooks (e.g., `useState` or `useReducer`). Develop the calculation engine that updates the total price estimate in real-time as the user modifies their selections.",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "The state should track the selected service, the quantity for each room type, a list of selected extras, and the chosen location. The calculation logic must reference the pricing data fetched in the previous subtask to compute the live total.",
+            "status": "pending",
+            "testStrategy": "Test various combinations of service, rooms, and extras selections. Manually calculate the expected price and verify it matches the total displayed on the UI. Test edge cases, such as deselecting all items to ensure the price resets to a base value or zero."
+          },
+          {
+            "id": 3,
+            "title": "Implement 'Email me this Quote' Functionality",
+            "description": "Add an email input field and a submit button labeled 'Email me this Quote'. Create a server action to capture the current quote configuration and the provided email, then save this information as a new entry in the `quotes` table in Supabase.",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "The server action will receive the quote state object and the email address. It will then use the Supabase client to perform an `insert` operation on the `quotes` table. Implement user feedback for success or failure states (e.g., a toast notification).",
+            "status": "pending",
+            "testStrategy": "Submit a quote using a test email address. Log into the Supabase dashboard and confirm that a new record appears in the `quotes` table with the correct service, rooms, extras, total price, and email."
+          },
+          {
+            "id": 4,
+            "title": "Implement 'Continue to Booking' CTA and State Handoff",
+            "description": "Develop the 'Continue to Booking' call-to-action. On click, this button should navigate the user to the main booking flow and pass the current quote state to pre-fill the initial steps of the booking process.",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "The state can be passed via URL query parameters or a shared client-side state management solution (like Zustand or a React Context Provider). The booking flow component will need to be able to read this incoming state and initialize itself accordingly.",
+            "status": "pending",
+            "testStrategy": "Configure a quote and click 'Continue to Booking'. Verify the user is redirected to the booking page. Confirm that the selections made in the quote component (e.g., service, rooms) are pre-filled correctly in the booking flow."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Component as a Modal and Standalone Page",
+            "description": "Adapt the Quick Quote component to function both as a pop-up modal and as a full-page component. Create the dedicated `/quote` route and implement the trigger mechanism (e.g., a button in the site header) to launch the modal view.",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "Use a headless UI library (e.g., Radix UI's Dialog) to build an accessible modal. The `/quote` page will simply render the main Quick Quote component. Ensure the component's logic is self-contained to allow for this reusability.",
+            "status": "pending",
+            "testStrategy": "Test the trigger for the modal and verify it opens and closes correctly. Navigate directly to the `/quote` URL and confirm the component renders as a page. Test the full quote functionality in both the modal and page contexts to ensure consistent behavior."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Booking Flow Stepper: Service, Rooms & Extras",
+        "description": "Build the initial steps of the multi-step booking flow. This includes selecting a service, specifying the number of bedrooms and bathrooms, and choosing add-on extras.",
+        "details": "Use a state management solution to manage the stepper state across multiple pages/components. The page `/book/{service-slug}` will be the entry point. Fetch service details, pricing, and associated extras from Supabase. Implement a sticky summary component that updates the price live as the user makes selections.",
+        "testStrategy": "Verify that service data is loaded correctly based on the URL slug. Test the room and extra selectors, ensuring the live price summary updates accurately. Ensure state is preserved when navigating between steps.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Booking Page and Fetch Service Data",
+            "description": "Create the dynamic page route `/book/{service-slug}`. Implement the data fetching logic to retrieve service details, base pricing rules, and a list of associated add-on extras from Supabase based on the provided URL slug.",
+            "dependencies": [],
+            "details": "Use Next.js dynamic routing. Create a Supabase server-side query to fetch data from the `services` and `extras` tables. The page should handle cases where a service slug is not found by showing a 404 page.",
+            "status": "pending",
+            "testStrategy": "Verify that navigating to a valid `/book/{service-slug}` URL correctly loads the corresponding service data. Test with an invalid slug to ensure a 404 page is rendered. Check that fetched data includes service details, pricing info, and related extras."
+          },
+          {
+            "id": 2,
+            "title": "Set Up Booking State Management",
+            "description": "Initialize and configure a state management solution (e.g., Zustand or React Context) to handle the state of the entire booking flow. Define the state's structure, including service details, room counts, selected extras, and total price.",
+            "dependencies": [],
+            "details": "Create a global store or context provider that will wrap the booking flow pages. The initial state should be populated with default values and then updated with data fetched in subtask 7.1. Define actions/setters to update the state.",
+            "status": "pending",
+            "testStrategy": "Use React DevTools or logging to inspect the state store. Verify that the initial state is set correctly after data fetching. Test that state update functions work as expected in isolation before integrating with UI components."
+          },
+          {
+            "id": 3,
+            "title": "Develop Bedroom and Bathroom Selector Component",
+            "description": "Build the UI component that allows users to increment or decrement the number of bedrooms and bathrooms for the booking. This component must read from and update the shared booking state.",
+            "dependencies": [
+              "7.2"
+            ],
+            "details": "Use simple plus/minus buttons for selection. On change, dispatch an action to update the `bedroomCount` and `bathroomCount` in the global state store. The component should read its current value from the state to ensure consistency.",
+            "status": "pending",
+            "testStrategy": "Test that clicking the +/- buttons updates the number displayed in the UI and correctly modifies the value in the global state store. Ensure there are reasonable minimums (e.g., 1 bedroom, 1 bathroom)."
+          },
+          {
+            "id": 4,
+            "title": "Develop Add-on Extras Selection Component",
+            "description": "Create a component that renders a list of available add-on extras for the selected service. Users should be able to select and deselect multiple extras, which will update the booking state.",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "The component will receive the list of extras (fetched in 7.1) as props. Use checkboxes or styled toggle switches for selection. Each selection change should update the `selectedExtras` array in the global state store.",
+            "status": "pending",
+            "testStrategy": "Verify that the component correctly displays all extras fetched from Supabase, including their names and prices. Test selecting and deselecting multiple extras and confirm the `selectedExtras` array in the state store is updated accurately."
+          },
+          {
+            "id": 5,
+            "title": "Implement Sticky Price Summary and Calculation Logic",
+            "description": "Build a sticky component that is always visible on the page. This component will display a summary of the user's selections and the live-calculated total price.",
+            "dependencies": [
+              "7.2",
+              "7.3",
+              "7.4"
+            ],
+            "details": "The component must subscribe to the global state. Implement the price calculation logic that considers the service's base price, cost adjustments for rooms, and the price of each selected extra. The component should re-render and display the new total whenever the state changes.",
+            "status": "pending",
+            "testStrategy": "Verify the component is sticky and remains visible on scroll. Change the number of rooms and select/deselect extras, confirming that the total price updates instantly and accurately reflects the sum of all selected items."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Booking Flow Stepper: Location & Date/Time Selection",
+        "description": "Implement the location and scheduling step of the booking flow. Users will select their area/suburb from a dynamic list and choose an available date and time slot.",
+        "details": "Fetch the list of service areas from the `areas` table. Create a date and time picker component. The core logic involves querying for available slots by cross-referencing `cleaner_availability` and existing `bookings` for the selected area and date. This may require a Supabase Edge Function for performance.",
+        "testStrategy": "Confirm the area dropdown is populated from the DB. Test the date picker to ensure it correctly disables unavailable dates/times. Manually create bookings in the DB to block out slots and verify the UI reflects this.",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Area/Suburb Selection Component",
+            "description": "Develop the UI component for users to select their service area. This component will fetch and display a list of all available areas from the database.",
+            "dependencies": [],
+            "details": "Implement a searchable dropdown or select input that is populated on component mount by fetching data from the `areas` table in Supabase. The selected `area_id` must be stored in the booking flow's shared state.",
+            "status": "pending",
+            "testStrategy": "Confirm the dropdown is populated with all entries from the `areas` table. Verify that selecting an area correctly updates the shared booking state."
+          },
+          {
+            "id": 2,
+            "title": "Implement Date and Time Picker UI Components",
+            "description": "Build the user interface for selecting a booking date and time. This includes a calendar for date selection and a separate component to display time slots for the chosen date.",
+            "dependencies": [],
+            "details": "Use a calendar library (e.g., react-day-picker) for the date selection part. Create a grid or list component to display time slots. Initially, this can be a static display; it will be made dynamic in a later subtask. The components should update the booking state upon user selection.",
+            "status": "pending",
+            "testStrategy": "Verify the calendar component renders correctly. Test that selecting a date and a static time slot updates the local or shared state."
+          },
+          {
+            "id": 3,
+            "title": "Develop Supabase Edge Function for Slot Availability",
+            "description": "Create a performant Supabase Edge Function to calculate and return available time slots for a given area and date.",
+            "dependencies": [],
+            "details": "The function will accept `area_id` and `date` as input. It must query `cleaner_availability` to find cleaners available on that day who serve the area, and then filter out time slots that are already taken by existing `bookings`. The function should return an array of available time strings (e.g., '09:00', '11:00').",
+            "status": "pending",
+            "testStrategy": "Deploy the function and test it directly using a tool like cURL or the Supabase dashboard. Provide test data (cleaner availability, existing bookings) to verify it returns the correct set of available slots for various scenarios."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Availability Logic with Date/Time Picker",
+            "description": "Connect the Date/Time Picker UI to the Supabase Edge Function. When a user selects a date, the frontend will call the function to fetch and display the actual available time slots.",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3"
+            ],
+            "details": "Implement a data-fetching hook (e.g., using React Query) that triggers the Edge Function whenever the selected area or date changes. Use the response to dynamically render the time slots in the UI, disabling or hiding any times that are not available. Display a loading state during the fetch.",
+            "status": "pending",
+            "testStrategy": "Select an area and a date in the UI. Verify a network request is made to the Edge Function. Manually create bookings in the DB to block out slots and confirm the UI correctly disables those time slots."
+          },
+          {
+            "id": 5,
+            "title": "Finalize State Management and Navigation",
+            "description": "Ensure the selected area, date, and time are correctly saved to the booking stepper's global state and enable navigation to the next step.",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "Upon a user selecting a valid time slot, persist the `area_id`, `booking_date`, and `booking_time` to the central state management store. The 'Next' button on the stepper should be disabled until a valid location, date, and time have all been selected. On click, it should navigate the user to the 'Cleaner Selection' step.",
+            "status": "pending",
+            "testStrategy": "Complete the selection process for this step. Inspect the state management store to confirm all values are saved correctly. Click the 'Next' button and verify it successfully navigates to the next route in the booking flow."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Booking Flow Stepper: Cleaner Selection",
+        "description": "Develop the cleaner selection step, which displays a list of available cleaners for the chosen area and time slot. Include an option to auto-assign the best available cleaner.",
+        "details": "Based on the selected area and time slot from the previous step, query the database for cleaners who are available and serve that area. Display each cleaner in a card with their name, rating, and other details from the `cleaners` table. Implement the 'Auto-assign' logic, which can be a simple placeholder for now (e.g., picks the first available).",
+        "testStrategy": "Set up test data with cleaners assigned to specific areas and availability. Verify that only the correct cleaners appear for a given time slot and area. Test the selection and auto-assign options, ensuring the chosen cleaner ID is stored in the booking state.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Server Function to Fetch Available Cleaners",
+            "description": "Develop a database query or server function (e.g., Supabase Edge Function) to retrieve a list of cleaners who are available for a given area and time slot.",
+            "dependencies": [],
+            "details": "The function will accept `areaId` and a `dateTime` object as input. It must query the `cleaners` table, cross-referencing `cleaner_availability` and existing `bookings`, to filter for cleaners who serve the specified area and do not have a conflicting appointment at the selected time. The function should return an array of cleaner objects, including their ID, name, and rating.",
+            "status": "pending",
+            "testStrategy": "Invoke the function directly with various test cases: a valid slot with multiple available cleaners, a slot with one available cleaner, and a slot with no available cleaners. Verify the returned data is accurate."
+          },
+          {
+            "id": 2,
+            "title": "Build Cleaner Selection UI Components",
+            "description": "Develop the static frontend components for the cleaner selection step, including the main layout and a reusable 'CleanerCard' component.",
+            "dependencies": [],
+            "details": "Create the main component that will house the list of cleaners and the 'Auto-assign' option. Design and implement a 'CleanerCard' component that accepts cleaner data (name, rating, etc.) as props and displays it in a clear, user-friendly format. This subtask focuses on the visual structure without data integration.",
+            "status": "pending",
+            "testStrategy": "Use a component viewer like Storybook or run the app with mock data to ensure the 'CleanerCard' and the main layout render correctly with different data inputs and on various screen sizes."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Cleaner Data and Display List",
+            "description": "Connect the frontend UI to the server function to fetch and display the list of available cleaners based on the user's selections from the previous step.",
+            "dependencies": [
+              "9.1",
+              "9.2"
+            ],
+            "details": "In the main cleaner selection component, retrieve the `areaId` and `dateTimeSlot` from the booking state. Use these values to call the server function created in subtask 9.1. Render the returned list of cleaners using the 'CleanerCard' component. Implement loading states for when data is being fetched and an empty state message (e.g., 'No cleaners are available for this time slot') if the list is empty.",
+            "status": "pending",
+            "testStrategy": "Navigate to the cleaner selection step in the application. Verify that the loading indicator appears, followed by the correct list of cleaners for a pre-defined available slot. Test that the empty state message is shown for a slot with no availability."
+          },
+          {
+            "id": 4,
+            "title": "Implement Selection and 'Auto-Assign' Logic",
+            "description": "Enable users to select a cleaner or opt for auto-assignment, and update the central booking state with the chosen cleaner's ID.",
+            "dependencies": [
+              "9.3"
+            ],
+            "details": "Add click handlers to each 'CleanerCard' and the 'Auto-assign' button. When a card is clicked, store the corresponding `cleanerId` in the booking state. For 'Auto-assign', implement the placeholder logic to select the first cleaner from the available list and store their ID. The UI should provide visual feedback for the current selection.",
+            "status": "pending",
+            "testStrategy": "Click on a cleaner card and verify the booking state is updated with the correct `cleanerId`. Click the 'Auto-assign' button and confirm the state is updated with the ID of the first cleaner in the list. Ensure the UI highlights the selected option."
+          },
+          {
+            "id": 5,
+            "title": "Write Unit and Integration Tests for the Selection Step",
+            "description": "Develop a comprehensive test suite to ensure the reliability and correctness of the cleaner selection functionality.",
+            "dependencies": [
+              "9.4"
+            ],
+            "details": "Create unit tests for the 'Auto-assign' logic and the state update mechanism. Write integration tests that mock the server function's response and simulate user interaction. The tests should cover selecting a cleaner, using auto-assign, and handling the case where no cleaners are available, verifying that the component behaves as expected and the booking state is managed correctly.",
+            "status": "pending",
+            "testStrategy": "Run the test suite and ensure all tests pass. Manually set up test data in the database (cleaners, areas, availability) and perform end-to-end tests to confirm that only the correct cleaners appear for a given time slot and area, and that the selection is passed to the next step."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Booking Flow: Review & Paystack Payment Integration",
+        "description": "Create the final 'Review & Payment' step. It will show a full summary of the booking, collect customer contact info (for guests), and integrate Paystack for payment processing.",
+        "details": "Display all booking details from the stepper state. Implement a form for contact information. Use a server action to handle the final submission. On submission, call the Paystack API to initiate a transaction. Upon successful payment, save the complete record to the `bookings` table and redirect the user to a confirmation page (`/order/{short-id}`).",
+        "testStrategy": "Test the payment flow with Paystack's test keys. Verify that a successful payment creates a new record in the `bookings` table with the correct status. Test that a failed payment shows an error message and does not create a booking. Ensure the PRG pattern is followed.",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Build 'Review & Pay' UI Component",
+            "description": "Create the user interface for the final booking step. This component will render a complete summary of the booking details (service, extras, date, time, cleaner, total price) from the stepper state and include a form to collect guest contact information (name, email, phone number).",
+            "dependencies": [],
+            "details": "The component should be divided into two main sections: a read-only booking summary and a contact information form. The form must have client-side validation for required fields. The final submission button should be disabled until the form is valid. This component will serve as the container for the entire payment process.",
+            "status": "pending",
+            "testStrategy": "Visually inspect the component to ensure all data from the stepper state is displayed correctly in the summary. Test the contact form's validation by submitting empty or invalid data and verifying that appropriate error messages are shown and the submit button remains disabled."
+          },
+          {
+            "id": 2,
+            "title": "Implement Server Action to Initiate Paystack Transaction",
+            "description": "Create a server action that is triggered on form submission. This action will take the final booking details and customer contact info, then call the Paystack 'Initialize Transaction' API to create a new payment session.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "The server action must assemble the payload for the Paystack API, including the total amount, currency, customer email, and a `metadata` object containing all booking details for later verification. Upon a successful API call, the action should return the `authorization_url` provided by Paystack to the client.",
+            "status": "pending",
+            "testStrategy": "Using Paystack's test keys, invoke the server action with mock data. Verify that it successfully communicates with the Paystack API and returns a valid `authorization_url`. Test error handling for cases like an invalid API key or a malformed request."
+          },
+          {
+            "id": 3,
+            "title": "Handle Client-Side Redirection and Payment Flow",
+            "description": "Implement the client-side logic to manage the payment flow. After the server action returns the `authorization_url`, the client should redirect the user to the Paystack payment page. Also, create the final confirmation page component.",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "The form's submission handler will receive the `authorization_url` from the server action and use `window.location.href` to redirect the user. Create a new page component at `/order/[short-id]` which will serve as the booking confirmation page. This page will initially be a placeholder until the data-saving logic is complete.",
+            "status": "pending",
+            "testStrategy": "Trigger the payment process from the UI. Confirm that the browser correctly redirects to the Paystack URL. After completing the test payment on Paystack's side, ensure the browser is redirected back to the specified callback URL in your application."
+          },
+          {
+            "id": 4,
+            "title": "Create API Route to Verify Payment and Save Booking",
+            "description": "Implement a dedicated API route (or server action) to act as the callback handler for Paystack. This route will verify the transaction's status with Paystack and, if successful, save the complete booking record to the `bookings` table in Supabase.",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "The route will receive a `reference` from Paystack. It must use this reference to call Paystack's 'Verify Transaction' endpoint. If the payment status is 'success', extract the booking details from the transaction's metadata, generate a unique `short-id`, and insert the new record into the `bookings` table with a 'confirmed' status. The route should then redirect the user to the confirmation page: `/order/{short-id}`.",
+            "status": "pending",
+            "testStrategy": "Use a test transaction reference to hit the callback route. Verify that it correctly calls the Paystack verification API. For a successful reference, check the `bookings` table to confirm that a new record was created with all the correct data. Test with a failed reference to ensure no record is created."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Confirmation Page and Error Handling",
+            "description": "Complete the confirmation page (`/order/[short-id]`) by fetching and displaying the details of the newly created booking. Implement user-friendly error handling for failed or cancelled payments.",
+            "dependencies": [
+              "10.3",
+              "10.4"
+            ],
+            "details": "The confirmation page should use the `short-id` from the URL to query the `bookings` table and display a summary of the confirmed booking. For error handling, if the payment verification fails or the user cancels, they should be redirected back to the 'Review & Pay' step with a clear error message explaining what happened.",
+            "status": "pending",
+            "testStrategy": "Perform a full end-to-end test of a successful payment, ensuring the user lands on the confirmation page and sees the correct booking details. Perform another test where the payment is cancelled or fails on the Paystack page, and verify the user is returned to the payment form with an appropriate error message."
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Admin Portal: Core Management Dashboards",
+        "description": "Build the initial admin portal for managing core business data. This includes interfaces for CRUD operations on Services, Pricing (base, per-room, extras), and Locations (suburbs/zones).",
+        "details": "Create a new route group `/admin`. Protect these routes to only be accessible by users with the 'admin' role. Use shadcn/ui's `<DataTable>` component to build interfaces for managing `services`, `service_pricing`, `extras`, and `areas`. Use Server Actions for all create, update, and delete operations.",
+        "testStrategy": "Log in as an admin and verify access to the portal. Log in as a customer and verify access is denied. Test all CRUD operations for services, pricing, and locations. Confirm that changes made in the admin portal are reflected in the customer-facing booking flow.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Admin Route Group and Role-Based Access Control",
+            "description": "Create the `/admin` route group and implement middleware to protect all routes within it, ensuring they are only accessible to users with the 'admin' role.",
+            "dependencies": [],
+            "details": "Create a new route group `(admin)` inside the `app` directory. Modify the existing `middleware.ts` file to check the user's role from the `profiles` table for any request to `/admin/*`. If the user is not authenticated or does not have the 'admin' role, redirect them to the login page or homepage.",
+            "status": "pending",
+            "testStrategy": "Log in as a user with the 'admin' role and verify access to a placeholder `/admin` page. Log in as a 'customer' or 'cleaner' and verify you are redirected away from `/admin` routes. Attempt to access an admin route while logged out and confirm redirection to the login page."
+          },
+          {
+            "id": 2,
+            "title": "Admin Layout and Navigation",
+            "description": "Develop the main layout for the admin portal, including a sidebar or header with navigation links to the different management sections.",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create a `layout.tsx` file within the `app/(admin)` route group. This layout will serve as the shell for all admin pages. Implement a persistent sidebar using shadcn/ui components that includes navigation links for 'Services', 'Pricing', and 'Locations'. Create a main dashboard page at `/admin` that can serve as a landing page with quick links.",
+            "status": "pending",
+            "testStrategy": "Verify that the admin layout with the navigation sidebar is present on all pages under the `/admin` route. Test that clicking the navigation links routes the user to the correct (initially placeholder) pages."
+          },
+          {
+            "id": 3,
+            "title": "CRUD Interface for Services",
+            "description": "Implement the user interface and backend logic for creating, reading, updating, and deleting business services.",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create the page at `/admin/services`. Use the shadcn/ui `<DataTable>` component to fetch and display all records from the `services` table. Implement a `<Dialog>` with a form for creating new services and editing existing ones. Write and connect Server Actions for `createService`, `updateService`, and `deleteService` operations.",
+            "status": "pending",
+            "testStrategy": "On the `/admin/services` page, test the full CRUD lifecycle: create a new service and verify it appears in the table. Edit the service's details and confirm the update. Delete the service and ensure it is removed from the table and the database."
+          },
+          {
+            "id": 4,
+            "title": "CRUD Interface for Pricing and Extras",
+            "description": "Build the interfaces for managing base service pricing, per-room pricing, and optional add-on extras.",
+            "dependencies": [
+              "11.1",
+              "11.3"
+            ],
+            "details": "Create the page at `/admin/pricing`. Use a tabbed interface to separate management of `service_pricing` and `extras`. For each tab, use a `<DataTable>` to display the data. Implement forms within dialogs for creating/editing pricing rules (linking services to prices) and extras. Create the necessary Server Actions to handle all CRUD operations for both tables.",
+            "status": "pending",
+            "testStrategy": "Test creating a new pricing rule for a service. Update an existing price. Create a new 'extra' service. Delete an extra. Confirm that these changes are correctly reflected in the price calculation on the customer-facing booking form."
+          },
+          {
+            "id": 5,
+            "title": "CRUD Interface for Locations (Areas)",
+            "description": "Implement the UI and server logic for managing serviceable locations, such as suburbs or zones.",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create the page at `/admin/locations`. Use the shadcn/ui `<DataTable>` to display all entries from the `areas` table. Implement a simple form (e.g., in a dialog) for adding new areas (e.g., by suburb name and postcode). Create and connect Server Actions for creating and deleting areas.",
+            "status": "pending",
+            "testStrategy": "Add a new suburb/zone and verify it appears in the data table. Delete a zone. Check the customer-facing booking flow to ensure the new location is available for selection and the deleted one is no longer an option."
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Cleaner Portal: Dashboard and Job Management",
+        "description": "Develop the cleaner-facing portal where they can view and manage their assigned jobs. This includes a dashboard for today's and upcoming jobs, and actions to update job status.",
+        "details": "Create a new route group `/dashboard/cleaner`. Protect it for the 'cleaner' role. The dashboard should query the `bookings` table for jobs assigned to the logged-in cleaner. Implement buttons to trigger server actions that update the booking `status` field (e.g., 'On My Way', 'Arrived', 'Completed').",
+        "testStrategy": "Log in as a cleaner. Verify the dashboard only shows jobs assigned to that cleaner. Test the status update buttons and confirm the `status` field in the `bookings` table is updated in Supabase.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set Up Cleaner Dashboard Route and Authentication",
+            "description": "Create the Next.js route group `/dashboard/cleaner` and implement middleware to protect it, ensuring only users with the 'cleaner' role can access the pages within.",
+            "dependencies": [],
+            "details": "Using the project's middleware configuration (likely with `@supabase/auth-helpers-nextjs`), add a rule that checks the user's session and their role from the `profiles` table for any request to `/dashboard/cleaner/**`. Unauthenticated users or users without the 'cleaner' role should be redirected to the login page or an 'unauthorized' page.",
+            "status": "pending",
+            "testStrategy": "Log in as a 'customer' and attempt to navigate to `/dashboard/cleaner`; verify redirection. Log out and attempt to access the URL; verify redirection. Log in as a 'cleaner' and verify successful access."
+          },
+          {
+            "id": 2,
+            "title": "Develop Data Fetching Logic for Cleaner's Jobs",
+            "description": "Implement the server-side logic within the cleaner dashboard page to query the Supabase `bookings` table and retrieve all jobs assigned to the currently authenticated cleaner.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "In the main server component for the cleaner dashboard, get the logged-in user's ID from the Supabase session. Create a database query that selects all records from the `bookings` table where the `cleaner_id` column matches the user's ID. The query should also join with related tables (e.g., `services`, `profiles` for customer info) to get all necessary details for display. Order the results by date.",
+            "status": "pending",
+            "testStrategy": "Create test bookings in Supabase assigned to a specific test cleaner. Log in as that cleaner and verify that the page component's data fetching function returns only the assigned bookings. Log in as a different cleaner and verify they see their own jobs or an empty list."
+          },
+          {
+            "id": 3,
+            "title": "Build the UI for the Job Dashboard",
+            "description": "Design and implement the user interface for the cleaner dashboard, displaying the fetched job data in a clear and organized manner, separating today's jobs from upcoming ones.",
+            "dependencies": [
+              "12.2"
+            ],
+            "details": "Create a main dashboard layout component. Develop a 'JobCard' component that accepts a booking object as a prop and displays key information like customer name, address, service details, and scheduled time. In the main dashboard, process the fetched jobs to create two lists: 'Today's Jobs' and 'Upcoming Jobs', and render them accordingly using the 'JobCard' component.",
+            "status": "pending",
+            "testStrategy": "Render the dashboard page with mock data representing various jobs (today, future, different statuses). Verify that the UI correctly separates the jobs and that each 'JobCard' displays all required information accurately and is responsive on different screen sizes."
+          },
+          {
+            "id": 4,
+            "title": "Create Server Actions for Job Status Updates",
+            "description": "Implement the backend server actions required to securely update the `status` field of a booking in the Supabase database.",
+            "dependencies": [],
+            "details": "Create a new file for cleaner-related server actions. Define functions like `updateBookingStatus(bookingId, newStatus)`. Inside each action, first, get the current user's ID. Before updating, perform a security check to ensure the booking `bookingId` is actually assigned to the current cleaner. If authorized, update the `status` field in the `bookings` table for the given `bookingId`. Implement revalidation (`revalidatePath`) to refresh the dashboard data.",
+            "status": "pending",
+            "testStrategy": "Manually invoke the server actions with valid parameters (correct cleaner and booking ID) and verify the status is updated in Supabase. Test failure cases by invoking the action for a booking not assigned to the current user and confirm no update occurs and an error is returned."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Status Update Buttons with Server Actions",
+            "description": "Add action buttons to the job card UI and connect them to the corresponding server actions, allowing cleaners to manage their job status directly from the dashboard.",
+            "dependencies": [
+              "12.3",
+              "12.4"
+            ],
+            "details": "Modify the 'JobCard' component to be a client component. Add buttons for status changes like 'On My Way', 'Arrived', and 'Completed'. Wrap these buttons in a `<form>` and use the `formAction` attribute to call the appropriate server action from subtask 12.4. Conditionally render or disable buttons based on the current job status (e.g., 'Arrived' button is only active if status is 'On My Way').",
+            "status": "pending",
+            "testStrategy": "As a logged-in cleaner, navigate the dashboard. Click the 'On My Way' button for a job. Verify the page refreshes and the job's status and available actions are updated. Check the `bookings` table in Supabase to confirm the `status` field was changed correctly. Repeat for all status transitions."
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement SEO Best Practices and URL Structure",
+        "description": "Ensure the application adheres to the SEO and URL structure defined in the PRD. This includes creating a `robots.txt` file, generating a sitemap, and setting up canonical URLs.",
+        "details": "Create a `robots.txt` file in the `public` directory to disallow crawling of transactional routes like `/book/`, `/q/`, and `/order/`. Use Next.js's built-in sitemap generation (`sitemap.ts`) to create a dynamic sitemap for static pages, services, and blog posts. Use the `metadata` object in page layouts to set canonical URLs and other meta tags.",
+        "testStrategy": "Check the live site for `/robots.txt` and `/sitemap.xml` and verify their contents are correct. Use browser developer tools to inspect the `<head>` of various pages and confirm that `canonical` links and other meta tags are correctly set.",
+        "priority": "low",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create `robots.txt` to Manage Crawler Access",
+            "description": "Create a `robots.txt` file in the `public` directory to specify which routes should not be crawled by search engines and to provide the location of the sitemap.",
+            "dependencies": [],
+            "details": "Create a new file at `public/robots.txt`. Add `User-agent: *` followed by `Disallow` rules for transactional paths: `/book/`, `/q/`, and `/order/`. Include a `Sitemap` directive pointing to the absolute URL of the sitemap, e.g., `Sitemap: https://[your-domain]/sitemap.xml`.",
+            "status": "pending",
+            "testStrategy": "After deployment, navigate to `/robots.txt` in a browser and verify that the content correctly disallows the specified routes and includes the sitemap URL."
+          },
+          {
+            "id": 2,
+            "title": "Generate Sitemap for Static Pages",
+            "description": "Implement the initial `sitemap.ts` file to automatically generate a sitemap for the application's core static pages like the homepage, 'How It Works', and 'Contact'.",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "Using Next.js's file-based metadata API, create an `app/sitemap.ts` file. This file will export a default function that returns an array of sitemap entries for static routes (`/`, `/how-it-works`, `/contact`). Set appropriate `lastModified`, `changeFrequency`, and `priority` values for each.",
+            "status": "pending",
+            "testStrategy": "After deployment, navigate to `/sitemap.xml` and verify that the URLs for the static pages are present and correctly formatted according to the sitemap protocol."
+          },
+          {
+            "id": 3,
+            "title": "Extend Sitemap for Dynamic Content (Services and Blog Posts)",
+            "description": "Enhance the `sitemap.ts` file to dynamically generate URLs for all services and blog posts by fetching their data from Supabase.",
+            "dependencies": [
+              "13.2"
+            ],
+            "details": "Modify the function in `app/sitemap.ts` to be asynchronous. Add logic to fetch all published `services` and `blog_posts` from the Supabase database. Map over the fetched data to create and append sitemap entries for each dynamic URL (e.g., `/services/[slug]`, `/blog/[slug]`) to the array of static page entries.",
+            "status": "pending",
+            "testStrategy": "Add, update, or remove a service or blog post in Supabase. Re-check `/sitemap.xml` to confirm that the sitemap is updated with the correct URLs and `lastModified` dates."
+          },
+          {
+            "id": 4,
+            "title": "Implement Base Metadata and Canonical URL Foundation in Root Layout",
+            "description": "Configure the root layout (`app/layout.tsx`) to set application-wide metadata defaults, including a title template and the base URL for resolving canonical links.",
+            "dependencies": [],
+            "details": "In `app/layout.tsx`, export a `metadata` object. Define a `title.template` (e.g., '%s | Shalean') and a default site `description`. Add a `metadataBase` property with the production `URL` object to ensure all relative canonical and Open Graph URLs resolve to absolute paths.",
+            "status": "pending",
+            "testStrategy": "Using browser developer tools, inspect the `<head>` of any page. Verify the presence of the `<title>` tag with the correct template format. Confirm that relative meta links would resolve to an absolute URL."
+          },
+          {
+            "id": 5,
+            "title": "Set Page-Specific Metadata and Canonical URLs",
+            "description": "Implement dynamic and static metadata generation for all pages, including unique titles, descriptions, and canonical URLs.",
+            "dependencies": [
+              "13.4"
+            ],
+            "details": "For static pages (e.g., `app/contact/page.tsx`), export a `metadata` object with a specific `title`, `description`, and `alternates: { canonical: '/contact' }`. For dynamic pages (e.g., `app/blog/[slug]/page.tsx`), implement the `generateMetadata` function to fetch data and return a dynamic `title`, `description`, and `alternates: { canonical: '/blog/[slug]' }`.",
+            "status": "pending",
+            "testStrategy": "Navigate to the homepage, a service page, and a blog post page. For each, use developer tools to inspect the `<head>` and confirm that the `<title>`, `<meta name=\"description\">`, and `<link rel=\"canonical\">` tags are present, unique, and accurate for that specific page."
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Integrate Email Service for Notifications",
+        "description": "Integrate an email service provider (e.g., Resend) to send transactional emails, starting with the booking confirmation email.",
+        "details": "Install the Resend SDK. Add API keys to environment variables. Create a server action or API route that is triggered after a successful booking is saved (Task 10). This action will use Resend to send a confirmation email to the customer with their booking details. Use a library like React Email to build email templates.",
+        "testStrategy": "After completing a test booking, check the recipient's inbox (or a service like Mailtrap) to verify the confirmation email was sent. Check the email content to ensure it's correctly populated with the booking details.",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set Up Resend and React Email Environment",
+            "description": "Configure the project to use Resend for sending emails and React Email for templating. This includes signing up for the service, obtaining API keys, and installing the required libraries.",
+            "dependencies": [],
+            "details": "Sign up for a Resend account and generate an API key. Install the `resend` and `react-email` npm packages. Add the Resend API key to the project's environment variables (`.env.local`) as `RESEND_API_KEY`.",
+            "status": "pending",
+            "testStrategy": "Verify that the environment variables are loaded correctly by the application and that the installed packages do not cause build errors."
+          },
+          {
+            "id": 2,
+            "title": "Create Booking Confirmation Email Template",
+            "description": "Develop a reusable React component for the booking confirmation email using the React Email library. The template should be designed to accept dynamic booking data.",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Create a new file, e.g., `/emails/BookingConfirmation.tsx`. Design the email layout to include placeholders for customer name, booking ID, service details, date, time, and total price. Style the email for a professional appearance using React Email components.",
+            "status": "pending",
+            "testStrategy": "Use the React Email development server to preview the email template. Pass mock data as props to the component to ensure it renders correctly and is visually appealing."
+          },
+          {
+            "id": 3,
+            "title": "Implement Email Sending Server Action",
+            "description": "Create a dedicated server action that takes booking data, renders the email template to HTML, and uses the Resend SDK to dispatch the email.",
+            "dependencies": [
+              "14.1",
+              "14.2"
+            ],
+            "details": "Create a new server action file (e.g., `app/actions/send-booking-confirmation.ts`). This action will accept an object containing booking and customer details. It will import the `BookingConfirmation` template, render it to an HTML string using React Email's `render` function, and then call `resend.emails.send()` with the recipient's email, subject line, and the rendered HTML.",
+            "status": "pending",
+            "testStrategy": "Create a temporary test script or a simple API route to trigger this action with mock data and verify that an email is sent successfully to a test address like Mailtrap."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Email Action into Booking Flow",
+            "description": "Modify the booking finalization logic to trigger the email sending action immediately after a new booking is successfully saved to the database.",
+            "dependencies": [
+              "14.3"
+            ],
+            "details": "In the server action or API route that handles the final step of a booking (related to Task 10), locate the point after the database insertion is confirmed successful. At this point, call the `sendBookingConfirmation` server action created in the previous subtask. Pass the relevant data from the newly created booking record and associated user.",
+            "status": "pending",
+            "testStrategy": "Add logging before and after the email action is called within the booking finalization logic. Run a test booking and check the server logs to confirm the action was triggered with the correct data payload."
+          },
+          {
+            "id": 5,
+            "title": "End-to-End Test of Booking Confirmation Email",
+            "description": "Conduct a full test of the booking and email notification flow to ensure the confirmation email is correctly sent, received, and populated with accurate data.",
+            "dependencies": [
+              "14.4"
+            ],
+            "details": "Using a test user account, complete the entire booking flow in the application. The test should trigger the database write and the subsequent email notification.",
+            "status": "pending",
+            "testStrategy": "Check the recipient's inbox (or a service like Mailtrap) to verify the confirmation email was received promptly. Scrutinize the email's subject, sender, and body content. Confirm that all dynamic fields (customer name, booking details, price) match the data from the test booking."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-12T12:57:51.800Z",
+      "updated": "2025-09-12T12:57:51.800Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

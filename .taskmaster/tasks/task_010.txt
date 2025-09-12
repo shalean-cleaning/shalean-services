@@ -1,0 +1,43 @@
+# Task ID: 10
+# Title: Booking Flow: Review & Paystack Payment Integration
+# Status: pending
+# Dependencies: 9
+# Priority: high
+# Description: Create the final 'Review & Payment' step. It will show a full summary of the booking, collect customer contact info (for guests), and integrate Paystack for payment processing.
+# Details:
+Display all booking details from the stepper state. Implement a form for contact information. Use a server action to handle the final submission. On submission, call the Paystack API to initiate a transaction. Upon successful payment, save the complete record to the `bookings` table and redirect the user to a confirmation page (`/order/{short-id}`).
+
+# Test Strategy:
+Test the payment flow with Paystack's test keys. Verify that a successful payment creates a new record in the `bookings` table with the correct status. Test that a failed payment shows an error message and does not create a booking. Ensure the PRG pattern is followed.
+
+# Subtasks:
+## 1. Build 'Review & Pay' UI Component [pending]
+### Dependencies: None
+### Description: Create the user interface for the final booking step. This component will render a complete summary of the booking details (service, extras, date, time, cleaner, total price) from the stepper state and include a form to collect guest contact information (name, email, phone number).
+### Details:
+The component should be divided into two main sections: a read-only booking summary and a contact information form. The form must have client-side validation for required fields. The final submission button should be disabled until the form is valid. This component will serve as the container for the entire payment process.
+
+## 2. Implement Server Action to Initiate Paystack Transaction [pending]
+### Dependencies: 10.1
+### Description: Create a server action that is triggered on form submission. This action will take the final booking details and customer contact info, then call the Paystack 'Initialize Transaction' API to create a new payment session.
+### Details:
+The server action must assemble the payload for the Paystack API, including the total amount, currency, customer email, and a `metadata` object containing all booking details for later verification. Upon a successful API call, the action should return the `authorization_url` provided by Paystack to the client.
+
+## 3. Handle Client-Side Redirection and Payment Flow [pending]
+### Dependencies: 10.2
+### Description: Implement the client-side logic to manage the payment flow. After the server action returns the `authorization_url`, the client should redirect the user to the Paystack payment page. Also, create the final confirmation page component.
+### Details:
+The form's submission handler will receive the `authorization_url` from the server action and use `window.location.href` to redirect the user. Create a new page component at `/order/[short-id]` which will serve as the booking confirmation page. This page will initially be a placeholder until the data-saving logic is complete.
+
+## 4. Create API Route to Verify Payment and Save Booking [pending]
+### Dependencies: 10.2
+### Description: Implement a dedicated API route (or server action) to act as the callback handler for Paystack. This route will verify the transaction's status with Paystack and, if successful, save the complete booking record to the `bookings` table in Supabase.
+### Details:
+The route will receive a `reference` from Paystack. It must use this reference to call Paystack's 'Verify Transaction' endpoint. If the payment status is 'success', extract the booking details from the transaction's metadata, generate a unique `short-id`, and insert the new record into the `bookings` table with a 'confirmed' status. The route should then redirect the user to the confirmation page: `/order/{short-id}`.
+
+## 5. Finalize Confirmation Page and Error Handling [pending]
+### Dependencies: 10.3, 10.4
+### Description: Complete the confirmation page (`/order/[short-id]`) by fetching and displaying the details of the newly created booking. Implement user-friendly error handling for failed or cancelled payments.
+### Details:
+The confirmation page should use the `short-id` from the URL to query the `bookings` table and display a summary of the confirmed booking. For error handling, if the payment verification fails or the user cancels, they should be redirected back to the 'Review & Pay' step with a clear error message explaining what happened.
+

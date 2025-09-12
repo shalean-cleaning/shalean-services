@@ -1,0 +1,43 @@
+# Task ID: 11
+# Title: Admin Portal: Core Management Dashboards
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Build the initial admin portal for managing core business data. This includes interfaces for CRUD operations on Services, Pricing (base, per-room, extras), and Locations (suburbs/zones).
+# Details:
+Create a new route group `/admin`. Protect these routes to only be accessible by users with the 'admin' role. Use shadcn/ui's `<DataTable>` component to build interfaces for managing `services`, `service_pricing`, `extras`, and `areas`. Use Server Actions for all create, update, and delete operations.
+
+# Test Strategy:
+Log in as an admin and verify access to the portal. Log in as a customer and verify access is denied. Test all CRUD operations for services, pricing, and locations. Confirm that changes made in the admin portal are reflected in the customer-facing booking flow.
+
+# Subtasks:
+## 1. Setup Admin Route Group and Role-Based Access Control [pending]
+### Dependencies: None
+### Description: Create the `/admin` route group and implement middleware to protect all routes within it, ensuring they are only accessible to users with the 'admin' role.
+### Details:
+Create a new route group `(admin)` inside the `app` directory. Modify the existing `middleware.ts` file to check the user's role from the `profiles` table for any request to `/admin/*`. If the user is not authenticated or does not have the 'admin' role, redirect them to the login page or homepage.
+
+## 2. Admin Layout and Navigation [pending]
+### Dependencies: 11.1
+### Description: Develop the main layout for the admin portal, including a sidebar or header with navigation links to the different management sections.
+### Details:
+Create a `layout.tsx` file within the `app/(admin)` route group. This layout will serve as the shell for all admin pages. Implement a persistent sidebar using shadcn/ui components that includes navigation links for 'Services', 'Pricing', and 'Locations'. Create a main dashboard page at `/admin` that can serve as a landing page with quick links.
+
+## 3. CRUD Interface for Services [pending]
+### Dependencies: 11.1
+### Description: Implement the user interface and backend logic for creating, reading, updating, and deleting business services.
+### Details:
+Create the page at `/admin/services`. Use the shadcn/ui `<DataTable>` component to fetch and display all records from the `services` table. Implement a `<Dialog>` with a form for creating new services and editing existing ones. Write and connect Server Actions for `createService`, `updateService`, and `deleteService` operations.
+
+## 4. CRUD Interface for Pricing and Extras [pending]
+### Dependencies: 11.1, 11.3
+### Description: Build the interfaces for managing base service pricing, per-room pricing, and optional add-on extras.
+### Details:
+Create the page at `/admin/pricing`. Use a tabbed interface to separate management of `service_pricing` and `extras`. For each tab, use a `<DataTable>` to display the data. Implement forms within dialogs for creating/editing pricing rules (linking services to prices) and extras. Create the necessary Server Actions to handle all CRUD operations for both tables.
+
+## 5. CRUD Interface for Locations (Areas) [pending]
+### Dependencies: 11.1
+### Description: Implement the UI and server logic for managing serviceable locations, such as suburbs or zones.
+### Details:
+Create the page at `/admin/locations`. Use the shadcn/ui `<DataTable>` to display all entries from the `areas` table. Implement a simple form (e.g., in a dialog) for adding new areas (e.g., by suburb name and postcode). Create and connect Server Actions for creating and deleting areas.
+

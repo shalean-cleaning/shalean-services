@@ -1,0 +1,43 @@
+# Task ID: 5
+# Title: Implement Dynamic Homepage Content
+# Status: pending
+# Dependencies: 2, 4
+# Priority: high
+# Description: Develop the components for the homepage and fetch their content dynamically from Supabase. This includes the Hero section, 'How It Works' steps, 'Why Choose Shalean' features, Team grid, Blog Preview, and Testimonials.
+# Details:
+Create separate server components for each section. Fetch data from Supabase tables like `team_members`, `testimonials`, and `blog_posts`. For the 'How It Works' and 'Why Choose Shalean' sections, create a generic `content_blocks` table in Supabase to store this data. Use Next.js Image component for optimized image loading.
+
+# Test Strategy:
+Verify that all homepage sections render with data fetched from Supabase. Add, edit, and delete content in Supabase and confirm the homepage updates on the next load. Check browser network tab to ensure images are optimized.
+
+# Subtasks:
+## 1. Define `content_blocks` Table and Seed Homepage Data [pending]
+### Dependencies: None
+### Description: Create the `content_blocks` table in Supabase for storing generic homepage content like for the 'How It Works' and 'Why Choose Us' sections. Seed this table, along with `team_members`, `testimonials`, and `blog_posts`, with initial data for development.
+### Details:
+The `content_blocks` table should include columns for `id`, `section_key` (e.g., 'hero', 'how-it-works'), `title`, `description`, `icon_name`, and an `order` field. Use the Supabase SQL editor or a migration file to create the table. Populate all relevant tables with 3-5 sample records each.
+
+## 2. Build 'How It Works' and 'Why Choose Us' Components [pending]
+### Dependencies: 5.1
+### Description: Create two separate server components, `HowItWorks.tsx` and `WhyChooseUs.tsx`. Both components will fetch their respective content from the `content_blocks` table based on a unique `section_key`.
+### Details:
+Create a Supabase client helper function for server-side data fetching. In each component, query the `content_blocks` table, filtering by the appropriate `section_key` (e.g., 'how-it-works') and ordering by the `order` column. Render the fetched data (title, description, icon) in a card-based or step-by-step layout.
+
+## 3. Build Team Grid and Testimonials Components [pending]
+### Dependencies: 5.1
+### Description: Develop the `TeamGrid.tsx` and `Testimonials.tsx` server components. These components will fetch and display data from the `team_members` and `testimonials` tables, respectively.
+### Details:
+For the `TeamGrid`, fetch all members and display their name, role, and image using the Next.js `Image` component for optimization. For `Testimonials`, fetch all entries and display the quote, author's name, and role. Consider implementing a simple slider or carousel for the testimonials.
+
+## 4. Build Hero Section and Blog Preview Components [pending]
+### Dependencies: 5.1
+### Description: Create the `Hero.tsx` and `BlogPreview.tsx` server components. The Hero will display primary marketing content, and the Blog Preview will show the most recent posts.
+### Details:
+The `Hero` component will fetch its content (headline, sub-headline, CTA text) from the `content_blocks` table using the 'hero' key. The `BlogPreview` component will fetch the 3 most recent posts from the `blog_posts` table by ordering by `created_at` descending and applying a `limit(3)`. Use Next.js `Image` for any background or post images.
+
+## 5. Assemble Homepage and Finalize Layout [pending]
+### Dependencies: 5.2, 5.3, 5.4
+### Description: Integrate all the newly created section components (`Hero`, `HowItWorks`, `WhyChooseUs`, `TeamGrid`, `Testimonials`, `BlogPreview`) into the main homepage file (`app/page.tsx`).
+### Details:
+In `app/page.tsx`, import and arrange all the section components in the correct visual order. Ensure the page is wrapped in the global layout to include the header and footer. The page itself should be a server component to allow its children to fetch data.
+

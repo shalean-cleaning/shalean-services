@@ -1,0 +1,43 @@
+# Task ID: 8
+# Title: Booking Flow Stepper: Location & Date/Time Selection
+# Status: pending
+# Dependencies: 7
+# Priority: high
+# Description: Implement the location and scheduling step of the booking flow. Users will select their area/suburb from a dynamic list and choose an available date and time slot.
+# Details:
+Fetch the list of service areas from the `areas` table. Create a date and time picker component. The core logic involves querying for available slots by cross-referencing `cleaner_availability` and existing `bookings` for the selected area and date. This may require a Supabase Edge Function for performance.
+
+# Test Strategy:
+Confirm the area dropdown is populated from the DB. Test the date picker to ensure it correctly disables unavailable dates/times. Manually create bookings in the DB to block out slots and verify the UI reflects this.
+
+# Subtasks:
+## 1. Create Area/Suburb Selection Component [pending]
+### Dependencies: None
+### Description: Develop the UI component for users to select their service area. This component will fetch and display a list of all available areas from the database.
+### Details:
+Implement a searchable dropdown or select input that is populated on component mount by fetching data from the `areas` table in Supabase. The selected `area_id` must be stored in the booking flow's shared state.
+
+## 2. Implement Date and Time Picker UI Components [pending]
+### Dependencies: None
+### Description: Build the user interface for selecting a booking date and time. This includes a calendar for date selection and a separate component to display time slots for the chosen date.
+### Details:
+Use a calendar library (e.g., react-day-picker) for the date selection part. Create a grid or list component to display time slots. Initially, this can be a static display; it will be made dynamic in a later subtask. The components should update the booking state upon user selection.
+
+## 3. Develop Supabase Edge Function for Slot Availability [pending]
+### Dependencies: None
+### Description: Create a performant Supabase Edge Function to calculate and return available time slots for a given area and date.
+### Details:
+The function will accept `area_id` and `date` as input. It must query `cleaner_availability` to find cleaners available on that day who serve the area, and then filter out time slots that are already taken by existing `bookings`. The function should return an array of available time strings (e.g., '09:00', '11:00').
+
+## 4. Integrate Availability Logic with Date/Time Picker [pending]
+### Dependencies: 8.1, 8.2, 8.3
+### Description: Connect the Date/Time Picker UI to the Supabase Edge Function. When a user selects a date, the frontend will call the function to fetch and display the actual available time slots.
+### Details:
+Implement a data-fetching hook (e.g., using React Query) that triggers the Edge Function whenever the selected area or date changes. Use the response to dynamically render the time slots in the UI, disabling or hiding any times that are not available. Display a loading state during the fetch.
+
+## 5. Finalize State Management and Navigation [pending]
+### Dependencies: 8.4
+### Description: Ensure the selected area, date, and time are correctly saved to the booking stepper's global state and enable navigation to the next step.
+### Details:
+Upon a user selecting a valid time slot, persist the `area_id`, `booking_date`, and `booking_time` to the central state management store. The 'Next' button on the stepper should be disabled until a valid location, date, and time have all been selected. On click, it should navigate the user to the 'Cleaner Selection' step.
+

@@ -1,0 +1,278 @@
+Product Requirements Document (PRD) – Shalean Cleaning Services Web Application
+1. Objective
+
+Build a responsive, dynamic, SEO-optimized, and secure web application for Shalean Cleaning Services, enabling customers to book services easily, admins to manage operations and pricing, and cleaners to manage assigned jobs.
+
+Key Principles
+
+No hardcoded data: all services, pricing, extras, content, locations, and cleaner data must be stored in Supabase and fetched dynamically.
+
+Fast performance: load time ≤ 2 seconds; optimized queries, caching, and lazy loading.
+
+SEO & clean URLs: short, crawl-friendly, canonical URLs; no sensitive data in URLs.
+
+Secure by design: sessions/cookies for state, no tokens/PII in query strings, all payments via Paystack.
+
+2. Features
+2.1 Customer Portal
+Homepage (Dynamic)
+
+Header: Home, Services, How It Works, Blog, Contact, Login/Signup, Book Now.
+
+Hero Section: Headline, tagline, background image.
+
+CTAs: Book a Cleaner, Get a Free Quote, Apply to Work.
+
+How It Works: 3–4 steps (Select Service → Book → Cleaner Arrives → Relax).
+
+Why Choose Shalean: Trusted Cleaners, Affordable Prices, Flexible Scheduling, 100% Satisfaction Guarantee.
+
+Our Team: Dynamic grid of team members (name, role, photo, bio).
+
+Blog Preview: Latest 3–4 posts.
+
+Testimonials: Dynamic reviews.
+
+Footer: Quick links, contact info, social media icons.
+
+Quick Quote Flow
+
+URL: /quote (SEO landing) or modal ?quote=open.
+
+Steps:
+
+Service + Rooms
+
+Extras
+
+Frequency + Location
+
+Live total: base + rooms + extras + discounts + fees.
+
+Output: price breakdown + “What’s included.”
+
+CTAs: Continue to Booking (prefilled) or Email me this Quote.
+
+State: stored in DB (quotes table), not exposed in URL.
+
+Booking Flow (Stepper)
+
+Service
+
+URL: /book/{service-slug}
+
+Shows service details (features, duration, base fee).
+
+User confirms or changes service.
+
+Rooms & Extras
+
+Bedrooms (0–10), Bathrooms (0–10).
+
+Extras (dynamic checkboxes with prices).
+
+Live price updates.
+
+Location & Date/Time
+
+Select suburb/area (from DB).
+
+Enter address.
+
+Choose date & time (available slots only).
+
+Cleaner Selection
+
+List of available cleaners for area & slot.
+
+Cleaner cards: name, rating, completed jobs, badges.
+
+Option: “Auto-assign best available.”
+
+Review & Payment
+
+Sticky summary (desktop), collapsible FAB (mobile).
+
+Contact info (guest allowed).
+
+Apply promo code.
+
+Paystack checkout → save booking → send confirmation email.
+
+2.2 Cleaner Portal
+
+Dashboard: list of today’s & upcoming jobs.
+
+Actions: accept/decline, update status (On My Way, Arrived, Completed).
+
+Availability: set working hours + service areas.
+
+Ratings: view feedback.
+
+Profile Management: update contact info & availability.
+
+2.3 Admin Portal
+
+Dashboard: overview of bookings, payments, cleaners.
+
+Booking Management: create, edit, reassign bookings.
+
+Pricing Management:
+
+Base service fee.
+
+Per-bedroom/bathroom pricing.
+
+Extras.
+
+Frequency discounts.
+
+Service fees.
+
+Area-based adjustments.
+
+Cleaner Management: add/edit cleaners, manage availability, assign service areas.
+
+Location Management: add/edit suburbs or zones.
+
+Customer Management: view bookings, payments, profiles.
+
+Content Management: homepage blocks, team, blog.
+
+Reports & Analytics: revenue, popular services, bookings by location.
+
+3. Technical Requirements
+Frontend
+
+Framework: Next.js (App Router).
+
+UI: TailwindCSS + shadcn/ui.
+
+Performance: ISR for blogs, SWR caching for pricing/locations, parallel fetches.
+
+Stepper: dynamic booking flow with sticky summary.
+
+Backend
+
+Supabase: Postgres DB, Auth, Storage, Edge Functions.
+
+Payments: Paystack integration.
+
+Emails: Resend/Postmark.
+
+Cleaner availability: queried via DB + edge function.
+
+Security: RLS for multi-role safety.
+
+Database Schema (Core Tables)
+
+services (id, slug, name, description, base_fee, active)
+
+service_pricing (service_id, per_bedroom, per_bathroom, service_fee_flat, service_fee_pct, active_from/to)
+
+extras (id, slug, name, description, price, active)
+
+service_extras (service_id, extra_id, required)
+
+frequency_discounts (frequency, discount_pct, active_from/to)
+
+areas (id, slug, name, price_adjustment_pct, active)
+
+cleaners (id, name, contact_info, bio, rating, active)
+
+cleaner_areas (cleaner_id, area_id)
+
+cleaner_availability (cleaner_id, day_of_week, start_time, end_time, is_available)
+
+service_features (service_id, label, sort_order)
+
+bookings (id, customer_id, service_id, bedrooms, bathrooms, extras[], frequency, area_id, cleaner_id, total_price, status, created_at)
+
+quotes (id, service_id, bedrooms, bathrooms, extras[], frequency, area_id, total_estimate, email, created_at)
+
+4. URL Design & Security
+SEO-friendly routes (indexable)
+
+Home: /
+
+Services list: /services
+
+Service page: /services/{slug}
+
+Blog: /blog and /blog/{slug}
+
+How it Works: /how-it-works
+
+Contact: /contact
+
+Careers: /careers/apply
+
+Quote landing: /quote
+
+Transactional routes (noindex)
+
+Booking: /book/{service-slug}
+
+Quote detail: /q/{short-id} (opaque, no PII)
+
+Booking confirmation: /order/{short-id}
+
+Security rules
+
+Never include PII or secrets in URLs (no emails, phone, tokens).
+
+State stored in sessions, DB, or short opaque IDs.
+
+All sensitive actions use POST.
+
+Confirmation pages follow PRG (Post-Redirect-Get).
+
+robots.txt: disallow /book/, /q/, /order/, /api/.
+
+5. User Roles & Permissions
+
+Customer: book services, select location/cleaner, manage bookings.
+
+Cleaner: manage assigned jobs, set availability, edit profile.
+
+Admin: manage services, pricing, locations, cleaners, content, and reports.
+
+6. Success Metrics
+
+Booking completion ≤ 3 minutes.
+
+Page load ≤ 2s.
+
+Bounce rate ↓ on homepage.
+
+Conversion ↑ with Quick Quote & Cleaner Selection.
+
+Cleaner utilization ≥ 80%.
+
+Customer satisfaction ≥ 4.5/5.
+
+7. Future Enhancements (Phase 2)
+
+Recurring bookings (weekly, bi-weekly, monthly).
+
+Referral program (refer & earn).
+
+Cleaner GPS navigation.
+
+Auto-assign algorithm for cleaner matching.
+
+Mobile apps (React Native).
+
+✅ This PRD now fully covers:
+
+Homepage design blocks
+
+Quick Quote flow
+
+Booking form with service → rooms/extras → location → cleaner → payment
+
+Dynamic pricing & locations
+
+Cleaner availability
+
+SEO-friendly URLs & security

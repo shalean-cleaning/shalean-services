@@ -1,0 +1,43 @@
+# Task ID: 2
+# Title: Implement Database Schema in Supabase
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create all required database tables in Supabase as specified in the PRD. This includes `services`, `service_pricing`, `extras`, `areas`, `cleaners`, `bookings`, `quotes`, and all related join tables.
+# Details:
+Use the Supabase SQL editor or migrations to define the schema. Ensure all columns, data types, foreign key relationships, and constraints match the PRD. Set up Row Level Security (RLS) policies for basic access control, starting with public read access for non-sensitive tables like `services` and `areas`.
+
+# Test Strategy:
+Manually inspect the schema in the Supabase dashboard. Write simple SQL queries to insert and select data from each table to ensure relationships are correctly configured. Verify that initial RLS policies are active.
+
+# Subtasks:
+## 1. Create Core Service and Public Content Tables [pending]
+### Dependencies: None
+### Description: Define the schema for tables that store the company's core service offerings, pricing, geographic areas, and public-facing website content. These tables are generally non-sensitive and foundational for the application.
+### Details:
+Using the Supabase SQL editor, create the following tables: `services`, `service_pricing`, `extras`, `areas`, `testimonials`, `blog_posts`, and `content_blocks`. Define all columns, data types, and primary keys as specified in the PRD.
+
+## 2. Define User, Profile, and Staff Tables [pending]
+### Dependencies: None
+### Description: Implement the database tables required for user authentication, role management, and staff information. This includes the custom `profiles` table that extends Supabase's built-in `auth.users` table.
+### Details:
+Create the `profiles` table with a primary key that is also a one-to-one foreign key to `auth.users.id`. Add a `role` column with a CHECK constraint for 'customer', 'cleaner', or 'admin'. Create the `cleaners` and `team_members` tables for staff-specific information.
+
+## 3. Implement Transactional and Scheduling Tables [pending]
+### Dependencies: 2.1, 2.2
+### Description: Create the tables for managing customer quotes, bookings, cleaner schedules, and the relationships between them. These tables form the core of the application's business logic.
+### Details:
+Define the schema for `quotes`, `bookings`, and `cleaner_availability`. Create necessary join tables, such as `booking_extras`, to link bookings to selected extras. These tables will have foreign key references to tables created in previous subtasks (e.g., `profiles`, `services`, `areas`).
+
+## 4. Apply All Foreign Key Constraints and Relationships [pending]
+### Dependencies: 2.3
+### Description: Systematically apply all foreign key constraints to establish the relationships between all created tables, ensuring relational integrity across the database schema.
+### Details:
+Using `ALTER TABLE` statements, add all foreign key constraints specified in the PRD. For example, link `bookings.user_id` to `profiles.id`, `service_pricing.service_id` to `services.id`, and `cleaner_availability.cleaner_id` to `cleaners.id`. Add any remaining `NOT NULL` or other constraints.
+
+## 5. Configure Initial Row Level Security (RLS) Policies [pending]
+### Dependencies: 2.4
+### Description: Set up the initial set of Row Level Security (RLS) policies to enable basic access control, starting with public read access for non-sensitive tables.
+### Details:
+Enable RLS on all tables. Create a `POLICY` for public read-only (`SELECT`) access for the `anon` role on `services`, `areas`, `testimonials`, and `blog_posts`. Create a basic policy allowing authenticated users to read their own data in the `profiles` table.
+

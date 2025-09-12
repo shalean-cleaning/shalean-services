@@ -1,0 +1,43 @@
+# Task ID: 6
+# Title: Develop Quick Quote Flow
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create the Quick Quote component, which can be triggered as a modal or on the `/quote` page. It will allow users to select a service, rooms, extras, and location to see a live price estimate.
+# Details:
+The component will fetch pricing data from `service_pricing`, `extras`, and `areas`. Implement client-side state management (e.g., `useState` or `useReducer`) to calculate the total in real-time. On 'Email me this Quote', save the configuration and email to the `quotes` table in Supabase. The 'Continue to Booking' CTA should redirect to the booking flow with the state pre-filled.
+
+# Test Strategy:
+Test all combinations of inputs and verify the live total is calculated correctly. Test the 'Email me this Quote' functionality and confirm a new record appears in the `quotes` table. Ensure the 'Continue to Booking' CTA works as expected.
+
+# Subtasks:
+## 1. Build Quick Quote UI and Fetch Pricing Data [pending]
+### Dependencies: None
+### Description: Create the user interface for the Quick Quote component, including selectors for service, rooms, extras, and location. Implement the data fetching logic to retrieve all necessary pricing and area information from the Supabase tables: `service_pricing`, `extras`, and `areas`.
+### Details:
+This subtask involves creating a client component for the quote form. Use server-side fetching in a parent component to get the initial data and pass it down as props. The UI should be structured to accommodate all required user inputs.
+
+## 2. Implement Client-Side State and Real-Time Price Calculation [pending]
+### Dependencies: 6.1
+### Description: Manage the user's selections using client-side state hooks (e.g., `useState` or `useReducer`). Develop the calculation engine that updates the total price estimate in real-time as the user modifies their selections.
+### Details:
+The state should track the selected service, the quantity for each room type, a list of selected extras, and the chosen location. The calculation logic must reference the pricing data fetched in the previous subtask to compute the live total.
+
+## 3. Implement 'Email me this Quote' Functionality [pending]
+### Dependencies: 6.2
+### Description: Add an email input field and a submit button labeled 'Email me this Quote'. Create a server action to capture the current quote configuration and the provided email, then save this information as a new entry in the `quotes` table in Supabase.
+### Details:
+The server action will receive the quote state object and the email address. It will then use the Supabase client to perform an `insert` operation on the `quotes` table. Implement user feedback for success or failure states (e.g., a toast notification).
+
+## 4. Implement 'Continue to Booking' CTA and State Handoff [pending]
+### Dependencies: 6.2
+### Description: Develop the 'Continue to Booking' call-to-action. On click, this button should navigate the user to the main booking flow and pass the current quote state to pre-fill the initial steps of the booking process.
+### Details:
+The state can be passed via URL query parameters or a shared client-side state management solution (like Zustand or a React Context Provider). The booking flow component will need to be able to read this incoming state and initialize itself accordingly.
+
+## 5. Integrate Component as a Modal and Standalone Page [pending]
+### Dependencies: 6.1, 6.2
+### Description: Adapt the Quick Quote component to function both as a pop-up modal and as a full-page component. Create the dedicated `/quote` route and implement the trigger mechanism (e.g., a button in the site header) to launch the modal view.
+### Details:
+Use a headless UI library (e.g., Radix UI's Dialog) to build an accessible modal. The `/quote` page will simply render the main Quick Quote component. Ensure the component's logic is self-contained to allow for this reusability.
+

@@ -1,0 +1,43 @@
+# Task ID: 9
+# Title: Booking Flow Stepper: Cleaner Selection
+# Status: pending
+# Dependencies: 8
+# Priority: medium
+# Description: Develop the cleaner selection step, which displays a list of available cleaners for the chosen area and time slot. Include an option to auto-assign the best available cleaner.
+# Details:
+Based on the selected area and time slot from the previous step, query the database for cleaners who are available and serve that area. Display each cleaner in a card with their name, rating, and other details from the `cleaners` table. Implement the 'Auto-assign' logic, which can be a simple placeholder for now (e.g., picks the first available).
+
+# Test Strategy:
+Set up test data with cleaners assigned to specific areas and availability. Verify that only the correct cleaners appear for a given time slot and area. Test the selection and auto-assign options, ensuring the chosen cleaner ID is stored in the booking state.
+
+# Subtasks:
+## 1. Create Server Function to Fetch Available Cleaners [pending]
+### Dependencies: None
+### Description: Develop a database query or server function (e.g., Supabase Edge Function) to retrieve a list of cleaners who are available for a given area and time slot.
+### Details:
+The function will accept `areaId` and a `dateTime` object as input. It must query the `cleaners` table, cross-referencing `cleaner_availability` and existing `bookings`, to filter for cleaners who serve the specified area and do not have a conflicting appointment at the selected time. The function should return an array of cleaner objects, including their ID, name, and rating.
+
+## 2. Build Cleaner Selection UI Components [pending]
+### Dependencies: None
+### Description: Develop the static frontend components for the cleaner selection step, including the main layout and a reusable 'CleanerCard' component.
+### Details:
+Create the main component that will house the list of cleaners and the 'Auto-assign' option. Design and implement a 'CleanerCard' component that accepts cleaner data (name, rating, etc.) as props and displays it in a clear, user-friendly format. This subtask focuses on the visual structure without data integration.
+
+## 3. Integrate Cleaner Data and Display List [pending]
+### Dependencies: 9.1, 9.2
+### Description: Connect the frontend UI to the server function to fetch and display the list of available cleaners based on the user's selections from the previous step.
+### Details:
+In the main cleaner selection component, retrieve the `areaId` and `dateTimeSlot` from the booking state. Use these values to call the server function created in subtask 9.1. Render the returned list of cleaners using the 'CleanerCard' component. Implement loading states for when data is being fetched and an empty state message (e.g., 'No cleaners are available for this time slot') if the list is empty.
+
+## 4. Implement Selection and 'Auto-Assign' Logic [pending]
+### Dependencies: 9.3
+### Description: Enable users to select a cleaner or opt for auto-assignment, and update the central booking state with the chosen cleaner's ID.
+### Details:
+Add click handlers to each 'CleanerCard' and the 'Auto-assign' button. When a card is clicked, store the corresponding `cleanerId` in the booking state. For 'Auto-assign', implement the placeholder logic to select the first cleaner from the available list and store their ID. The UI should provide visual feedback for the current selection.
+
+## 5. Write Unit and Integration Tests for the Selection Step [pending]
+### Dependencies: 9.4
+### Description: Develop a comprehensive test suite to ensure the reliability and correctness of the cleaner selection functionality.
+### Details:
+Create unit tests for the 'Auto-assign' logic and the state update mechanism. Write integration tests that mock the server function's response and simulate user interaction. The tests should cover selecting a cleaner, using auto-assign, and handling the case where no cleaners are available, verifying that the component behaves as expected and the booking state is managed correctly.
+

@@ -1,0 +1,43 @@
+# Task ID: 7
+# Title: Booking Flow Stepper: Service, Rooms & Extras
+# Status: pending
+# Dependencies: 2, 4
+# Priority: high
+# Description: Build the initial steps of the multi-step booking flow. This includes selecting a service, specifying the number of bedrooms and bathrooms, and choosing add-on extras.
+# Details:
+Use a state management solution to manage the stepper state across multiple pages/components. The page `/book/{service-slug}` will be the entry point. Fetch service details, pricing, and associated extras from Supabase. Implement a sticky summary component that updates the price live as the user makes selections.
+
+# Test Strategy:
+Verify that service data is loaded correctly based on the URL slug. Test the room and extra selectors, ensuring the live price summary updates accurately. Ensure state is preserved when navigating between steps.
+
+# Subtasks:
+## 1. Create Booking Page and Fetch Service Data [pending]
+### Dependencies: None
+### Description: Create the dynamic page route `/book/{service-slug}`. Implement the data fetching logic to retrieve service details, base pricing rules, and a list of associated add-on extras from Supabase based on the provided URL slug.
+### Details:
+Use Next.js dynamic routing. Create a Supabase server-side query to fetch data from the `services` and `extras` tables. The page should handle cases where a service slug is not found by showing a 404 page.
+
+## 2. Set Up Booking State Management [pending]
+### Dependencies: None
+### Description: Initialize and configure a state management solution (e.g., Zustand or React Context) to handle the state of the entire booking flow. Define the state's structure, including service details, room counts, selected extras, and total price.
+### Details:
+Create a global store or context provider that will wrap the booking flow pages. The initial state should be populated with default values and then updated with data fetched in subtask 7.1. Define actions/setters to update the state.
+
+## 3. Develop Bedroom and Bathroom Selector Component [pending]
+### Dependencies: 7.2
+### Description: Build the UI component that allows users to increment or decrement the number of bedrooms and bathrooms for the booking. This component must read from and update the shared booking state.
+### Details:
+Use simple plus/minus buttons for selection. On change, dispatch an action to update the `bedroomCount` and `bathroomCount` in the global state store. The component should read its current value from the state to ensure consistency.
+
+## 4. Develop Add-on Extras Selection Component [pending]
+### Dependencies: 7.1, 7.2
+### Description: Create a component that renders a list of available add-on extras for the selected service. Users should be able to select and deselect multiple extras, which will update the booking state.
+### Details:
+The component will receive the list of extras (fetched in 7.1) as props. Use checkboxes or styled toggle switches for selection. Each selection change should update the `selectedExtras` array in the global state store.
+
+## 5. Implement Sticky Price Summary and Calculation Logic [pending]
+### Dependencies: 7.2, 7.3, 7.4
+### Description: Build a sticky component that is always visible on the page. This component will display a summary of the user's selections and the live-calculated total price.
+### Details:
+The component must subscribe to the global state. Implement the price calculation logic that considers the service's base price, cost adjustments for rooms, and the price of each selected extra. The component should re-render and display the new total whenever the state changes.
+

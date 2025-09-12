@@ -1,0 +1,43 @@
+# Task ID: 13
+# Title: Implement SEO Best Practices and URL Structure
+# Status: pending
+# Dependencies: 4, 5
+# Priority: low
+# Description: Ensure the application adheres to the SEO and URL structure defined in the PRD. This includes creating a `robots.txt` file, generating a sitemap, and setting up canonical URLs.
+# Details:
+Create a `robots.txt` file in the `public` directory to disallow crawling of transactional routes like `/book/`, `/q/`, and `/order/`. Use Next.js's built-in sitemap generation (`sitemap.ts`) to create a dynamic sitemap for static pages, services, and blog posts. Use the `metadata` object in page layouts to set canonical URLs and other meta tags.
+
+# Test Strategy:
+Check the live site for `/robots.txt` and `/sitemap.xml` and verify their contents are correct. Use browser developer tools to inspect the `<head>` of various pages and confirm that `canonical` links and other meta tags are correctly set.
+
+# Subtasks:
+## 1. Create `robots.txt` to Manage Crawler Access [pending]
+### Dependencies: None
+### Description: Create a `robots.txt` file in the `public` directory to specify which routes should not be crawled by search engines and to provide the location of the sitemap.
+### Details:
+Create a new file at `public/robots.txt`. Add `User-agent: *` followed by `Disallow` rules for transactional paths: `/book/`, `/q/`, and `/order/`. Include a `Sitemap` directive pointing to the absolute URL of the sitemap, e.g., `Sitemap: https://[your-domain]/sitemap.xml`.
+
+## 2. Generate Sitemap for Static Pages [pending]
+### Dependencies: 13.1
+### Description: Implement the initial `sitemap.ts` file to automatically generate a sitemap for the application's core static pages like the homepage, 'How It Works', and 'Contact'.
+### Details:
+Using Next.js's file-based metadata API, create an `app/sitemap.ts` file. This file will export a default function that returns an array of sitemap entries for static routes (`/`, `/how-it-works`, `/contact`). Set appropriate `lastModified`, `changeFrequency`, and `priority` values for each.
+
+## 3. Extend Sitemap for Dynamic Content (Services and Blog Posts) [pending]
+### Dependencies: 13.2
+### Description: Enhance the `sitemap.ts` file to dynamically generate URLs for all services and blog posts by fetching their data from Supabase.
+### Details:
+Modify the function in `app/sitemap.ts` to be asynchronous. Add logic to fetch all published `services` and `blog_posts` from the Supabase database. Map over the fetched data to create and append sitemap entries for each dynamic URL (e.g., `/services/[slug]`, `/blog/[slug]`) to the array of static page entries.
+
+## 4. Implement Base Metadata and Canonical URL Foundation in Root Layout [pending]
+### Dependencies: None
+### Description: Configure the root layout (`app/layout.tsx`) to set application-wide metadata defaults, including a title template and the base URL for resolving canonical links.
+### Details:
+In `app/layout.tsx`, export a `metadata` object. Define a `title.template` (e.g., '%s | Shalean') and a default site `description`. Add a `metadataBase` property with the production `URL` object to ensure all relative canonical and Open Graph URLs resolve to absolute paths.
+
+## 5. Set Page-Specific Metadata and Canonical URLs [pending]
+### Dependencies: 13.4
+### Description: Implement dynamic and static metadata generation for all pages, including unique titles, descriptions, and canonical URLs.
+### Details:
+For static pages (e.g., `app/contact/page.tsx`), export a `metadata` object with a specific `title`, `description`, and `alternates: { canonical: '/contact' }`. For dynamic pages (e.g., `app/blog/[slug]/page.tsx`), implement the `generateMetadata` function to fetch data and return a dynamic `title`, `description`, and `alternates: { canonical: '/blog/[slug]' }`.
+

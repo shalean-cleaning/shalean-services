@@ -1,0 +1,43 @@
+# Task ID: 4
+# Title: Build Global Layout and Static Pages
+# Status: pending
+# Dependencies: 1, 3
+# Priority: medium
+# Description: Create the main application layout including the dynamic header and footer. Implement the static pages: 'How It Works' and 'Contact', ensuring they use the shared layout.
+# Details:
+In `app/layout.tsx`, build the main structure. Create a `<Header>` component that dynamically displays 'Login/Signup' or a user menu based on auth state. The header links should use `<Link>` from `next/link`. Create a `<Footer>` component with quick links and contact info. Build the content for `/how-it-works` and `/contact` pages.
+
+# Test Strategy:
+Navigate between the homepage and the new static pages. Verify the header and footer are present on all pages. Confirm the header's auth-aware state changes upon login/logout.
+
+# Subtasks:
+## 1. Create Root Layout and Footer Component [pending]
+### Dependencies: None
+### Description: Establish the main application structure in `app/layout.tsx` and create the static `<Footer>` component. This forms the foundational shell for all pages.
+### Details:
+In `app/layout.tsx`, define the root HTML structure, import global styles, and set up metadata. Create a new component file `components/layout/Footer.tsx`. Populate the footer with quick links (e.g., Home, How It Works, Contact) and company contact information. Render this `<Footer>` component within the `<body>` of the root layout.
+
+## 2. Implement Static Header Component Structure [pending]
+### Dependencies: 4.1
+### Description: Create the initial `<Header>` component with a logo, primary navigation links, and a static placeholder for authentication actions, ensuring it is responsive.
+### Details:
+Create the file `components/layout/Header.tsx`. Add the company logo and the main navigation links ('How It Works', 'Contact') using the Next.js `<Link>` component. Add a static 'Login / Signup' button group as a placeholder. Implement responsive styles using TailwindCSS. Render the `<Header>` component in `app/layout.tsx`.
+
+## 3. Integrate Dynamic Authentication State into Header [pending]
+### Dependencies: 4.2
+### Description: Enhance the `<Header>` to conditionally render UI elements based on the user's authentication status from Supabase.
+### Details:
+Modify the `<Header>` to be a server component that checks for an active user session via the Supabase client. If a user is logged in, display a user profile avatar and a dropdown menu with 'Dashboard' and 'Logout' links. If the user is not authenticated, display the 'Login / Signup' buttons.
+
+## 4. Build 'How It Works' Static Page [pending]
+### Dependencies: 4.1, 4.2
+### Description: Create the content and page file for the '/how-it-works' route, ensuring it correctly uses the shared application layout.
+### Details:
+Create a new page file at `app/how-it-works/page.tsx`. Populate the page with content that explains the service process, using semantic HTML and styled with TailwindCSS. The page should automatically inherit the global Header and Footer from the root layout.
+
+## 5. Build 'Contact' Static Page [pending]
+### Dependencies: 4.1, 4.2
+### Description: Create the content and page file for the '/contact' route, including contact details and ensuring it uses the shared application layout.
+### Details:
+Create a new page file at `app/contact/page.tsx`. Add the company's contact information, such as an address, email, and phone number. Include a placeholder for a future contact form. This page must also inherit the global Header and Footer.
+

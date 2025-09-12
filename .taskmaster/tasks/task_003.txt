@@ -1,0 +1,43 @@
+# Task ID: 3
+# Title: Set Up Supabase Authentication and User Roles
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Configure Supabase Auth to handle user signup, login, and session management. Implement a system to manage user roles (Customer, Cleaner, Admin) using a custom `profiles` table with a `role` column linked to the `auth.users` table.
+# Details:
+Create login and signup forms. Use Supabase's middleware helper (`@supabase/auth-helpers-nextjs`) to manage sessions. Create a public `profiles` table with a one-to-one relationship to `auth.users`. Add a `role` text column with a check constraint for 'customer', 'cleaner', or 'admin'. Implement RLS policies on tables like `bookings` based on the user's role from the `profiles` table.
+
+# Test Strategy:
+Test the full signup flow, ensuring a new entry is created in both `auth.users` and `profiles`. Test login and logout. Create test users for each role and verify that RLS policies correctly restrict access to data.
+
+# Subtasks:
+## 1. Create `profiles` Table and Signup Trigger [pending]
+### Dependencies: None
+### Description: Set up the database schema for user profiles, including the table itself and an automated trigger to populate it when a new user signs up in `auth.users`.
+### Details:
+Using the Supabase SQL editor, create a public `profiles` table with an `id` column (UUID, primary key, referencing `auth.users.id`) and a `role` column (TEXT). Add a CHECK constraint to the `role` column to only allow 'customer', 'cleaner', or 'admin'. Create a PostgreSQL function and trigger that automatically inserts a new row into `profiles` upon a new user insertion into `auth.users`, setting the default role to 'customer'.
+
+## 2. Configure Next.js Middleware for Session Management [pending]
+### Dependencies: None
+### Description: Implement Next.js middleware using `@supabase/auth-helpers-nextjs` to manage user sessions and refresh tokens automatically on every request, making the session available across the application.
+### Details:
+Install the `@supabase/auth-helpers-nextjs` package. Create a `middleware.ts` file in the Next.js project root. Use the `createMiddlewareClient` function to handle the request and response, ensuring the user's session cookie is managed correctly. This setup is essential for server components and API routes to access the user's session.
+
+## 3. Implement Signup and Login UI Components [pending]
+### Dependencies: 3.1, 3.2
+### Description: Create the user interface components for user registration and login, including the necessary forms and client-side logic to interact with Supabase Auth.
+### Details:
+Develop React components for `SignupForm` and `LoginForm`. Use a UI library for form elements and manage form state with `useState` or `react-hook-form`. The form submission handlers will call `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()` from a client-side Supabase client instance. Implement logic to handle loading states and display API errors to the user.
+
+## 4. Implement Role-Based Row Level Security (RLS) Policies [pending]
+### Dependencies: 3.1
+### Description: Define and apply RLS policies on key tables like `bookings` to restrict data access based on the user's role stored in their `profiles` record.
+### Details:
+First, create a PostgreSQL helper function, e.g., `get_user_role()`, that returns the `role` from the `profiles` table for the currently authenticated user (`auth.uid()`). On the `bookings` table, enable RLS. Create policies: an 'Admin' policy for full access, a 'Customer' policy allowing access only to their own bookings (`USING (user_id = auth.uid())`), and a 'Cleaner' policy for assigned bookings.
+
+## 5. Create User Account Page and Logout Functionality [pending]
+### Dependencies: 3.2, 3.3
+### Description: Develop a protected user account page to display profile information and implement a secure logout mechanism. Integrate the auth state into the global UI.
+### Details:
+Create a protected route at `/account`. This page will fetch and display data from the user's `profiles` record. Add a 'Logout' button that calls the `supabase.auth.signOut()` method and redirects the user to the homepage. Update the global `<Header>` component to conditionally render 'Login/Signup' links or a user menu with 'Account' and 'Logout' options based on the session status.
+

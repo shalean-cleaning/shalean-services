@@ -1,0 +1,43 @@
+# Task ID: 12
+# Title: Cleaner Portal: Dashboard and Job Management
+# Status: pending
+# Dependencies: 3, 10
+# Priority: medium
+# Description: Develop the cleaner-facing portal where they can view and manage their assigned jobs. This includes a dashboard for today's and upcoming jobs, and actions to update job status.
+# Details:
+Create a new route group `/dashboard/cleaner`. Protect it for the 'cleaner' role. The dashboard should query the `bookings` table for jobs assigned to the logged-in cleaner. Implement buttons to trigger server actions that update the booking `status` field (e.g., 'On My Way', 'Arrived', 'Completed').
+
+# Test Strategy:
+Log in as a cleaner. Verify the dashboard only shows jobs assigned to that cleaner. Test the status update buttons and confirm the `status` field in the `bookings` table is updated in Supabase.
+
+# Subtasks:
+## 1. Set Up Cleaner Dashboard Route and Authentication [pending]
+### Dependencies: None
+### Description: Create the Next.js route group `/dashboard/cleaner` and implement middleware to protect it, ensuring only users with the 'cleaner' role can access the pages within.
+### Details:
+Using the project's middleware configuration (likely with `@supabase/auth-helpers-nextjs`), add a rule that checks the user's session and their role from the `profiles` table for any request to `/dashboard/cleaner/**`. Unauthenticated users or users without the 'cleaner' role should be redirected to the login page or an 'unauthorized' page.
+
+## 2. Develop Data Fetching Logic for Cleaner's Jobs [pending]
+### Dependencies: 12.1
+### Description: Implement the server-side logic within the cleaner dashboard page to query the Supabase `bookings` table and retrieve all jobs assigned to the currently authenticated cleaner.
+### Details:
+In the main server component for the cleaner dashboard, get the logged-in user's ID from the Supabase session. Create a database query that selects all records from the `bookings` table where the `cleaner_id` column matches the user's ID. The query should also join with related tables (e.g., `services`, `profiles` for customer info) to get all necessary details for display. Order the results by date.
+
+## 3. Build the UI for the Job Dashboard [pending]
+### Dependencies: 12.2
+### Description: Design and implement the user interface for the cleaner dashboard, displaying the fetched job data in a clear and organized manner, separating today's jobs from upcoming ones.
+### Details:
+Create a main dashboard layout component. Develop a 'JobCard' component that accepts a booking object as a prop and displays key information like customer name, address, service details, and scheduled time. In the main dashboard, process the fetched jobs to create two lists: 'Today's Jobs' and 'Upcoming Jobs', and render them accordingly using the 'JobCard' component.
+
+## 4. Create Server Actions for Job Status Updates [pending]
+### Dependencies: None
+### Description: Implement the backend server actions required to securely update the `status` field of a booking in the Supabase database.
+### Details:
+Create a new file for cleaner-related server actions. Define functions like `updateBookingStatus(bookingId, newStatus)`. Inside each action, first, get the current user's ID. Before updating, perform a security check to ensure the booking `bookingId` is actually assigned to the current cleaner. If authorized, update the `status` field in the `bookings` table for the given `bookingId`. Implement revalidation (`revalidatePath`) to refresh the dashboard data.
+
+## 5. Integrate Status Update Buttons with Server Actions [pending]
+### Dependencies: 12.3, 12.4
+### Description: Add action buttons to the job card UI and connect them to the corresponding server actions, allowing cleaners to manage their job status directly from the dashboard.
+### Details:
+Modify the 'JobCard' component to be a client component. Add buttons for status changes like 'On My Way', 'Arrived', and 'Completed'. Wrap these buttons in a `<form>` and use the `formAction` attribute to call the appropriate server action from subtask 12.4. Conditionally render or disable buttons based on the current job status (e.g., 'Arrived' button is only active if status is 'On My Way').
+
