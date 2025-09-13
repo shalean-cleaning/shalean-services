@@ -142,7 +142,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -150,7 +150,7 @@
             "description": "Set up the database schema for user profiles, including the table itself and an automated trigger to populate it when a new user signs up in `auth.users`.",
             "dependencies": [],
             "details": "Using the Supabase SQL editor, create a public `profiles` table with an `id` column (UUID, primary key, referencing `auth.users.id`) and a `role` column (TEXT). Add a CHECK constraint to the `role` column to only allow 'customer', 'cleaner', or 'admin'. Create a PostgreSQL function and trigger that automatically inserts a new row into `profiles` upon a new user insertion into `auth.users`, setting the default role to 'customer'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "After creating the trigger, use the Supabase dashboard's Auth section to manually add a new user. Verify that a corresponding entry is automatically created in the `profiles` table with the correct user ID and the default role 'customer'."
           },
           {
@@ -159,7 +159,7 @@
             "description": "Implement Next.js middleware using `@supabase/auth-helpers-nextjs` to manage user sessions and refresh tokens automatically on every request, making the session available across the application.",
             "dependencies": [],
             "details": "Install the `@supabase/auth-helpers-nextjs` package. Create a `middleware.ts` file in the Next.js project root. Use the `createMiddlewareClient` function to handle the request and response, ensuring the user's session cookie is managed correctly. This setup is essential for server components and API routes to access the user's session.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "After setting up the middleware, run the application and check the browser's developer tools to confirm the `sb-*-auth-token` cookie is being set upon login and cleared upon logout. Verify that accessing a protected route without a session redirects the user."
           },
           {
@@ -171,7 +171,7 @@
               "3.2"
             ],
             "details": "Develop React components for `SignupForm` and `LoginForm`. Use a UI library for form elements and manage form state with `useState` or `react-hook-form`. The form submission handlers will call `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()` from a client-side Supabase client instance. Implement logic to handle loading states and display API errors to the user.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the signup form with a new email; verify the user is created in `auth.users` and the `profiles` trigger works. Test the login form with correct and incorrect credentials. Confirm successful login creates a session and redirects the user appropriately."
           },
           {
@@ -182,7 +182,7 @@
               "3.1"
             ],
             "details": "First, create a PostgreSQL helper function, e.g., `get_user_role()`, that returns the `role` from the `profiles` table for the currently authenticated user (`auth.uid()`). On the `bookings` table, enable RLS. Create policies: an 'Admin' policy for full access, a 'Customer' policy allowing access only to their own bookings (`USING (user_id = auth.uid())`), and a 'Cleaner' policy for assigned bookings.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually set the roles for test users in the `profiles` table. Log in as a 'customer' and verify they can only fetch their own bookings. Log in as a 'cleaner' and verify they can only see assigned bookings. Log in as an 'admin' and verify they can see all bookings."
           },
           {
@@ -194,7 +194,7 @@
               "3.3"
             ],
             "details": "Create a protected route at `/account`. This page will fetch and display data from the user's `profiles` record. Add a 'Logout' button that calls the `supabase.auth.signOut()` method and redirects the user to the homepage. Update the global `<Header>` component to conditionally render 'Login/Signup' links or a user menu with 'Account' and 'Logout' options based on the session status.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Log in and navigate to the `/account` page; verify profile data is displayed correctly. Click the logout button and confirm the session is terminated and the user is redirected. Verify the header UI updates to show the 'Login' link again."
           }
         ]
@@ -947,7 +947,7 @@
     ],
     "metadata": {
       "created": "2025-09-12T12:57:51.800Z",
-      "updated": "2025-09-12T12:57:51.800Z",
+      "updated": "2025-09-13T07:06:15.027Z",
       "description": "Tasks for master context"
     }
   }
