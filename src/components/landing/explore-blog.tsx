@@ -26,7 +26,7 @@ const blogPosts = [
   },
   {
     title: 'Best of Cape Town hiking trails',
-    excerpt: 'Explore Cape Town\'s most beautiful hiking trails and outdoor adventures for nature lovers.',
+    excerpt: 'Explore Cape Town&apos;s most beautiful hiking trails and outdoor adventures for nature lovers.',
     date: '2024-01-05',
     author: 'Grace Mthembu',
     image: 'Hike',
