@@ -1,8 +1,71 @@
-import { ContentBlock, BlogPost, Testimonial, Profile } from '@/lib/database.types'
-import { createClient } from '@/lib/supabase-server'
+import { cache } from "react";
+
+import { createClient } from "@/lib/supabase-server";
+
+export type HomePageData = {
+  hero: { title: string; subtitle?: string | null; ctaLabel?: string | null };
+  blocks: Array<{ id: string; title: string; body: string }>;
+  testimonials: Array<{
+    id: string;
+    author_name: string;
+    author_image?: string | null;
+    content: string;
+    rating?: number | null;
+  }>;
+};
+
+export const getHomepageData = cache(async (): Promise<HomePageData> => {
+  const supabase = createClient();
+
+  // Replace the following with the real queries; example shown:
+  const { data: testimonialsRaw } = await supabase
+    .from("testimonials")
+    .select("id, author_name, author_image, quote, rating");
+
+  const testimonials =
+    (testimonialsRaw ?? []).map((r: {
+      id: string;
+      author_name: string;
+      author_image?: string | null;
+      quote: string;
+      rating?: number | null;
+    }) => ({
+      id: r.id,
+      author_name: r.author_name,
+      author_image: r.author_image ?? null,
+      content: r.quote,
+      rating: r.rating ?? null,
+    }));
+
+  const { data: heroRaw } = await supabase
+    .from("content_blocks")
+    .select("title, description")
+    .eq("section_key", "hero")
+    .single();
+
+  const hero = {
+    title: heroRaw?.title ?? "",
+    subtitle: heroRaw?.description ?? null,
+    ctaLabel: null,
+  };
+
+  const { data: blocksRaw } = await supabase
+    .from("content_blocks")
+    .select("id, title, description")
+    .eq("section_key", "how-it-works");
+
+  const blocks =
+    (blocksRaw ?? []).map((b: { id: string; title: string; description: string }) => ({
+      id: b.id,
+      title: b.title,
+      body: b.description,
+    }));
+
+  return { hero, blocks, testimonials };
+});
 
 // Homepage data fetching utilities
-export async function getContentBlocks(sectionKey: string): Promise<ContentBlock[]> {
+export async function getContentBlocks(sectionKey: string) {
   const supabase = await createClient()
   
   const { data, error } = await supabase
@@ -20,20 +83,20 @@ export async function getContentBlocks(sectionKey: string): Promise<ContentBlock
   return data || []
 }
 
-export async function getHeroContent(): Promise<ContentBlock | null> {
+export async function getHeroContent() {
   const blocks = await getContentBlocks('hero')
   return blocks[0] || null
 }
 
-export async function getHowItWorksContent(): Promise<ContentBlock[]> {
+export async function getHowItWorksContent() {
   return getContentBlocks('how-it-works')
 }
 
-export async function getWhyChooseUsContent(): Promise<ContentBlock[]> {
+export async function getWhyChooseUsContent() {
   return getContentBlocks('why-choose-us')
 }
 
-export async function getRecentBlogPosts(limit: number = 3): Promise<BlogPost[]> {
+export async function getRecentBlogPosts(limit: number = 3) {
   const supabase = await createClient()
   
   const { data, error } = await supabase
@@ -51,7 +114,7 @@ export async function getRecentBlogPosts(limit: number = 3): Promise<BlogPost[]>
   return data || []
 }
 
-export async function getFeaturedTestimonials(limit: number = 4): Promise<Testimonial[]> {
+export async function getFeaturedTestimonials(limit: number = 4) {
   const supabase = await createClient()
   
   const { data, error } = await supabase
@@ -69,7 +132,7 @@ export async function getFeaturedTestimonials(limit: number = 4): Promise<Testim
   return data || []
 }
 
-export async function getTeamMembers(): Promise<Profile[]> {
+export async function getTeamMembers() {
   const supabase = await createClient()
   
   const { data, error } = await supabase
