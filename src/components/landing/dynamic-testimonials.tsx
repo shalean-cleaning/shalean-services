@@ -18,13 +18,14 @@ function formatAlt(name?: string | null) {
   return trimmed ? `Avatar of ${trimmed}` : 'Customer avatar'
 }
 
-function normalizeTestimonial(t: any): Testimonial {
+function normalizeTestimonial(t: unknown): Testimonial {
+  const obj = t as Record<string, unknown>;
   return {
-    id: String(t?.id ?? Math.random().toString(36).slice(2)),
-    author_name: typeof t?.name === 'string' ? t.name : (typeof t?.author_name === 'string' ? t.author_name : null),
-    author_image: typeof t?.avatar === 'string' ? t.avatar : (typeof t?.author_image === 'string' ? t.author_image : null),
-    quote: String(t?.quote ?? ''),
-    role: typeof t?.role === 'string' ? t.role : null,
+    id: String(obj?.id ?? Math.random().toString(36).slice(2)),
+    author_name: typeof obj?.name === 'string' ? obj.name : (typeof obj?.author_name === 'string' ? obj.author_name : null),
+    author_image: typeof obj?.avatar === 'string' ? obj.avatar : (typeof obj?.author_image === 'string' ? obj.author_image : null),
+    quote: String(obj?.quote ?? ''),
+    role: typeof obj?.role === 'string' ? obj.role : null,
   }
 }
 

@@ -89,7 +89,7 @@ export async function getTeamMembers(): Promise<Profile[]> {
 
 // Icon mapping utility
 export function getIconComponent(iconName: string) {
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, () => Promise<React.ComponentType>> = {
     'check-circle': () => import('lucide-react').then(m => m.CheckCircle),
     'calendar': () => import('lucide-react').then(m => m.Calendar),
     'settings': () => import('lucide-react').then(m => m.Settings),
