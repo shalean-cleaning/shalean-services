@@ -16,7 +16,7 @@ type Testimonial = {
   content: string;
 };
 
-type Props = { testimonials: Testimonial[] };
+// type Props = { testimonials: Testimonial[] };
 
 function formatAlt(name?: string | null) {
   const trimmed = (name ?? '').trim()
@@ -139,7 +139,7 @@ export default function DynamicTestimonials() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {(displayTestimonials ?? []).map((raw, i) => {
+          {(displayTestimonials ?? []).map((raw) => {
             const testimonial = normalizeTestimonial(raw)
             const imgSrc = testimonial.author_image || '/placeholder-avatar.jpg'
             const alt = formatAlt(testimonial.author_name)

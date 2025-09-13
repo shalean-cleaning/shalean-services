@@ -98,9 +98,9 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     (async () => {
       try {
         const [servicesData, extrasData, regionsData] = await Promise.all([
-          fetchJSON('services', '/api/services'),
-          fetchJSON('extras', '/api/extras'),
-          fetchJSON('regions', '/api/regions'),
+          fetchJSON<Service[]>('services', '/api/services'),
+          fetchJSON<Extra[]>('extras', '/api/extras'),
+          fetchJSON<Region[]>('regions', '/api/regions'),
         ]);
         setServices(servicesData);
         setExtras(extrasData);
@@ -204,10 +204,45 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     }
 
     // Store in localStorage for booking flow
-    localStorage.setItem('quickQuote', JSON.stringify(quoteData))
+    localStorage.setItem('quickQuote', JSON.stringify({
+      service_id: selectedService,
+      suburb_id: selectedSuburb,
+      bedrooms: parseInt(bedrooms) || 0,
+      bathrooms: parseInt(bathrooms) || 0,
+      frequency,
+      extras: Object.entries(selectedExtras)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([extraId, quantity]) => ({
+          id: extraId,
+          quantity,
+          price: extras.find(e => e.id === extraId)?.price || 0
+        })),
+      breakdown: quoteBreakdown,
+      service_name: serviceName,
+      suburb_name: suburbName,
+      email
+    }))
     
     if (onContinueToBooking) {
-      onContinueToBooking(quoteData)
+      const service = services.find(s => s.id === selectedService)
+      const region = regions.find(r => r.suburbs.some(s => s.id === selectedSuburb))
+      const suburb = region?.suburbs.find(s => s.id === selectedSuburb)
+      
+      if (service && suburb && quoteBreakdown) {
+        onContinueToBooking({
+          service,
+          suburb,
+          extras: Object.entries(selectedExtras)
+            .filter(([_, quantity]) => quantity > 0)
+            .map(([extraId, quantity]) => {
+              const extra = extras.find(e => e.id === extraId)
+              return extra ? { ...extra, quantity } : null
+            })
+            .filter((extra): extra is Extra & { quantity: number } => extra !== null),
+          total: quoteBreakdown.total,
+          breakdown: quoteBreakdown
+        })
+      }
     } else {
       // Navigate to booking page
       window.location.href = '/booking'

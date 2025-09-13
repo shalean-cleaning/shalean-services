@@ -15,7 +15,7 @@ export type HomePageData = {
 };
 
 export const getHomepageData = cache(async (): Promise<HomePageData> => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Replace the following with the real queries; example shown:
   const { data: testimonialsRaw } = await supabase

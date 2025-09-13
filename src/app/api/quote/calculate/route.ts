@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase-server'
 export const runtime = 'nodejs'
 
 export const POST = withApiSafe(async (request: Request) => {
-  const supabase = createClient()
+  const supabase = await createClient()
   const body = await request.json()
   
   const { service_id, suburb_id, extras = [], bedrooms = 0, bathrooms = 0, frequency = 'one-time' } = body
