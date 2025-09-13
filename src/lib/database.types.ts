@@ -34,6 +34,7 @@ export interface Service {
   id: string;
   category_id?: string;
   name: string;
+  slug: string;
   description?: string;
   base_price: number;
   duration_minutes: number;

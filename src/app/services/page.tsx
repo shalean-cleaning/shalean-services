@@ -1,209 +1,105 @@
-import { CheckCircle, Home, Building, Sparkles, Truck } from "lucide-react";
-import type { Metadata } from "next";
-import Link from "next/link";
+import Link from 'next/link';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Clock, DollarSign, Home } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: "Our Services",
-  description: "Professional cleaning services for homes and businesses. Residential, commercial, deep cleaning, and move-in/move-out services.",
-};
+// Mock services data for demonstration
+const mockServices = [
+  {
+    id: '1',
+    name: 'Standard House Cleaning',
+    slug: 'standard-house-cleaning',
+    description: 'Complete cleaning of all living areas including kitchen, bathrooms, bedrooms, and common areas',
+    base_price: 120.00,
+    duration_minutes: 120,
+  },
+  {
+    id: '2',
+    name: 'Apartment Cleaning',
+    slug: 'apartment-cleaning',
+    description: 'Thorough cleaning of apartment units including all rooms and appliances',
+    base_price: 100.00,
+    duration_minutes: 90,
+  },
+  {
+    id: '3',
+    name: 'Move-in/Move-out Cleaning',
+    slug: 'move-in-move-out-cleaning',
+    description: 'Comprehensive cleaning for new tenants or departing residents',
+    base_price: 200.00,
+    duration_minutes: 180,
+  },
+  {
+    id: '4',
+    name: 'Post-Construction Cleaning',
+    slug: 'post-construction-cleaning',
+    description: 'Specialized cleaning after construction or renovation work',
+    base_price: 250.00,
+    duration_minutes: 240,
+  },
+];
 
-export default function Services() {
-  const services = [
-    {
-      icon: Home,
-      title: "Residential Cleaning",
-      description: "Regular house cleaning services to keep your home spotless and comfortable.",
-      features: [
-        "Weekly, bi-weekly, or monthly cleaning",
-        "All rooms cleaned thoroughly",
-        "Kitchen and bathroom deep clean",
-        "Dusting and vacuuming",
-        "Trash removal",
-      ],
-      price: "Starting at $120",
-      href: "/services/residential",
-    },
-    {
-      icon: Building,
-      title: "Commercial Cleaning",
-      description: "Professional office and commercial space cleaning for businesses.",
-      features: [
-        "Office cleaning and maintenance",
-        "Restroom sanitization",
-        "Floor care and maintenance",
-        "Window cleaning",
-        "Customized cleaning schedules",
-      ],
-      price: "Starting at $200",
-      href: "/services/commercial",
-    },
-    {
-      icon: Sparkles,
-      title: "Deep Cleaning",
-      description: "Intensive cleaning services for move-ins, move-outs, and special occasions.",
-      features: [
-        "Complete home deep clean",
-        "Inside appliances cleaned",
-        "Baseboards and trim detailed",
-        "Light fixtures cleaned",
-        "Cabinet fronts and handles",
-      ],
-      price: "Starting at $300",
-      href: "/services/deep-cleaning",
-    },
-    {
-      icon: Truck,
-      title: "Move-in/Move-out Cleaning",
-      description: "Specialized cleaning services for moving transitions.",
-      features: [
-        "Empty property cleaning",
-        "Cabinet and drawer cleaning",
-        "Appliance deep clean",
-        "Window cleaning",
-        "Floor care and protection",
-      ],
-      price: "Starting at $250",
-      href: "/services/move-cleaning",
-    },
-  ];
-
+export default function ServicesPage() {
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/5 to-primary/10 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Our Services
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Professional cleaning services tailored to your specific needs. 
-              From regular home cleaning to commercial office maintenance, we&apos;ve got you covered.
-            </p>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Our Cleaning Services
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Professional cleaning services tailored to your needs. Choose from our range of services and book online.
+          </p>
         </div>
-      </section>
 
-      {/* Services Grid */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {services.map((service, index) => {
-              const Icon = service.icon;
-              return (
-                <div key={index} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="p-8">
-                    <div className="flex items-center mb-6">
-                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                        <Icon className="w-8 h-8 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900">{service.title}</h2>
-                        <p className="text-primary font-semibold">{service.price}</p>
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-600 mb-6">{service.description}</p>
-                    
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">What&apos;s Included:</h3>
-                      <ul className="space-y-2">
-                        {service.features.map((feature, featureIndex) => (
-                          <li key={featureIndex} className="flex items-center text-gray-600">
-                            <CheckCircle className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="flex gap-3">
-                      <Link href={service.href} className="flex-1">
-                        <Button className="w-full">Learn More</Button>
-                      </Link>
-                      <Link href="/quote" className="flex-1">
-                        <Button variant="outline" className="w-full">Get Quote</Button>
-                      </Link>
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          {mockServices.map((service) => (
+            <Card key={service.id} className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Home className="w-8 h-8 text-blue-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {service.name}
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-gray-600 mb-6">{service.description}</p>
+
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{service.duration_minutes} minutes</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-lg font-semibold text-green-600">
+                      ${service.base_price.toFixed(2)}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+              </div>
 
-      {/* Process Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How We Work</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Our simple process ensures you get the best cleaning service every time.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary-foreground">1</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Get Quote</h3>
-              <p className="text-gray-600">Contact us for a free, detailed quote tailored to your needs.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary-foreground">2</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule</h3>
-              <p className="text-gray-600">Choose a convenient time that works with your schedule.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary-foreground">3</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Clean</h3>
-              <p className="text-gray-600">Our professional team arrives with all supplies and equipment.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary-foreground">4</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Enjoy</h3>
-              <p className="text-gray-600">Relax in your clean, fresh space with our satisfaction guarantee.</p>
-            </div>
-          </div>
+              <Link href={`/booking/service/${service.slug}`}>
+                <Button className="w-full">
+                  Book This Service
+                </Button>
+              </Link>
+            </Card>
+          ))}
         </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Get your free quote today and experience the difference of professional cleaning services.
+        <div className="mt-12 text-center">
+          <p className="text-gray-600 mb-4">
+            Don&apos;t see what you&apos;re looking for? We offer custom cleaning solutions.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/quote">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                Get Free Quote
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-primary">
-                Contact Us
-              </Button>
-            </Link>
-          </div>
+          <Button variant="outline">
+            Contact Us for Custom Quote
+          </Button>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

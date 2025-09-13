@@ -83,9 +83,9 @@ export default function DynamicHero() {
     cta_secondary_link?: string
   } || {}
   
-  const primaryCta = ctaData.cta_primary || 'Get a Free Quote'
+  const primaryCta = ctaData.cta_primary || 'View Our Services'
   const secondaryCta = ctaData.cta_secondary || 'Apply to Work'
-  const primaryLink = ctaData.cta_primary_link || '/quote'
+  const primaryLink = ctaData.cta_primary_link || '/services'
   const secondaryLink = ctaData.cta_secondary_link || '/apply'
 
   return (
