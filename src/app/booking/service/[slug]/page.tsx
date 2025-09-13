@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { BookingStepper } from '@/components/booking/booking-stepper';
 import { BookingSummary } from '@/components/booking/booking-summary';
-import { Service, Extra, PricingRule } from '@/lib/database.types';
+import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
 
 interface BookingPageProps {
   params: Promise<{
@@ -32,9 +32,30 @@ async function getServiceData(slug: string) {
   }
 }
 
+async function getRegionsData() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/regions`, {
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    return data as Region[];
+  } catch (error) {
+    console.error('Error fetching regions data:', error);
+    return [];
+  }
+}
+
 export default async function BookingPage({ params }: BookingPageProps) {
   const { slug } = await params;
-  const serviceData = await getServiceData(slug);
+  const [serviceData, regions] = await Promise.all([
+    getServiceData(slug),
+    getRegionsData(),
+  ]);
 
   if (!serviceData) {
     notFound();
@@ -53,6 +74,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                 service={service}
                 extras={extras}
                 pricingRules={pricingRules}
+                regions={regions}
               />
             </div>
           </div>

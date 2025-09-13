@@ -19,9 +19,20 @@ export interface BookingState {
     quantity: number;
   }>;
   
+  // Location and scheduling
+  selectedRegion: string | null;
+  selectedSuburb: string | null;
+  selectedDate: string | null;
+  selectedTime: string | null;
+  address: string;
+  address2?: string;
+  postcode: string;
+  specialInstructions?: string;
+  
   // Pricing
   basePrice: number;
   totalPrice: number;
+  deliveryFee: number;
   
   // Current step
   currentStep: number;
@@ -33,6 +44,14 @@ export interface BookingState {
   addExtra: (extra: Extra) => void;
   removeExtra: (extraId: string) => void;
   updateExtraQuantity: (extraId: string, quantity: number) => void;
+  setSelectedRegion: (regionId: string | null) => void;
+  setSelectedSuburb: (suburbId: string | null) => void;
+  setSelectedDate: (date: string | null) => void;
+  setSelectedTime: (time: string | null) => void;
+  setAddress: (address: string) => void;
+  setAddress2: (address2: string) => void;
+  setPostcode: (postcode: string) => void;
+  setSpecialInstructions: (instructions: string) => void;
   calculateTotalPrice: () => void;
   setCurrentStep: (step: number) => void;
   resetBooking: () => void;
@@ -43,8 +62,17 @@ const initialState = {
   bedroomCount: 1,
   bathroomCount: 1,
   selectedExtras: [],
+  selectedRegion: null,
+  selectedSuburb: null,
+  selectedDate: null,
+  selectedTime: null,
+  address: '',
+  address2: '',
+  postcode: '',
+  specialInstructions: '',
   basePrice: 0,
   totalPrice: 0,
+  deliveryFee: 0,
   currentStep: 1,
 };
 
@@ -120,8 +148,66 @@ export const useBookingStore = create<BookingState>()(
         get().calculateTotalPrice();
       },
       
+      setSelectedRegion: (regionId) => {
+        set({ selectedRegion: regionId });
+        // Reset suburb when region changes
+        if (regionId !== get().selectedRegion) {
+          set({ selectedSuburb: null });
+        }
+      },
+      
+      setSelectedSuburb: (suburbId) => {
+        set({ selectedSuburb: suburbId });
+        // Fetch delivery fee for the selected suburb
+        if (suburbId) {
+          fetch(`/api/suburbs`)
+            .then(res => res.json())
+            .then(suburbs => {
+              const suburb = suburbs.find((s: { id: string; delivery_fee: number }) => s.id === suburbId);
+              if (suburb) {
+                set({ deliveryFee: suburb.delivery_fee || 0 });
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching suburb delivery fee:', err);
+              set({ deliveryFee: 0 });
+            });
+        } else {
+          set({ deliveryFee: 0 });
+        }
+        get().calculateTotalPrice();
+      },
+      
+      setSelectedDate: (date) => {
+        set({ selectedDate: date });
+        // Reset time when date changes
+        if (date !== get().selectedDate) {
+          set({ selectedTime: null });
+        }
+      },
+      
+      setSelectedTime: (time) => {
+        set({ selectedTime: time });
+      },
+      
+      setAddress: (address) => {
+        set({ address });
+      },
+      
+      setAddress2: (address2) => {
+        set({ address2 });
+      },
+      
+      setPostcode: (postcode) => {
+        set({ postcode });
+      },
+      
+      setSpecialInstructions: (instructions) => {
+        set({ specialInstructions: instructions });
+      },
+      
       calculateTotalPrice: () => {
-        const { basePrice, bedroomCount, bathroomCount, selectedExtras } = get();
+        const { basePrice, bedroomCount, bathroomCount, selectedExtras, deliveryFee } = get();
         
         // Base price calculation (simplified - in real app, you'd use pricing rules)
         let roomPrice = basePrice;
@@ -140,13 +226,13 @@ export const useBookingStore = create<BookingState>()(
           0
         );
         
-        const totalPrice = roomPrice + extrasTotal;
+        const totalPrice = roomPrice + extrasTotal + deliveryFee;
         
         set({ totalPrice });
       },
       
       setCurrentStep: (step) => {
-        set({ currentStep: Math.max(1, Math.min(3, step)) });
+        set({ currentStep: Math.max(1, Math.min(4, step)) });
       },
       
       resetBooking: () => {
@@ -160,6 +246,14 @@ export const useBookingStore = create<BookingState>()(
         bedroomCount: state.bedroomCount,
         bathroomCount: state.bathroomCount,
         selectedExtras: state.selectedExtras,
+        selectedRegion: state.selectedRegion,
+        selectedSuburb: state.selectedSuburb,
+        selectedDate: state.selectedDate,
+        selectedTime: state.selectedTime,
+        address: state.address,
+        address2: state.address2,
+        postcode: state.postcode,
+        specialInstructions: state.specialInstructions,
         currentStep: state.currentStep,
       }),
     }

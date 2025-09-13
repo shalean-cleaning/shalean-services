@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, Clock, Home, Plus } from 'lucide-react';
+import { Calendar, Clock, Home, Plus, MapPin } from 'lucide-react';
 
 import { Service, PricingRule } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
@@ -18,6 +18,10 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
     bedroomCount,
     bathroomCount,
     selectedExtras,
+    selectedDate,
+    selectedTime,
+    address,
+    deliveryFee,
     totalPrice,
   } = useBookingStore();
 
@@ -55,6 +59,35 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
           <Calendar className="w-4 h-4" />
           <span>{bedroomCount} bedroom{bedroomCount !== 1 ? 's' : ''}, {bathroomCount} bathroom{bathroomCount !== 1 ? 's' : ''}</span>
         </div>
+
+        {/* Location Information */}
+        {address && (
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Service Location</h4>
+              <p className="text-sm text-gray-500">{address}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Scheduling Information */}
+        {selectedDate && selectedTime && (
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Scheduled Time</h4>
+              <p className="text-sm text-gray-500">
+                {new Date(selectedDate).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })} at {selectedTime}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <Separator className="my-4" />
@@ -77,6 +110,13 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Additional bathrooms (×{bathroomCount - 1})</span>
             <span className="font-medium">+${((bathroomCount - 1) * 15).toFixed(2)}</span>
+          </div>
+        )}
+
+        {deliveryFee > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Delivery fee</span>
+            <span className="font-medium">+${deliveryFee.toFixed(2)}</span>
           </div>
         )}
 

@@ -486,7 +486,7 @@
         "dependencies": [
           7
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -494,7 +494,7 @@
             "description": "Develop the UI component for users to select their service area. This component will fetch and display a list of all available areas from the database.",
             "dependencies": [],
             "details": "Implement a searchable dropdown or select input that is populated on component mount by fetching data from the `areas` table in Supabase. The selected `area_id` must be stored in the booking flow's shared state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirm the dropdown is populated with all entries from the `areas` table. Verify that selecting an area correctly updates the shared booking state."
           },
           {
@@ -503,7 +503,7 @@
             "description": "Build the user interface for selecting a booking date and time. This includes a calendar for date selection and a separate component to display time slots for the chosen date.",
             "dependencies": [],
             "details": "Use a calendar library (e.g., react-day-picker) for the date selection part. Create a grid or list component to display time slots. Initially, this can be a static display; it will be made dynamic in a later subtask. The components should update the booking state upon user selection.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the calendar component renders correctly. Test that selecting a date and a static time slot updates the local or shared state."
           },
           {
@@ -512,7 +512,7 @@
             "description": "Create a performant Supabase Edge Function to calculate and return available time slots for a given area and date.",
             "dependencies": [],
             "details": "The function will accept `area_id` and `date` as input. It must query `cleaner_availability` to find cleaners available on that day who serve the area, and then filter out time slots that are already taken by existing `bookings`. The function should return an array of available time strings (e.g., '09:00', '11:00').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Deploy the function and test it directly using a tool like cURL or the Supabase dashboard. Provide test data (cleaner availability, existing bookings) to verify it returns the correct set of available slots for various scenarios."
           },
           {
@@ -525,7 +525,7 @@
               "8.3"
             ],
             "details": "Implement a data-fetching hook (e.g., using React Query) that triggers the Edge Function whenever the selected area or date changes. Use the response to dynamically render the time slots in the UI, disabling or hiding any times that are not available. Display a loading state during the fetch.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Select an area and a date in the UI. Verify a network request is made to the Edge Function. Manually create bookings in the DB to block out slots and confirm the UI correctly disables those time slots."
           },
           {
@@ -536,7 +536,7 @@
               "8.4"
             ],
             "details": "Upon a user selecting a valid time slot, persist the `area_id`, `booking_date`, and `booking_time` to the central state management store. The 'Next' button on the stepper should be disabled until a valid location, date, and time have all been selected. On click, it should navigate the user to the 'Cleaner Selection' step.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Complete the selection process for this step. Inspect the state management store to confirm all values are saved correctly. Click the 'Next' button and verify it successfully navigates to the next route in the booking flow."
           }
         ]
@@ -947,7 +947,7 @@
     ],
     "metadata": {
       "created": "2025-09-12T12:57:51.800Z",
-      "updated": "2025-09-13T07:06:15.027Z",
+      "updated": "2025-09-13T20:54:45.528Z",
       "description": "Tasks for master context"
     }
   }

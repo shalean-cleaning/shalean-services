@@ -5,26 +5,29 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { Service, Extra, PricingRule } from '@/lib/database.types';
+import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
 import { ServiceSelectionStep } from './steps/service-selection-step';
 import { RoomsSelectionStep } from './steps/rooms-selection-step';
 import { ExtrasSelectionStep } from './steps/extras-selection-step';
+import { LocationSchedulingStep } from './steps/location-scheduling-step';
 
 interface BookingStepperProps {
   service: Service;
   extras: Extra[];
   pricingRules: PricingRule[];
+  regions: Region[];
 }
 
 const steps = [
   { id: 1, title: 'Service', description: 'Select your cleaning service' },
   { id: 2, title: 'Rooms', description: 'Specify bedrooms & bathrooms' },
   { id: 3, title: 'Extras', description: 'Add optional extras' },
+  { id: 4, title: 'Location & Time', description: 'Choose location and schedule' },
 ];
 
-export function BookingStepper({ service, extras, pricingRules }: BookingStepperProps) {
+export function BookingStepper({ service, extras, pricingRules, regions }: BookingStepperProps) {
   const {
     currentStep,
     setCurrentStep,
@@ -32,6 +35,12 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
     bedroomCount,
     bathroomCount,
     selectedExtras,
+    selectedRegion,
+    selectedSuburb,
+    selectedDate,
+    selectedTime,
+    address,
+    postcode,
   } = useBookingStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -45,7 +54,7 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
   }, [service, setSelectedService, isInitialized]);
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -64,6 +73,8 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
         return bedroomCount >= 1 && bathroomCount >= 1;
       case 3:
         return true; // Extras are optional
+      case 4:
+        return !!(selectedRegion && selectedSuburb && selectedDate && selectedTime && address && postcode);
       default:
         return false;
     }
@@ -90,6 +101,12 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
           <ExtrasSelectionStep 
             extras={extras}
             selectedExtras={selectedExtras}
+          />
+        );
+      case 4:
+        return (
+          <LocationSchedulingStep 
+            regions={regions}
           />
         );
       default:
@@ -160,7 +177,7 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
         </Button>
 
         <div className="flex gap-2">
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
@@ -172,7 +189,7 @@ export function BookingStepper({ service, extras, pricingRules }: BookingStepper
           ) : (
             <Button
               onClick={() => {
-                // TODO: Navigate to next step (date/time selection)
+                // TODO: Navigate to booking confirmation
                 console.log('Proceed to booking confirmation');
               }}
               disabled={!canProceed()}
