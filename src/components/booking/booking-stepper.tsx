@@ -12,6 +12,7 @@ import { ServiceSelectionStep } from './steps/service-selection-step';
 import { RoomsSelectionStep } from './steps/rooms-selection-step';
 import { ExtrasSelectionStep } from './steps/extras-selection-step';
 import { LocationSchedulingStep } from './steps/location-scheduling-step';
+import { CleanerSelectionStep } from './steps/cleaner-selection-step';
 
 interface BookingStepperProps {
   service: Service;
@@ -25,6 +26,7 @@ const steps = [
   { id: 2, title: 'Rooms', description: 'Specify bedrooms & bathrooms' },
   { id: 3, title: 'Extras', description: 'Add optional extras' },
   { id: 4, title: 'Location & Time', description: 'Choose location and schedule' },
+  { id: 5, title: 'Cleaner', description: 'Select your cleaner' },
 ];
 
 export function BookingStepper({ service, extras, pricingRules, regions }: BookingStepperProps) {
@@ -39,6 +41,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
     selectedSuburb,
     selectedDate,
     selectedTime,
+    selectedCleanerId,
     address,
     postcode,
   } = useBookingStore();
@@ -54,7 +57,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
   }, [service, setSelectedService, isInitialized]);
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -75,6 +78,8 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
         return true; // Extras are optional
       case 4:
         return !!(selectedRegion && selectedSuburb && selectedDate && selectedTime && address && postcode);
+      case 5:
+        return !!selectedCleanerId;
       default:
         return false;
     }
@@ -108,6 +113,10 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
           <LocationSchedulingStep 
             regions={regions}
           />
+        );
+      case 5:
+        return (
+          <CleanerSelectionStep />
         );
       default:
         return null;
@@ -177,7 +186,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
         </Button>
 
         <div className="flex gap-2">
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <Button
               onClick={handleNext}
               disabled={!canProceed()}

@@ -551,7 +551,7 @@
         "dependencies": [
           8
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -559,7 +559,7 @@
             "description": "Develop a database query or server function (e.g., Supabase Edge Function) to retrieve a list of cleaners who are available for a given area and time slot.",
             "dependencies": [],
             "details": "The function will accept `areaId` and a `dateTime` object as input. It must query the `cleaners` table, cross-referencing `cleaner_availability` and existing `bookings`, to filter for cleaners who serve the specified area and do not have a conflicting appointment at the selected time. The function should return an array of cleaner objects, including their ID, name, and rating.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Invoke the function directly with various test cases: a valid slot with multiple available cleaners, a slot with one available cleaner, and a slot with no available cleaners. Verify the returned data is accurate."
           },
           {
@@ -568,7 +568,7 @@
             "description": "Develop the static frontend components for the cleaner selection step, including the main layout and a reusable 'CleanerCard' component.",
             "dependencies": [],
             "details": "Create the main component that will house the list of cleaners and the 'Auto-assign' option. Design and implement a 'CleanerCard' component that accepts cleaner data (name, rating, etc.) as props and displays it in a clear, user-friendly format. This subtask focuses on the visual structure without data integration.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use a component viewer like Storybook or run the app with mock data to ensure the 'CleanerCard' and the main layout render correctly with different data inputs and on various screen sizes."
           },
           {
@@ -580,7 +580,7 @@
               "9.2"
             ],
             "details": "In the main cleaner selection component, retrieve the `areaId` and `dateTimeSlot` from the booking state. Use these values to call the server function created in subtask 9.1. Render the returned list of cleaners using the 'CleanerCard' component. Implement loading states for when data is being fetched and an empty state message (e.g., 'No cleaners are available for this time slot') if the list is empty.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to the cleaner selection step in the application. Verify that the loading indicator appears, followed by the correct list of cleaners for a pre-defined available slot. Test that the empty state message is shown for a slot with no availability."
           },
           {
@@ -591,7 +591,7 @@
               "9.3"
             ],
             "details": "Add click handlers to each 'CleanerCard' and the 'Auto-assign' button. When a card is clicked, store the corresponding `cleanerId` in the booking state. For 'Auto-assign', implement the placeholder logic to select the first cleaner from the available list and store their ID. The UI should provide visual feedback for the current selection.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Click on a cleaner card and verify the booking state is updated with the correct `cleanerId`. Click the 'Auto-assign' button and confirm the state is updated with the ID of the first cleaner in the list. Ensure the UI highlights the selected option."
           },
           {
@@ -602,7 +602,7 @@
               "9.4"
             ],
             "details": "Create unit tests for the 'Auto-assign' logic and the state update mechanism. Write integration tests that mock the server function's response and simulate user interaction. The tests should cover selecting a cleaner, using auto-assign, and handling the case where no cleaners are available, verifying that the component behaves as expected and the booking state is managed correctly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the test suite and ensure all tests pass. Manually set up test data in the database (cleaners, areas, availability) and perform end-to-end tests to confirm that only the correct cleaners appear for a given time slot and area, and that the selection is passed to the next step."
           }
         ]
@@ -947,7 +947,7 @@
     ],
     "metadata": {
       "created": "2025-09-12T12:57:51.800Z",
-      "updated": "2025-09-13T20:54:45.528Z",
+      "updated": "2025-09-13T21:20:00.305Z",
       "description": "Tasks for master context"
     }
   }

@@ -29,6 +29,20 @@ export interface BookingState {
   postcode: string;
   specialInstructions?: string;
   
+  // Cleaner selection
+  selectedCleanerId: string | null;
+  availableCleaners: Array<{
+    id: string;
+    name: string;
+    rating: number;
+    totalRatings: number;
+    experienceYears: number;
+    bio?: string;
+    avatarUrl?: string;
+    eta?: string;
+    badges?: string[];
+  }>;
+  
   // Pricing
   basePrice: number;
   totalPrice: number;
@@ -52,6 +66,19 @@ export interface BookingState {
   setAddress2: (address2: string) => void;
   setPostcode: (postcode: string) => void;
   setSpecialInstructions: (instructions: string) => void;
+  setSelectedCleanerId: (cleanerId: string | null) => void;
+  setAvailableCleaners: (cleaners: Array<{
+    id: string;
+    name: string;
+    rating: number;
+    totalRatings: number;
+    experienceYears: number;
+    bio?: string;
+    avatarUrl?: string;
+    eta?: string;
+    badges?: string[];
+  }>) => void;
+  autoAssignCleaner: () => void;
   calculateTotalPrice: () => void;
   setCurrentStep: (step: number) => void;
   resetBooking: () => void;
@@ -70,6 +97,8 @@ const initialState = {
   address2: '',
   postcode: '',
   specialInstructions: '',
+  selectedCleanerId: null,
+  availableCleaners: [],
   basePrice: 0,
   totalPrice: 0,
   deliveryFee: 0,
@@ -206,6 +235,28 @@ export const useBookingStore = create<BookingState>()(
         set({ specialInstructions: instructions });
       },
       
+      setSelectedCleanerId: (cleanerId) => {
+        set({ selectedCleanerId: cleanerId });
+      },
+      
+      setAvailableCleaners: (cleaners) => {
+        set({ availableCleaners: cleaners });
+      },
+      
+      autoAssignCleaner: () => {
+        const { availableCleaners } = get();
+        if (availableCleaners.length > 0) {
+          // Deterministic auto-assign: pick the cleaner with highest rating
+          // If ratings are equal, pick the one with most experience
+          const bestCleaner = availableCleaners.reduce((best, current) => {
+            if (current.rating > best.rating) return current;
+            if (current.rating === best.rating && current.experienceYears > best.experienceYears) return current;
+            return best;
+          });
+          set({ selectedCleanerId: bestCleaner.id });
+        }
+      },
+      
       calculateTotalPrice: () => {
         const { basePrice, bedroomCount, bathroomCount, selectedExtras, deliveryFee } = get();
         
@@ -232,7 +283,7 @@ export const useBookingStore = create<BookingState>()(
       },
       
       setCurrentStep: (step) => {
-        set({ currentStep: Math.max(1, Math.min(4, step)) });
+        set({ currentStep: Math.max(1, Math.min(5, step)) });
       },
       
       resetBooking: () => {
@@ -254,6 +305,8 @@ export const useBookingStore = create<BookingState>()(
         address2: state.address2,
         postcode: state.postcode,
         specialInstructions: state.specialInstructions,
+        selectedCleanerId: state.selectedCleanerId,
+        availableCleaners: state.availableCleaners,
         currentStep: state.currentStep,
       }),
     }
