@@ -1,27 +1,32 @@
-import { NextResponse } from 'next/server'
-import { withApiSafe } from '@/lib/api-safe'
-import { createClient } from '@/lib/supabase-server'
+// app/api/extras/route.ts
+import { NextResponse } from 'next/server';
+import { getServerSupabase } from '@/lib/supabase/server';
 
-export const runtime = 'nodejs'
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export const GET = withApiSafe(async () => {
-  const supabase = createClient()
-  
-  const { data: extras, error } = await supabase
-    .from('extras')
-    .select(`
-      id,
-      name,
-      description,
-      price,
-      duration_minutes
-    `)
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-
-  if (error) {
-    throw new Error(`Failed to fetch extras: ${error.message}`)
+export async function GET() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 });
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.json({ error: 'Missing Supabase key (service or anon)' }, { status: 500 });
   }
 
-  return NextResponse.json(extras, { status: 200 })
-}, { routeName: '/api/extras' })
+  try {
+    const supabase = getServerSupabase();
+    const { data, error } = await supabase
+      .from('extras')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('[api/extras] Supabase error:', error);
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+    }
+    return NextResponse.json(data ?? [], { status: 200 });
+  } catch (err: any) {
+    console.error('[api/extras] Handler error:', err);
+    return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 });
+  }
+}

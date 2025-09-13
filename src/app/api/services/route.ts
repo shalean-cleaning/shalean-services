@@ -1,33 +1,33 @@
-import { NextResponse } from 'next/server'
-import { withApiSafe } from '@/lib/api-safe'
-import { createClient } from '@/lib/supabase-server'
+// app/api/services/route.ts
+import { NextResponse } from 'next/server';
+import { getServerSupabase } from '@/lib/supabase/server';
 
-export const runtime = 'nodejs'
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export const GET = withApiSafe(async () => {
-  const supabase = createClient()
-  
-  const { data: services, error } = await supabase
-    .from('services')
-    .select(`
-      id,
-      name,
-      description,
-      base_price,
-      duration_minutes,
-      category_id,
-      service_categories (
-        id,
-        name,
-        description
-      )
-    `)
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-
-  if (error) {
-    throw new Error(`Failed to fetch services: ${error.message}`)
+export async function GET() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 });
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.json({ error: 'Missing Supabase key (service or anon)' }, { status: 500 });
   }
 
-  return NextResponse.json(services, { status: 200 })
-}, { routeName: '/api/services' })
+  try {
+    const supabase = getServerSupabase();
+    // Adjust table name if different
+    const { data, error } = await supabase
+      .from('service_category')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('[api/services] Supabase error:', error);
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+    }
+    return NextResponse.json(data ?? [], { status: 200 });
+  } catch (err: any) {
+    console.error('[api/services] Handler error:', err);
+    return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 });
+  }
+}
