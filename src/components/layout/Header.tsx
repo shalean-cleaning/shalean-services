@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useUser } from '@/hooks/useAuth'
 import { NAV_ITEMS } from '@/types/nav'
+import QuickQuote from '@/components/landing/quick-quote'
 
 export function Header() {
   const { user, profile, loading } = useUser()
@@ -60,6 +61,7 @@ export function Header() {
 
           {/* Desktop Auth Section */}
           <div className="hidden lg:flex items-center space-x-4">
+            <QuickQuote isModal={true} />
             {loading ? (
               <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
             ) : user ? (
@@ -187,6 +189,9 @@ export function Header() {
                     
                     {/* Mobile Auth Section */}
                     <div className="pt-6 border-t border-gray-200 mt-6">
+                      <div className="px-3 py-2 mb-4">
+                        <QuickQuote isModal={true} />
+                      </div>
                       {loading ? (
                         <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
                       ) : user ? (

@@ -202,6 +202,26 @@ export interface Rating {
   updated_at: string;
 }
 
+export interface Quote {
+  id: string
+  email: string
+  service_id: string
+  suburb_id: string
+  bedrooms: number
+  bathrooms: number
+  frequency: string
+  extras: Array<{
+    id: string
+    quantity: number
+    price: number
+  }>
+  total_price: number
+  status: 'pending' | 'contacted' | 'converted' | 'expired'
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface BlogPost {
   id: string;
   title: string;
