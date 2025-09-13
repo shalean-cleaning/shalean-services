@@ -216,6 +216,31 @@ export interface BlogPost {
   updated_at: string;
 }
 
+export interface ContentBlock {
+  id: string;
+  section_key: string;
+  title: string;
+  description?: string;
+  icon_name?: string;
+  order_index: number;
+  metadata?: Record<string, unknown>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Testimonial {
+  id: string;
+  quote: string;
+  author_name: string;
+  author_role?: string;
+  author_image?: string;
+  rating?: number;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // View Types
 export interface CleanerAvailabilityView {
   cleaner_id: string;
@@ -343,6 +368,8 @@ export type PaymentInsert = Omit<Payment, 'id' | 'created_at' | 'updated_at'>;
 export type NotificationInsert = Omit<Notification, 'id' | 'created_at'>;
 export type RatingInsert = Omit<Rating, 'id' | 'created_at' | 'updated_at'>;
 export type BlogPostInsert = Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>;
+export type ContentBlockInsert = Omit<ContentBlock, 'id' | 'created_at' | 'updated_at'>;
+export type TestimonialInsert = Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>;
 
 // Update Types (omitting immutable fields)
 export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>;
@@ -361,3 +388,5 @@ export type PaymentUpdate = Partial<Omit<Payment, 'id' | 'created_at' | 'updated
 export type NotificationUpdate = Partial<Omit<Notification, 'id' | 'created_at'>>;
 export type RatingUpdate = Partial<Omit<Rating, 'id' | 'created_at' | 'updated_at'>>;
 export type BlogPostUpdate = Partial<Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>>;
+export type ContentBlockUpdate = Partial<Omit<ContentBlock, 'id' | 'created_at' | 'updated_at'>>;
+export type TestimonialUpdate = Partial<Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>>;
