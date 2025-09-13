@@ -1,5 +1,6 @@
 'use client'
 
+import { Menu, User } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -8,7 +9,6 @@ import { LogoutButton } from '@/components/auth/LogoutButton'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useUser } from '@/hooks/useAuth'
-import { Menu, User } from 'lucide-react'
 import { NAV_ITEMS } from '@/types/nav'
 
 export function Header() {

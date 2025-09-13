@@ -1,8 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { 
   Sparkles, 
   Home, 
@@ -13,6 +11,9 @@ import {
   Calendar,
   Shield
 } from 'lucide-react'
+import Link from 'next/link'
+
+import { Button } from '@/components/ui/button'
 
 const services = [
   { icon: Home, label: 'Cleaning', color: 'text-blue-600' },

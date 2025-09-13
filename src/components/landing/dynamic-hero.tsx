@@ -1,9 +1,6 @@
 "use client";
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { useHeroContent } from '@/hooks/useHomepageData'
 import { 
   Sparkles, 
   Home, 
@@ -14,6 +11,10 @@ import {
   Calendar,
   Shield
 } from 'lucide-react'
+import Link from 'next/link'
+
+import { Button } from '@/components/ui/button'
+import { useHeroContent } from '@/hooks/useHomepageData'
 
 const services = [
   { icon: Home, label: 'Cleaning', color: 'text-blue-600' },

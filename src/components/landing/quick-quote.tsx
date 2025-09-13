@@ -1,12 +1,13 @@
 'use client'
 
+import { Calculator, Plus, Minus } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Calculator, Clock, MapPin, Home, Plus, Minus, CheckCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface Service {
   id: string
@@ -51,7 +52,7 @@ interface QuoteBreakdown {
 
 interface QuickQuoteProps {
   isModal?: boolean
-  onContinueToBooking?: (quoteData: any) => void
+  onContinueToBooking?: (quoteData: { service: Service; suburb: Region['suburbs'][0]; extras: Extra[]; total: number; breakdown: QuoteBreakdown }) => void
 }
 
 export default function QuickQuote({ isModal = false, onContinueToBooking }: QuickQuoteProps) {
@@ -104,9 +105,9 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
         setServices(servicesData);
         setExtras(extrasData);
         setRegions(regionsData);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('[QuickQuote] bootstrap error:', err);
-        setLoadError(err?.message ?? 'Failed to fetch data');
+        setLoadError(err instanceof Error ? err.message : 'Failed to fetch data');
       } finally {
         setLoading(false);
       }

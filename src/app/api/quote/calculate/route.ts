@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+
 import { withApiSafe } from '@/lib/api-safe'
 import { createClient } from '@/lib/supabase-server'
 
@@ -15,7 +16,7 @@ export const POST = withApiSafe(async (request: Request) => {
   }
 
   // Convert extras to the format expected by the database function
-  const extrasJson = extras.map((extra: any) => ({
+  const extrasJson = extras.map((extra: { id: string; quantity?: number; price: number }) => ({
     extra_id: extra.id,
     quantity: extra.quantity || 1,
     price: extra.price
@@ -53,7 +54,7 @@ export const POST = withApiSafe(async (request: Request) => {
   const serviceFee = serviceData.base_price * 0.10
   
   // Calculate extras total
-  const extrasTotal = extras.reduce((sum: number, extra: any) => {
+  const extrasTotal = extras.reduce((sum: number, extra: { price: number; quantity?: number }) => {
     return sum + (extra.price * (extra.quantity || 1))
   }, 0)
 

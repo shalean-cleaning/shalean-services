@@ -1,11 +1,12 @@
 "use client";
 
+import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { Calendar, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, ArrowRight } from "lucide-react";
+
 import { useRecentBlogPosts } from "@/hooks/useHomepageData";
-import { format } from "date-fns";
 
 export default function DynamicBlogPreview() {
   const { data: blogPosts, isLoading } = useRecentBlogPosts(3);

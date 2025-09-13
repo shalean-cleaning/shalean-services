@@ -1,8 +1,9 @@
+import { Calculator, CheckCircle, Phone, Zap } from "lucide-react";
 import type { Metadata } from "next";
+
+import QuickQuote from "@/components/landing/quick-quote";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, Clock, CheckCircle, Phone, Zap } from "lucide-react";
-import QuickQuote from "@/components/landing/quick-quote";
 
 export const metadata: Metadata = {
   title: "Get a Free Quote",

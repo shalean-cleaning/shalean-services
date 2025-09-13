@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, User } from 'lucide-react'
+import Link from 'next/link'
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateYMD } from '@/lib/dates'
 
 const blogPosts = [

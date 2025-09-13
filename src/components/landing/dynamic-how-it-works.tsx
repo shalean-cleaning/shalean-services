@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle, Calendar, Settings } from "lucide-react";
+
 import { useHowItWorksContent } from "@/hooks/useHomepageData";
 
 const iconMap = {

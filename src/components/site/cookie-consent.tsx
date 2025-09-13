@@ -1,9 +1,9 @@
 'use client'
 
+import { X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
 
 export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false)

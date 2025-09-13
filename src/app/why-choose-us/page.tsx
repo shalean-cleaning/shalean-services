@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Shield, Award, Users, Clock, Heart, Star } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Why Choose Shalean Services",

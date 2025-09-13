@@ -1,5 +1,6 @@
 // app/api/services/route.ts
 import { NextResponse } from 'next/server';
+
 import { getServerSupabase } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -26,8 +27,8 @@ export async function GET() {
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
     return NextResponse.json(data ?? [], { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[api/services] Handler error:', err);
-    return NextResponse.json({ error: err?.message ?? 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }

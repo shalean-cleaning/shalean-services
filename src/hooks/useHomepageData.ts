@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchJson, normalizeError } from '@/lib/http'
+
 import { ContentBlock, BlogPost, Testimonial, Profile } from '@/lib/database.types'
+import { fetchJson, normalizeError } from '@/lib/http'
 
 // React Query hooks for homepage data
 export function useContentBlocks(sectionKey: string) {

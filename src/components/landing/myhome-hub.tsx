@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Home, Calendar, Users, Settings } from 'lucide-react'
+import Link from 'next/link'
+
+import { Button } from '@/components/ui/button'
 
 export default function MyHomeHub() {
   return (

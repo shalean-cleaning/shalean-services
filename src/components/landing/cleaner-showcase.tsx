@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from 'framer-motion'
+import { Star } from 'lucide-react'
 import Link from 'next/link'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Star } from 'lucide-react'
 
 const cleaners = [
   {

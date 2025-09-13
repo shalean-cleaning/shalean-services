@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { CheckCircle, Home, Building, Sparkles, Truck } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Our Services",

@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { Menu, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
 
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import QuickQuote from '@/components/landing/quick-quote'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useUser } from '@/hooks/useAuth'
 import { NAV_ITEMS } from '@/types/nav'
-import QuickQuote from '@/components/landing/quick-quote'
 
 export function Header() {
   const { user, profile, loading } = useUser()

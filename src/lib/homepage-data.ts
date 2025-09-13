@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase-server'
 import { ContentBlock, BlogPost, Testimonial, Profile } from '@/lib/database.types'
+import { createClient } from '@/lib/supabase-server'
 
 // Homepage data fetching utilities
 export async function getContentBlocks(sectionKey: string): Promise<ContentBlock[]> {

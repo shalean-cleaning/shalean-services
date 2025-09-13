@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+
 import { useTeamMembers } from "@/hooks/useHomepageData";
 
 export default function DynamicTeamGrid() {

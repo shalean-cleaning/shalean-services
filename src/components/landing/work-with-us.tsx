@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Users, DollarSign, Clock, Heart } from 'lucide-react'
+import Link from 'next/link'
+
+import { Button } from '@/components/ui/button'
 
 export default function WorkWithUs() {
   return (

@@ -1,11 +1,12 @@
 'use client'
 
+import { CheckCircle, Calendar, User, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CheckCircle, Calendar, Clock, MapPin, User, CreditCard } from 'lucide-react'
 
 interface QuoteData {
   service_id: string
@@ -134,7 +135,7 @@ export default function BookingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-3xl font-bold text-gray-900">Complete Your Booking</h1>
           <p className="text-gray-600 mt-2">
-            You're almost done! Just a few more details to confirm your cleaning service.
+            You&apos;re almost done! Just a few more details to confirm your cleaning service.
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ShieldCheck, Calendar, Heart, Leaf, DollarSign, Phone } from "lucide-react";
+
 import { useWhyChooseUsContent } from "@/hooks/useHomepageData";
 
 const iconMap = {
