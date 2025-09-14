@@ -14,6 +14,6 @@ export const GET = withApiSafe(async () => {
     ctaHref: "/services",
   };
 
-  return NextResponse.json(data, { status: 200 });
-}, { routeName: "/api/content/hero" });
+  return NextResponse.json(data);
+});
 

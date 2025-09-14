@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 
 import { withApiSafe } from '../../../../lib/api-safe'
-export const runtime = 'nodejs'
+
+export const dynamic = "force-dynamic";
 
 export const GET = withApiSafe(async () => {
   const testimonials = [
@@ -12,5 +13,5 @@ export const GET = withApiSafe(async () => {
       quote: 'Brilliant service, quick booking, spotless result.',
     },
   ]
-  return NextResponse.json(testimonials, { status: 200 })
-}, { routeName: '/api/testimonials/featured' })
+  return NextResponse.json(testimonials)
+})

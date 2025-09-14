@@ -14,13 +14,14 @@ import { fadeUp, pop, stagger } from '@/components/anim/variants'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
-// Server-side fetch helper
-async function getJSON<T>(path: string): Promise<T> {
+async function getJSON<T>(path: string, init?: RequestInit): Promise<T> {
   const onVercel = !!process.env.VERCEL;
-  const base = onVercel ? "" : (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
-  const res = await fetch(`${base}${path}`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
+  const rawBase = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const base = onVercel ? "" : rawBase.replace(/\/+$/, "");
+  const url = `${base}${path}`;
+  const res = await fetch(url, { cache: "no-store", ...init });
+  if (!res.ok) throw new Error(`[getJSON] HTTP ${res.status} ${res.statusText} for ${url}`);
+  return await res.json() as T;
 }
 
 export const dynamic = "force-dynamic";
@@ -37,13 +38,15 @@ const blogCardImages = ['/images/placeholder.png', '/images/placeholder.png', '/
 
 export default async function Home() {
   // Fetch all landing content via APIs
-  const hero = await getJSON<{ title: string; subtitle: string; imageUrl: string; ctaText: string; ctaHref: string }>("/api/content/hero");
-  const contentBlocks = await getJSON<Array<{ id: string; title: string; body: string }>>("/api/content/blocks");
-  const team = await getJSON<Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }>>("/api/team/members");
-  const blog = await getJSON<Array<{ id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }>>("/api/blog/recent?limit=3");
+  const hero: { title: string; subtitle: string; imageUrl: string; ctaText: string; ctaHref: string } = await getJSON("/api/content/hero");
+  const howItWorks: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=how-it-works");
+  const whyChooseUs: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=why-choose-us");
+  const testimonials: Array<{ id: string; name: string; avatar: string; quote: string }> = await getJSON("/api/testimonials/featured?limit=4");
+  const team: Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }> = await getJSON("/api/team/members");
+  const blog: Array<{ id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }> = await getJSON("/api/blog/recent?limit=3");
   
   // Extract specific blocks
-  const whyChooseUs = contentBlocks.find((block) => block.id === 'why-choose-us');
+  const contentBlocks = [howItWorks, whyChooseUs].filter(Boolean);
   
   // Create services data from static content (since no services API endpoint exists yet)
   const services = [
@@ -154,10 +157,10 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                {whyChooseUs?.title || "Why Choose Us"}
+                Why Choose Us
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                {whyChooseUs?.body || "We provide comprehensive home services with trusted professionals and reliable support."}
+                We provide comprehensive home services with trusted professionals and reliable support.
               </p>
             </div>
 
