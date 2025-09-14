@@ -34,16 +34,16 @@ export default function Home() {
 
   // Service icons data
   const services = [
-    { icon: Sparkles, label: "Cleaning" },
-    { icon: Sparkles, label: "Deep Clean" },
-    { icon: Leaf, label: "Outdoor" },
-    { icon: Shirt, label: "Laundry" },
-    { icon: Baby, label: "Nanny" },
-    { icon: Heart, label: "Elder Care" },
-    { icon: Truck, label: "Move-In/Out" },
-    { icon: HomeIcon, label: "Airbnb" },
-    { icon: Users, label: "Housekeeper" },
-    { icon: Clock, label: "Maintenance" },
+    { icon: Sparkles, label: "Cleaning", color: "text-blue-600" },
+    { icon: Shield, label: "Deep Clean", color: "text-green-600" },
+    { icon: Leaf, label: "Outdoor", color: "text-emerald-600" },
+    { icon: Shirt, label: "Laundry", color: "text-purple-600" },
+    { icon: Baby, label: "Nanny", color: "text-pink-600" },
+    { icon: Heart, label: "Elder Care", color: "text-rose-600" },
+    { icon: Truck, label: "Move-In/Out", color: "text-orange-600" },
+    { icon: HomeIcon, label: "Airbnb", color: "text-indigo-600" },
+    { icon: Users, label: "Housekeeper", color: "text-cyan-600" },
+    { icon: Clock, label: "Maintenance", color: "text-amber-600" },
   ];
 
   // Value strip data
@@ -181,44 +181,64 @@ export default function Home() {
   return (
     <main className="flex flex-col">
       {/* Hero Section */}
-      <MotionSection className="relative bg-gradient-to-br from-blue-50 to-indigo-100 pt-20 pb-16 lg:pt-32 lg:pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <MotionSection className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-20 pb-20 lg:pt-32 lg:pb-28 overflow-hidden">
+        {/* Background decoration */}
+        <div className='absolute inset-0 bg-[url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")] opacity-40'></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
             <div className="text-center lg:text-left">
               <MotionItem variants={fadeUp}>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                  Reliable home cleaning, on your schedule.
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-semibold mb-6">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Trusted by 1000+ families
+                </div>
+              </MotionItem>
+              
+              <MotionItem variants={fadeUp}>
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+                  Reliable home cleaning,{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    on your schedule
+                  </span>
                 </h1>
               </MotionItem>
               
               <MotionItem variants={fadeUp}>
-                <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0">
-                  Book trusted local cleaners in minutes and manage every visit from one place.
+                <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                  Book trusted local cleaners in minutes and manage every visit from one place. 
+                  <span className="font-semibold text-gray-800"> 100% satisfaction guaranteed.</span>
                 </p>
               </MotionItem>
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
                 <MotionItem variants={popCard}>
-                  <Button size="lg" asChild className="text-lg px-8 py-3">
-                    <Link href="/booking">Book a Service</Link>
+                  <Button size="lg" asChild className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Link href="/booking" className="flex items-center">
+                      <Calendar className="w-5 h-5 mr-2" />
+                      Book a Service
+                    </Link>
                   </Button>
                 </MotionItem>
                 <MotionItem variants={popCard}>
-                  <Button size="lg" asChild variant="outline" className="text-lg px-8 py-3">
-                    <Link href="/apply">Find Full-Time Help</Link>
+                  <Button size="lg" asChild variant="outline" className="text-lg px-8 py-4 border-2 hover:bg-gray-50 transition-all duration-300">
+                    <Link href="/apply" className="flex items-center">
+                      <Users className="w-5 h-5 mr-2" />
+                      Find Full-Time Help
+                    </Link>
                   </Button>
                 </MotionItem>
               </div>
 
               {/* Service Icons */}
-              <StaggerList className="flex flex-wrap justify-center lg:justify-start gap-4">
+              <StaggerList className="flex flex-wrap justify-center lg:justify-start gap-3">
                 {services.map((service) => (
                   <MotionItem key={service.label} variants={popCard}>
-                    <div className="flex items-center space-x-2 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5">
-                      <service.icon className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">{service.label}</span>
+                    <div className="flex items-center space-x-2 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                      <service.icon className={`w-5 h-5 ${service.color}`} />
+                      <span className="text-sm font-semibold text-gray-800">{service.label}</span>
                     </div>
                   </MotionItem>
                 ))}
@@ -232,14 +252,29 @@ export default function Home() {
                 style={heroParallax.style}
                 className="relative"
               >
-                <SafeImage
-                  src={IMAGES.hero}
-                  alt="Professional cleaning service"
-                  width={800}
-                  height={600}
-                  className="rounded-2xl shadow-2xl"
-                  priority
-                />
+                <div className="relative">
+                  <SafeImage
+                    src={IMAGES.hero}
+                    alt="Professional cleaning service"
+                    width={800}
+                    height={600}
+                    className="rounded-3xl shadow-2xl border-4 border-white/20"
+                    priority
+                  />
+                  {/* Floating elements */}
+                  <div className="absolute -top-4 -right-4 bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-gray-800">Live Booking</span>
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                    <div className="flex items-center space-x-2">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="text-sm font-semibold text-gray-800">4.9/5 Rating</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </MotionItem>
           </div>
