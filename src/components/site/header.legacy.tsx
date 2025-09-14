@@ -7,9 +7,7 @@ import { Menu, X, User } from "lucide-react";
 
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useUser } from '@/hooks/useAuth';
-import { NAV_ITEMS } from '@/types/nav';
 
 const NAV = [
   { label: "Home", href: "/" },

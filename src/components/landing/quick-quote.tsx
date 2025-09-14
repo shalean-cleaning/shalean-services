@@ -82,7 +82,9 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     const res = await fetch(url, { cache: 'no-store', ...init });
     if (!res.ok) {
       let body = '';
-      try { body = await res.text(); } catch {}
+      try { body = await res.text(); } catch {
+        // Ignore text parsing errors
+      }
       console.error(`[QuickQuote] ${name} failed:`, {
         url, status: res.status, statusText: res.statusText, body
       });

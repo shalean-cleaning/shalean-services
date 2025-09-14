@@ -4,7 +4,7 @@ import type { Variants } from "framer-motion";
 import { useRef } from "react";
 
 import { useReducedMotionPref } from "@/hooks/useReducedMotionPref";
-import { fadeUp, stagger } from "./motion";
+import { fadeUp } from "./motion";
 
 type MotionSectionProps = {
   children: React.ReactNode;

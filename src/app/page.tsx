@@ -1,5 +1,4 @@
 "use client";
-import { motion } from "framer-motion";
 import SafeImage from "@/components/ui/safe-image";
 import { IMAGES } from "@/lib/images";
 import Link from "next/link";
@@ -7,7 +6,6 @@ import {
   Calendar,
   Shield,
   Home as HomeIcon, 
-  ArrowRight,
   Star,
   Users,
   Clock,
@@ -26,7 +24,7 @@ import {
 } from 'lucide-react';
 
 import { MotionSection, StaggerList, MotionItem } from '@/components/anim/MotionComponents';
-import { fadeUp, fadeIn, popCard, slideInLeft, slideInRight, scaleIn, float } from '@/components/anim/motion';
+import { fadeUp, popCard, slideInLeft, slideInRight } from '@/components/anim/motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useParallax } from '@/hooks/useParallax';
@@ -289,7 +287,7 @@ export default function Home() {
             <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200 transform -translate-y-1/2"></div>
             
             <StaggerList className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-              {steps.map((step, index) => (
+              {steps.map((step) => (
                 <MotionItem key={step.step} variants={fadeUp}>
                   <div className="text-center relative">
                     <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-6 relative z-10">

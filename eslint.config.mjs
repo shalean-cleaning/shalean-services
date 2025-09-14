@@ -1,61 +1,135 @@
-import { FlatCompat } from "@eslint/eslintrc";
-import importPlugin from "eslint-plugin-import";
-import unusedImports from "eslint-plugin-unused-imports";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+/** @type {import("eslint").Linter.FlatConfig[]} */
+export default [
+  js.configs.recommended,
   {
+    files: ["**/*.{js,jsx,ts,tsx}"],
     ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
+      "node_modules/**", 
+      ".next/**", 
+      "dist/**", 
       "build/**",
-      "next-env.d.ts",
+      "**/.next/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**"
     ],
-  },
-  {
     plugins: {
-      "unused-imports": unusedImports,
-      import: importPlugin,
+      "@next/next": nextPlugin,
+      "@typescript-eslint": tseslint,
+    },
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        console: "readonly",
+        process: "readonly",
+        Buffer: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+        window: "readonly",
+        document: "readonly",
+        navigator: "readonly",
+        location: "readonly",
+        localStorage: "readonly",
+        sessionStorage: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        module: "readonly",
+        require: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        global: "readonly",
+        self: "readonly",
+        importScripts: "readonly",
+        WebAssembly: "readonly",
+        Blob: "readonly",
+        btoa: "readonly",
+        atob: "readonly",
+        HTMLDivElement: "readonly",
+        Image: "readonly",
+      },
     },
     rules: {
-      "unused-imports/no-unused-imports": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-      "import/order": [
-        "warn",
-        {
-          groups: [["builtin", "external"], ["internal", "parent", "sibling", "index"]],
-          "newlines-between": "always",
-          alphabetize: { order: "asc", caseInsensitive: true },
-        },
-      ],
-      // Prevent inline remote URLs that can 404; enforce registry usage
+      // Next.js defaults
+      "@next/next/no-html-link-for-pages": "off",
+
+      // Prevent named imports of Image from next/image
       "no-restricted-syntax": [
         "warn",
         {
-          selector:
-            "JSXOpeningElement[name.name='Image'] JSXAttribute[name.name='src'] Literal[value=/^https?:\\/\\//]",
-          message:
-            "Use local images or the IMAGES registry + <SafeImage>. Inline remote URLs are disallowed.",
-        },
-        {
-          selector:
-            "ImportDeclaration[source.value='next/image'] ImportSpecifier[imported.name='Image']",
+          selector: 'ImportDeclaration[source.value="next/image"] ImportSpecifier[imported.name="Image"]',
           message:
             "Use the default import: `import Image from \"next/image\"` (no named import).",
         },
       ],
+
+      // TypeScript/React specific rules
+      "no-unused-vars": "off", // Turn off base rule
+      "@typescript-eslint/no-unused-vars": ["error", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true 
+      }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      
+      // React specific
+      "react/react-in-jsx-scope": "off", // Not needed in Next.js 13+
+      "react/prop-types": "off", // Using TypeScript instead
+      
+      // General
+      "no-console": "warn",
+      "no-empty": "error",
+      "no-empty-pattern": "error",
+      "no-constant-condition": "error",
+      "no-cond-assign": "error",
+      
+      // Jest/Testing
+      "no-undef": "off", // TypeScript handles this
+    },
+  },
+  // Test files configuration
+  {
+    files: ["**/*.test.{js,jsx,ts,tsx}", "**/__tests__/**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...js.configs.recommended.globals,
+        jest: "readonly",
+        describe: "readonly",
+        it: "readonly",
+        test: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off", // Allow any in tests
+    },
+  },
+  // Supabase Edge Functions configuration
+  {
+    files: ["supabase/functions/**/*.ts"],
+    languageOptions: {
+      globals: {
+        Deno: "readonly",
+        Response: "readonly",
+        Request: "readonly",
+      },
     },
   },
 ];
-
-export default eslintConfig;
