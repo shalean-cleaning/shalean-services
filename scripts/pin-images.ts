@@ -4,7 +4,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { basename } from "node:path";
 
-const REMOTE = [
+const REMOTE: string[] = [
   // Add any real images you want to pin locally (must be reachable URLs)
   // "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&w=1600&q=80",
 ];
