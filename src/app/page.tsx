@@ -10,9 +10,9 @@ import {
 
 import Reveal from '@/components/anim/Reveal'
 import { fadeUp, pop, stagger } from '@/components/anim/variants'
-import ServiceIconTile from '@/components/ui/ServiceIconTile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import ServiceIconTile from '@/components/ui/ServiceIconTile'
 import { hero, services, features, safety, partners, team, serviceIconMap } from '@/content/home'
 import * as L from 'lucide-react'
 
@@ -53,7 +53,8 @@ export default async function Home() {
                 <div className="flex flex-wrap justify-center gap-4 mb-12">
                   {services.map((service) => {
                     const map = serviceIconMap[service.label as keyof typeof serviceIconMap];
-                    const Icon = (map && (L as Record<string, any>)[map.icon]) || L.Square; // safe fallback
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const Icon = (map && (L as any)[map.icon]) || L.Square; // safe fallback
                     return (
                       <Reveal key={service.label} variants={pop}>
                         <ServiceIconTile

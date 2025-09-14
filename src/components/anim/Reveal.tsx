@@ -23,7 +23,7 @@ export default function Reveal({
   viewportMargin = "-80px 0px -80px 0px",
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { margin: viewportMargin, once });
+  const inView = useInView(ref, { margin: viewportMargin as any, once });
   const reduce = useReducedMotionPref();
   const controls = reduce ? "show" : inView ? "show" : "hidden";
   
