@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
 
+import { AuthModal } from '@/components/auth/AuthModal';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useAuth';
@@ -55,6 +56,8 @@ function NavLink({
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const { user, profile } = useUser();
 
   const shouldShowLink = (item: typeof NAV[0]) => {
@@ -64,6 +67,11 @@ export function Header() {
   };
 
   const filteredNav = NAV.filter(shouldShowLink);
+
+  const openAuthModal = (mode: 'login' | 'signup') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur">
@@ -115,15 +123,20 @@ export function Header() {
               </div>
             ) : (
             <>
-              <Link href="/auth/login" className="text-sm font-medium hover:text-blue-700">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => openAuthModal('login')}
+                className="text-sm font-medium hover:text-blue-700"
+              >
                 Log In
-              </Link>
-              <Link
-                href="/auth/signup"
+              </Button>
+              <Button
+                onClick={() => openAuthModal('signup')}
                 className="inline-flex items-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
               >
                 Sign Up
-              </Link>
+              </Button>
             </>
             )}
           </div>
@@ -193,22 +206,38 @@ export function Header() {
                     </div>
                   ) : (
                 <div className="space-y-2">
-                  <Button className="w-full" asChild>
-                    <Link href="/auth/login" onClick={() => setOpen(false)}>
-                      Log In
-                        </Link>
-                      </Button>
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href="/auth/signup" onClick={() => setOpen(false)}>
-                      Sign Up
-                        </Link>
-                      </Button>
-                    </div>
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      openAuthModal('login');
+                      setOpen(false);
+                    }}
+                  >
+                    Log In
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      openAuthModal('signup');
+                      setOpen(false);
+                    }}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
                   )}
                 </div>
               </div>
         </div>
       )}
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode={authModalMode}
+      />
     </header>
   );
 }
