@@ -38,8 +38,7 @@ export default function DynamicTeamGrid() {
       first_name: 'Sarah',
       last_name: 'Johnson',
       role: 'ADMIN',
-      avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face',
-      is_active: true,
+      avatar_url: '/images/placeholder.png',
       created_at: '',
       updated_at: ''
     },
@@ -49,7 +48,7 @@ export default function DynamicTeamGrid() {
       first_name: 'Mike',
       last_name: 'Chen',
       role: 'ADMIN',
-      avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
+      avatar_url: '/images/placeholder.png',
       is_active: true,
       created_at: '',
       updated_at: ''
@@ -60,7 +59,7 @@ export default function DynamicTeamGrid() {
       first_name: 'Emma',
       last_name: 'Davis',
       role: 'ADMIN',
-      avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face',
+      avatar_url: '/images/placeholder.png',
       is_active: true,
       created_at: '',
       updated_at: ''
@@ -71,7 +70,7 @@ export default function DynamicTeamGrid() {
       first_name: 'David',
       last_name: 'Wilson',
       role: 'ADMIN',
-      avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
+      avatar_url: '/images/placeholder.png',
       is_active: true,
       created_at: '',
       updated_at: ''
@@ -116,7 +115,7 @@ export default function DynamicTeamGrid() {
             >
               <div className="relative w-32 h-32 mx-auto mb-4">
                 <Image
-                  src={member.avatar_url || '/placeholder-avatar.jpg'}
+                  src={member.avatar_url || '/images/placeholder.png'}
                   alt={`${member.first_name} ${member.last_name}`}
                   fill
                   className="rounded-full object-cover"
@@ -136,3 +135,4 @@ export default function DynamicTeamGrid() {
     </section>
   );
 }
+

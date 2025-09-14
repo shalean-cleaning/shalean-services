@@ -14,10 +14,16 @@ import { fadeUp, pop, stagger } from '@/components/anim/variants'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
-import { hero, services, features, safety, partners, team, serviceIconMap } from '@/content/home'
+// Server-side fetch helper
+async function getJSON<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const url = `${base}${path}`;
+  const res = await fetch(url, { cache: "no-store", ...init });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${res.statusText} for ${url}`);
+  return res.json();
+}
 
-
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 // Icon mapping for features
 const featureIconMap = {
@@ -30,10 +36,60 @@ const featureIconMap = {
 const blogCardImages = ['/images/card1.svg', '/images/card2.svg', '/images/card3.svg'];
 
 export default async function Home() {
-  // ISR fetch for Blog only
-  const base = (process.env.NEXT_PUBLIC_CONTENT_ORIGIN ?? "").replace(/\/+$/, "");
-  const res = await fetch(`${base}/api/blog/recent?limit=3`, { next: { revalidate: 600 } });
-  const blog = res.ok ? await res.json() : { posts: [] };
+  // Fetch all landing content via APIs
+  const hero = await getJSON<{ title: string; subtitle: string; imageUrl: string }>("/api/content/hero");
+  const contentBlocks = await getJSON<Array<{ id: string; title: string; body: string }>>("/api/content/blocks");
+  const testimonials = await getJSON<Array<{ id: string; name: string; avatar: string; quote: string }>>("/api/testimonials/featured?limit=4");
+  const team = await getJSON<Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }>>("/api/team/members");
+  const blog = await getJSON<Array<{ id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }>>("/api/blog/recent?limit=3");
+  
+  // Extract specific blocks
+  const howItWorks = contentBlocks.find((block) => block.id === 'how-it-works');
+  const whyChooseUs = contentBlocks.find((block) => block.id === 'why-choose-us');
+  
+  // Create services data from static content (since no services API endpoint exists yet)
+  const services = [
+    { icon: "broom", label: "Cleaning", href: "/services/cleaning" },
+    { icon: "sparkles", label: "Deep Clean", href: "/services/deep-clean" },
+    { icon: "leaf", label: "Outdoor", href: "/services/outdoor" },
+    { icon: "shirt", label: "Laundry/Ironing", href: "/services/laundry" },
+    { icon: "baby", label: "Nanny", href: "/services/nanny" },
+    { icon: "heart", label: "Elder Care", href: "/services/elder-care" },
+    { icon: "truck", label: "Move-In/Out", href: "/services/move-in-out" },
+    { icon: "home", label: "Airbnb", href: "/services/airbnb" },
+  ];
+  
+  // Service icon mapping
+  const serviceIconMap = {
+    Cleaning:        { icon: "Broom",          fg: "text-blue-600",   bg: "bg-blue-50",     ring: "ring-blue-100" },
+    "Deep Clean":    { icon: "Sparkles",       fg: "text-purple-600", bg: "bg-purple-50",   ring: "ring-purple-100" },
+    Outdoor:         { icon: "Leaf",           fg: "text-emerald-600",bg: "bg-emerald-50",  ring: "ring-emerald-100" },
+    "Laundry/Ironing":{ icon: "Shirt",         fg: "text-sky-600",    bg: "bg-sky-50",      ring: "ring-sky-100" },
+    Nanny:           { icon: "Baby",          fg: "text-pink-600",   bg: "bg-pink-50",     ring: "ring-pink-100" },
+    "Elder Care":    { icon: "HeartHandshake", fg: "text-rose-600",   bg: "bg-rose-50",     ring: "ring-rose-100" },
+    "Move-In/Out":   { icon: "Truck",          fg: "text-amber-600",  bg: "bg-amber-50",    ring: "ring-amber-100" },
+    Airbnb:          { icon: "Home",           fg: "text-teal-600",   bg: "bg-teal-50",     ring: "ring-teal-100" },
+  } as const;
+  
+  // Create features data (since no specific features API exists)
+  const features = [
+    { title: "Bookings", text: "Schedule one-time or recurring cleaning." },
+    { title: "Placements", text: "Find full-time housekeepers, nannies, carers." },
+    { title: "MyHome Hub", text: "Manage all services and bookings in one place." },
+  ];
+  
+  // Create safety data (since no specific safety API exists)
+  const safety = [
+    { title: "Background Checks", text: "Comprehensive verification." },
+    { title: "References", text: "Verified references." },
+    { title: "Years Experience", text: "Minimum 2+ years." },
+    { title: "Insurance Coverage", text: "Fully insured and bonded." },
+  ];
+  
+  // Create partners data (since no specific partners API exists)
+  const partners = [
+    "Airbnb", "Booking.com", "Property24", "Private Property", "Gumtree", "OLX"
+  ];
 
   return (
     <main id="main" className="flex flex-col">
@@ -74,15 +130,20 @@ export default async function Home() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {hero.ctas.map((cta) => (
-                  <Reveal key={cta.label} variants={pop}>
-                    <Button size="lg" asChild className="text-lg px-8 py-3" variant={cta.variant as "default" | "ghost" | "link" | "outline" | "destructive" | "secondary"}>
-                      <Link href={cta.href}>
-                        {cta.label}
+                <Reveal variants={pop}>
+                  <Button size="lg" asChild className="text-lg px-8 py-3" variant="default">
+                    <Link href="/services">
+                      View Our Services
+                    </Link>
+                  </Button>
+                </Reveal>
+                <Reveal variants={pop}>
+                  <Button size="lg" asChild className="text-lg px-8 py-3" variant="ghost">
+                    <Link href="/apply">
+                      Apply to Work
                       </Link>
                     </Button>
                   </Reveal>
-                ))}
               </div>
             </div>
           </div>
@@ -147,19 +208,19 @@ export default async function Home() {
             <Reveal variants={stagger}>
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {team.map((member) => (
-                  <Reveal key={member.name} variants={pop}>
+                  <Reveal key={member.id} variants={pop}>
                     <div className="text-center">
                       <div className="relative w-32 h-32 mx-auto mb-4">
                         <Image
-                          src={member.img}
-                          alt={member.name}
+                          src={member.avatar_url || "/images/avatar.svg"}
+                          alt={`${member.first_name} ${member.last_name}`}
                           fill
                           className="rounded-full object-cover will-change-transform"
                           sizes="(max-width: 768px) 128px, 128px"
                         />
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {member.name}
+                        {member.first_name} {member.last_name}
                       </h3>
                       <p className="text-gray-600 capitalize">
                         {member.role.toLowerCase()}
@@ -196,7 +257,7 @@ export default async function Home() {
       </Reveal>
 
       {/* Blog Section - Only render if posts exist */}
-      {Array.isArray(blog.posts) && blog.posts.length > 0 && (
+      {Array.isArray(blog) && blog.length > 0 && (
         <Reveal variants={fadeUp}>
           <section className="py-16 sm:py-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -218,7 +279,7 @@ export default async function Home() {
 
               <Reveal variants={stagger}>
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                  {blog.posts.map((post: { id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }, i: number) => (
+                  {blog.map((post, i: number) => (
                     <Reveal key={post.id} variants={pop}>
                       <article className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow will-change-transform">
                         {/* Featured Image */}

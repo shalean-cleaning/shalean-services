@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         published_at: '2024-01-15T10:00:00Z',
         is_published: true,
         author_name: 'Sarah Johnson',
-        featured_image: 'https://images.unsplash.com/photo-1581578017425-ec3843c6a8a5?w=800&h=400&fit=crop',
+        featured_image: '/images/placeholder.png',
       },
       {
         id: '2',
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         published_at: '2024-01-10T14:30:00Z',
         is_published: true,
         author_name: 'Mike Chen',
-        featured_image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&h=400&fit=crop',
+        featured_image: '/images/placeholder.png',
       },
       {
         id: '3',
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         published_at: '2024-01-05T09:15:00Z',
         is_published: true,
         author_name: 'Emma Rodriguez',
-        featured_image: 'https://images.unsplash.com/photo-1581578017425-ec3843c6a8a5?w=800&h=400&fit=crop',
+        featured_image: '/images/placeholder.png',
       },
     ]
     
@@ -49,3 +49,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 })
   }
 }
+
+

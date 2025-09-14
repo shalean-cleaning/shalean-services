@@ -47,7 +47,7 @@ INSERT INTO content_blocks (section_key, title, description, icon_name, order_in
 
 -- Insert team members data
 INSERT INTO profiles (id, email, first_name, last_name, role, avatar_url) VALUES
-(gen_random_uuid(), 'sarah.johnson@shalean.com', 'Sarah', 'Johnson', 'ADMIN', 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face'),
+(gen_random_uuid(), 'sarah.johnson@shalean.com', 'Sarah', 'Johnson', 'ADMIN', '/images/placeholder.png'),
 (gen_random_uuid(), 'mike.chen@shalean.com', 'Mike', 'Chen', 'ADMIN', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'),
 (gen_random_uuid(), 'emma.davis@shalean.com', 'Emma', 'Davis', 'ADMIN', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face'),
 (gen_random_uuid(), 'david.wilson@shalean.com', 'David', 'Wilson', 'ADMIN', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face');
@@ -81,4 +81,6 @@ INSERT INTO blog_posts (title, slug, excerpt, content, featured_image, is_publis
 ('10 Tips for Maintaining a Clean Home Between Professional Cleanings', 'maintaining-clean-home-tips', 'Keep your home spotless between professional cleaning visits with these expert tips and tricks.', 'Professional cleaning services are wonderful, but maintaining a clean home between visits is equally important...', 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=400&fit=crop', true, NOW() - INTERVAL '2 days'),
 ('The Benefits of Eco-Friendly Cleaning Products', 'eco-friendly-cleaning-benefits', 'Discover why eco-friendly cleaning products are better for your health, home, and the environment.', 'Traditional cleaning products often contain harsh chemicals that can be harmful to your family and pets...', 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop', true, NOW() - INTERVAL '5 days'),
 ('How to Choose the Right Cleaning Service for Your Home', 'choosing-right-cleaning-service', 'Learn what to look for when selecting a professional cleaning service that meets your specific needs.', 'With so many cleaning services available, it can be overwhelming to choose the right one for your home...', 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop', true, NOW() - INTERVAL '1 week');
+
+
 

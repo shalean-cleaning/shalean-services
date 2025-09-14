@@ -1,21 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
 
-type Handler = (req: Request) => Promise<Response> | Response
+type Handler = (req: Request) => Promise<Response> | Response;
 
-export function withApiSafe(handler: Handler, options?: { routeName?: string }) {
-  return async (req: Request) => {
+export function withApiSafe(handler: Handler, _opts?: { routeName?: string }): Handler {
+  return async (req) => {
     try {
-      const res = await handler(req)
-      return res
+      const res = await handler(req);
+      return res;
     } catch (err: unknown) {
-      const detail = {
-        name: err instanceof Error ? err.name : 'Error',
-        message: err instanceof Error ? err.message : String(err),
-        stack: process.env.NODE_ENV === 'development' ? (err instanceof Error ? err.stack : undefined) : undefined,
-        route: options?.routeName,
-      }
-      console.error('API route error:', detail)
-      return NextResponse.json({ error: detail }, { status: 500 })
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('[API ERROR]', errorMessage, { url: req.url });
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-  }
+  };
 }

@@ -8,7 +8,7 @@ export const GET = withApiSafe(async () => {
     {
       id: 't1',
       name: 'Alex',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
+      avatar: '/images/placeholder.png',
       quote: 'Brilliant service, quick booking, spotless result.',
     },
   ]
