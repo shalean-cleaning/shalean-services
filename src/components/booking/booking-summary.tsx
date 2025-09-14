@@ -12,7 +12,7 @@ interface BookingSummaryProps {
   pricingRules: PricingRule[];
 }
 
-export function BookingSummary({ service: _service, pricingRules: _pricingRules }: BookingSummaryProps) {
+export function BookingSummary({ }: BookingSummaryProps) {
   const {
     selectedService,
     bedroomCount,

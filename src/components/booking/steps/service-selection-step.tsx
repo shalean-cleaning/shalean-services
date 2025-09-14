@@ -11,7 +11,7 @@ interface ServiceSelectionStepProps {
   pricingRules: PricingRule[];
 }
 
-export function ServiceSelectionStep({ service, pricingRules: _pricingRules }: ServiceSelectionStepProps) {
+export function ServiceSelectionStep({ service }: ServiceSelectionStepProps) {
   const { selectedService, setSelectedService } = useBookingStore();
 
   const isSelected = selectedService?.id === service.id;

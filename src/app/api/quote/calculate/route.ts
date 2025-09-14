@@ -9,7 +9,7 @@ export const POST = withApiSafe(async (request: Request) => {
   const supabase = await createClient()
   const body = await request.json()
   
-  const { service_id, suburb_id, extras = [], _bedrooms = 0, _bathrooms = 0, _frequency = 'one-time' } = body
+  const { service_id, suburb_id, extras = [] } = body
 
   if (!service_id || !suburb_id) {
     return NextResponse.json({ error: 'Service ID and Suburb ID are required' }, { status: 400 })

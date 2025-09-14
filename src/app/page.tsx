@@ -39,14 +39,10 @@ const blogCardImages = ['/images/placeholder.png', '/images/placeholder.png', '/
 export default async function Home() {
   // Fetch all landing content via APIs
   const hero: { title: string; subtitle: string; imageUrl: string; ctaText: string; ctaHref: string } = await getJSON("/api/content/hero");
-  const howItWorks: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=how-it-works");
-  const whyChooseUs: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=why-choose-us");
-  const testimonials: Array<{ id: string; name: string; avatar: string; quote: string }> = await getJSON("/api/testimonials/featured?limit=4");
+  const _howItWorks: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=how-it-works");
+  const _whyChooseUs: { id: string; title: string; body: string } = await getJSON("/api/content/blocks?section=why-choose-us");
   const team: Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }> = await getJSON("/api/team/members");
   const blog: Array<{ id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }> = await getJSON("/api/blog/recent?limit=3");
-  
-  // Extract specific blocks
-  const contentBlocks = [howItWorks, whyChooseUs].filter(Boolean);
   
   // Create services data from static content (since no services API endpoint exists yet)
   const services = [

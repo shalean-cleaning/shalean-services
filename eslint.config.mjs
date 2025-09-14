@@ -29,6 +29,7 @@ const eslintConfig = [
     },
     rules: {
       "unused-imports/no-unused-imports": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "import/order": [
         "warn",
         {

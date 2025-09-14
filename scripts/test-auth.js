@@ -95,7 +95,7 @@ async function testAuthentication() {
   console.log('\n4️⃣ Testing RLS policies...')
   
   // Test reading own profile
-  const { data: ownProfile, error: ownProfileError } = await supabase
+  const { data: _ownProfile, error: ownProfileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', loginData.user?.id)
@@ -108,7 +108,7 @@ async function testAuthentication() {
   }
 
   // Test reading other profiles (should fail for customer)
-  const { data: otherProfiles, error: otherProfilesError } = await supabase
+  const { data: _otherProfiles, error: otherProfilesError } = await supabase
     .from('profiles')
     .select('*')
     .neq('id', loginData.user?.id)
