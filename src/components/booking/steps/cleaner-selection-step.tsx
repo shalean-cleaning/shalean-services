@@ -1,12 +1,13 @@
 'use client';
 
+import { Sparkles, Users, Clock, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+import { CleanerCard } from '../cleaner-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { CleanerCard } from '../cleaner-card';
 import { useBookingStore } from '@/lib/stores/booking-store';
-import { Sparkles, Users, Clock, AlertCircle } from 'lucide-react';
 
 export function CleanerSelectionStep() {
   const {

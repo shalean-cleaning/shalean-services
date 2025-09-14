@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { CleanerCard } from '@/components/booking/cleaner-card';
 import { CleanerSelectionStep } from '@/components/booking/steps/cleaner-selection-step';
 import { useBookingStore } from '@/lib/stores/booking-store';

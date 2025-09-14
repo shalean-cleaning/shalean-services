@@ -1,12 +1,13 @@
 import { format } from "date-fns";
-import Image from "next/image";
-import Link from "next/link";
 import { 
   Calendar,
   Shield,
   Home as HomeIcon, 
   ArrowRight,
 } from 'lucide-react'
+import * as L from 'lucide-react'
+import Image from "next/image";
+import Link from "next/link";
 
 import Reveal from '@/components/anim/Reveal'
 import { fadeUp, pop, stagger } from '@/components/anim/variants'
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
 import { hero, services, features, safety, partners, team, serviceIconMap } from '@/content/home'
-import * as L from 'lucide-react'
+
 
 export const dynamic = "force-static";
 

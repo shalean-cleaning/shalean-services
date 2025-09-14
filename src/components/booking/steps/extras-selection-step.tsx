@@ -1,12 +1,11 @@
 'use client';
 
+import { Minus, Plus, Info } from 'lucide-react';
 import { useState } from 'react';
 
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Minus, Plus, Info } from 'lucide-react';
-
 import { Extra } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 
+import { Card } from '@/components/ui/card';
 import { Service, PricingRule } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 

@@ -76,7 +76,6 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
   const [quoteBreakdown, setQuoteBreakdown] = useState<QuoteBreakdown | null>(null)
   const [serviceName, setServiceName] = useState<string>('')
   const [suburbName, setSuburbName] = useState<string>('')
-  const [lastCalculated, setLastCalculated] = useState<number>(0)
 
   // Helper function for fetching JSON with error context
   async function fetchJSON<T>(name: string, url: string, init?: RequestInit): Promise<T> {
@@ -126,7 +125,7 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     setCalculating(true)
     try {
       const extrasArray = Object.entries(selectedExtras)
-        .filter(([_, quantity]) => quantity > 0)
+        .filter(([, quantity]) => quantity > 0)
         .map(([extraId, quantity]) => {
           const extra = extras.find(e => e.id === extraId)
           return {
@@ -184,25 +183,6 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
   }
 
   const handleContinueToBooking = () => {
-    const quoteData = {
-      service_id: selectedService,
-      suburb_id: selectedSuburb,
-      bedrooms: parseInt(bedrooms) || 0,
-      bathrooms: parseInt(bathrooms) || 0,
-      frequency,
-      extras: Object.entries(selectedExtras)
-        .filter(([_, quantity]) => quantity > 0)
-        .map(([extraId, quantity]) => ({
-          id: extraId,
-          quantity,
-          price: extras.find(e => e.id === extraId)?.price || 0
-        })),
-      breakdown: quoteBreakdown,
-      service_name: serviceName,
-      suburb_name: suburbName,
-      email
-    }
-
     // Store in localStorage for booking flow
     localStorage.setItem('quickQuote', JSON.stringify({
       service_id: selectedService,
@@ -211,7 +191,7 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
       bathrooms: parseInt(bathrooms) || 0,
       frequency,
       extras: Object.entries(selectedExtras)
-        .filter(([_, quantity]) => quantity > 0)
+        .filter(([, quantity]) => quantity > 0)
         .map(([extraId, quantity]) => ({
           id: extraId,
           quantity,
@@ -233,7 +213,7 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
           service,
           suburb,
           extras: Object.entries(selectedExtras)
-            .filter(([_, quantity]) => quantity > 0)
+            .filter(([, quantity]) => quantity > 0)
             .map(([extraId, quantity]) => {
               const extra = extras.find(e => e.id === extraId)
               return extra ? { ...extra, quantity } : null
@@ -267,7 +247,7 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
           bathrooms: parseInt(bathrooms) || 0,
           frequency,
           extras: Object.entries(selectedExtras)
-            .filter(([_, quantity]) => quantity > 0)
+            .filter(([, quantity]) => quantity > 0)
             .map(([extraId, quantity]) => ({
               id: extraId,
               quantity,

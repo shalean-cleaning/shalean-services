@@ -1,9 +1,9 @@
 'use client';
 
+import { format, addDays, isSameDay, isBefore, isAfter } from 'date-fns';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { Calendar, Clock, MapPin } from 'lucide-react';
-import { format, addDays, isSameDay, isBefore, isAfter } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

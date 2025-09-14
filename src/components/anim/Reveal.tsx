@@ -1,7 +1,7 @@
 "use client";
-import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { useRef } from "react";
 
 import { useReducedMotionPref } from "@/hooks/useReducedMotionPref";
 
@@ -23,7 +23,7 @@ export default function Reveal({
   viewportMargin = "-80px 0px -80px 0px",
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { margin: viewportMargin as any, once });
+  const inView = useInView(ref, { margin: viewportMargin, once });
   const reduce = useReducedMotionPref();
   const controls = reduce ? "show" : inView ? "show" : "hidden";
   

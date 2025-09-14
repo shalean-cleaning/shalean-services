@@ -1,18 +1,16 @@
 'use client';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
-import { useBookingStore } from '@/lib/stores/booking-store';
-
-import { ServiceSelectionStep } from './steps/service-selection-step';
-import { RoomsSelectionStep } from './steps/rooms-selection-step';
+import { CleanerSelectionStep } from './steps/cleaner-selection-step';
 import { ExtrasSelectionStep } from './steps/extras-selection-step';
 import { LocationSchedulingStep } from './steps/location-scheduling-step';
-import { CleanerSelectionStep } from './steps/cleaner-selection-step';
+import { RoomsSelectionStep } from './steps/rooms-selection-step';
+import { ServiceSelectionStep } from './steps/service-selection-step';
+import { Button } from '@/components/ui/button';
+import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
+import { useBookingStore } from '@/lib/stores/booking-store';
 
 interface BookingStepperProps {
   service: Service;

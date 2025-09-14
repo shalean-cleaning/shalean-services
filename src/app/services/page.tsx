@@ -1,8 +1,8 @@
+import { Clock, DollarSign, Home } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Clock, DollarSign, Home } from 'lucide-react';
 
 // Mock services data for demonstration
 const mockServices = [

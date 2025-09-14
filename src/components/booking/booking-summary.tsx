@@ -1,9 +1,9 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, Home, Plus, MapPin } from 'lucide-react';
 
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Service, PricingRule } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 

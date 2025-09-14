@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Star, Clock, Award, User } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -68,9 +70,11 @@ export function CleanerCard({ cleaner, isSelected, onSelect }: CleanerCardProps)
         {/* Avatar */}
         <div className="flex-shrink-0">
           {cleaner.avatarUrl && !imageError ? (
-            <img
+            <Image
               src={cleaner.avatarUrl}
               alt={cleaner.name}
+              width={64}
+              height={64}
               className="w-16 h-16 rounded-full object-cover"
               onError={handleImageError}
             />

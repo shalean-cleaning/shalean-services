@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Minus, Plus, Bed, Bath } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
 interface RoomsSelectionStepProps {
