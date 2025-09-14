@@ -1,8 +1,9 @@
 "use client";
-import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { useReducedMotionPref } from "@/hooks/useReducedMotionPref";
+import { motion, useInView } from "framer-motion";
 import type { Variants } from "framer-motion";
+
+import { useReducedMotionPref } from "@/hooks/useReducedMotionPref";
 
 type Props = {
   children: React.ReactNode;

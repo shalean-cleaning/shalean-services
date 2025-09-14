@@ -1,26 +1,19 @@
 import { format } from "date-fns";
-import { 
-  Sparkles, 
-  Home as HomeIcon, 
-  Shirt, 
-  Baby, 
-  Heart, 
-  Truck, 
-  Calendar,
-  Shield,
-  Leaf,
-  ArrowRight,
-  Star
-} from 'lucide-react'
 import Image from "next/image";
 import Link from "next/link";
+import { 
+  Calendar,
+  Shield,
+  Home as HomeIcon, 
+  ArrowRight,
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { hero, services, features, safety, partners, team, serviceIconMap } from '@/content/home'
 import Reveal from '@/components/anim/Reveal'
 import { fadeUp, pop, stagger } from '@/components/anim/variants'
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { hero, services, features, safety, partners, team, serviceIconMap } from '@/content/home'
 import * as L from 'lucide-react'
 
 export const dynamic = "force-static";
@@ -60,7 +53,7 @@ export default async function Home() {
                 <div className="flex flex-wrap justify-center gap-4 mb-12">
                   {services.map((service) => {
                     const map = serviceIconMap[service.label as keyof typeof serviceIconMap];
-                    const Icon = (map && (L as any)[map.icon]) || L.Square; // safe fallback
+                    const Icon = (map && (L as Record<string, any>)[map.icon]) || L.Square; // safe fallback
                     return (
                       <Reveal key={service.label} variants={pop}>
                         <ServiceIconTile
