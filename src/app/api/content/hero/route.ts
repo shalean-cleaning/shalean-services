@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { withApiSafe } from "../../../../lib/api-safe";
 
 export const dynamic = "force-dynamic";

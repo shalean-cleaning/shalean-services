@@ -15,19 +15,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
 // Server-side fetch helper
-async function getJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const onVercel = !!process.env.VERCEL; // true in Vercel runtime
-  const rawBase = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-  const base = onVercel ? "" : rawBase.replace(/\/+$/, ""); // use relative in prod
-  const url = `${base}${path}`;
-  try {
-    const res = await fetch(url, { cache: "no-store", ...init });
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    return res.json();
-  } catch (e) {
-    console.error("[getJSON] failed", { url, err: (e as Error).message });
-    throw e; // keep throwing so we see it in Vercel logs
-  }
+async function getJSON<T>(path: string): Promise<T> {
+  const onVercel = !!process.env.VERCEL;
+  const base = onVercel ? "" : (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const res = await fetch(`${base}${path}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${res.statusText}`);
+  return res.json() as Promise<T>;
 }
 
 export const dynamic = "force-dynamic";
@@ -46,12 +39,10 @@ export default async function Home() {
   // Fetch all landing content via APIs
   const hero = await getJSON<{ title: string; subtitle: string; imageUrl: string; ctaText: string; ctaHref: string }>("/api/content/hero");
   const contentBlocks = await getJSON<Array<{ id: string; title: string; body: string }>>("/api/content/blocks");
-  const testimonials = await getJSON<Array<{ id: string; name: string; avatar: string; quote: string }>>("/api/testimonials/featured?limit=4");
   const team = await getJSON<Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }>>("/api/team/members");
   const blog = await getJSON<Array<{ id: string; title: string; slug: string; excerpt: string; featured_image?: string; published_at: string }>>("/api/blog/recent?limit=3");
   
   // Extract specific blocks
-  const howItWorks = contentBlocks.find((block) => block.id === 'how-it-works');
   const whyChooseUs = contentBlocks.find((block) => block.id === 'why-choose-us');
   
   // Create services data from static content (since no services API endpoint exists yet)
@@ -163,10 +154,10 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Why Choose Us
+                {whyChooseUs?.title || "Why Choose Us"}
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                We provide comprehensive home services with trusted professionals and reliable support.
+                {whyChooseUs?.body || "We provide comprehensive home services with trusted professionals and reliable support."}
               </p>
             </div>
 

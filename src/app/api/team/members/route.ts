@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
-import { withApiSafe } from '../../../../lib/api-safe'
+import { NextResponse } from 'next/server';
+
+import { withApiSafe } from '../../../../lib/api-safe';
 
 export const GET = withApiSafe(async () => {
   try {
