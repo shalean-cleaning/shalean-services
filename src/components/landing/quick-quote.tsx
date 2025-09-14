@@ -158,7 +158,6 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
       setQuoteBreakdown(data.breakdown)
       setServiceName(data.service_name)
       setSuburbName(data.suburb_name)
-      setLastCalculated(Date.now())
     } catch (error) {
       console.error('Error calculating quote:', error)
     } finally {

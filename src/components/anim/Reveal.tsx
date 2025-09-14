@@ -11,7 +11,7 @@ type Props = {
   as?: React.ElementType;
   once?: boolean;
   className?: string;
-  viewportMargin?: string; // e.g. "-100px 0px -100px 0px"
+  viewportMargin?: string | number; // e.g. "-100px 0px -100px 0px" or object
 };
 
 export default function Reveal({
@@ -23,7 +23,11 @@ export default function Reveal({
   viewportMargin = "-80px 0px -80px 0px",
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { margin: viewportMargin, once });
+  const inView = useInView(ref, { 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    margin: viewportMargin as any, 
+    once 
+  });
   const reduce = useReducedMotionPref();
   const controls = reduce ? "show" : inView ? "show" : "hidden";
   
