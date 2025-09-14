@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { withApiSafe } from '@/lib/api-safe'
+import { withApiSafe } from '../../../../lib/api-safe'
 export const runtime = 'nodejs'
 
 export const GET = withApiSafe(async () => {

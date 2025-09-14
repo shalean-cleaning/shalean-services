@@ -16,11 +16,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import ServiceIconTile from '@/components/ui/ServiceIconTile'
 // Server-side fetch helper
 async function getJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const base = (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const onVercel = !!process.env.VERCEL; // true in Vercel runtime
+  const rawBase = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const base = onVercel ? "" : rawBase.replace(/\/+$/, ""); // use relative in prod
   const url = `${base}${path}`;
-  const res = await fetch(url, { cache: "no-store", ...init });
-  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${res.statusText} for ${url}`);
-  return res.json();
+  try {
+    const res = await fetch(url, { cache: "no-store", ...init });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    return res.json();
+  } catch (e) {
+    console.error("[getJSON] failed", { url, err: (e as Error).message });
+    throw e; // keep throwing so we see it in Vercel logs
+  }
 }
 
 export const dynamic = "force-dynamic";
@@ -33,11 +40,11 @@ const featureIconMap = {
 };
 
 // Blog card images fallback
-const blogCardImages = ['/images/card1.svg', '/images/card2.svg', '/images/card3.svg'];
+const blogCardImages = ['/images/placeholder.png', '/images/placeholder.png', '/images/placeholder.png'];
 
 export default async function Home() {
   // Fetch all landing content via APIs
-  const hero = await getJSON<{ title: string; subtitle: string; imageUrl: string }>("/api/content/hero");
+  const hero = await getJSON<{ title: string; subtitle: string; imageUrl: string; ctaText: string; ctaHref: string }>("/api/content/hero");
   const contentBlocks = await getJSON<Array<{ id: string; title: string; body: string }>>("/api/content/blocks");
   const testimonials = await getJSON<Array<{ id: string; name: string; avatar: string; quote: string }>>("/api/testimonials/featured?limit=4");
   const team = await getJSON<Array<{ id: string; first_name: string; last_name: string; role: string; avatar_url: string }>>("/api/team/members");
@@ -132,8 +139,8 @@ export default async function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Reveal variants={pop}>
                   <Button size="lg" asChild className="text-lg px-8 py-3" variant="default">
-                    <Link href="/services">
-                      View Our Services
+                    <Link href={hero.ctaHref}>
+                      {hero.ctaText}
                     </Link>
                   </Button>
                 </Reveal>
@@ -212,7 +219,7 @@ export default async function Home() {
                     <div className="text-center">
                       <div className="relative w-32 h-32 mx-auto mb-4">
                         <Image
-                          src={member.avatar_url || "/images/avatar.svg"}
+                          src={member.avatar_url || "/images/placeholder.png"}
                           alt={`${member.first_name} ${member.last_name}`}
                           fill
                           className="rounded-full object-cover will-change-transform"
