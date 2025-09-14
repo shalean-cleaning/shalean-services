@@ -7,7 +7,7 @@ import "./globals.css";
 import { Providers } from "@/app/providers";
 import { CookieConsent } from "@/components/site/cookie-consent";
 import { Footer } from "@/components/site/footer";
-import { Header } from "@/components/site/header";
+import SiteHeader from "@/components/layout/site-header";
 import { SkipLink } from "@/components/site/skip-link";
 
 const geistSans = Geist({
@@ -109,7 +109,7 @@ export default function RootLayout({
         
         <Providers>
           <div className="min-h-screen flex flex-col">
-            <Header />
+            <SiteHeader />
             <main id="main" className="flex-1">
               {children}
             </main>

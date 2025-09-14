@@ -1,10 +1,8 @@
-import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AdminDashboard() {
   return (
     <div className="min-h-screen">
-      <Header />
       <main className="p-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">

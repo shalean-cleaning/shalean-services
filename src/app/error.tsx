@@ -1,20 +1,49 @@
 "use client";
+
 import { useEffect } from "react";
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }, reset: () => void }) {
+import Link from "next/link";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   useEffect(() => {
-    console.error("[GlobalError]", { message: error.message, digest: error.digest, stack: error.stack });
+    if (process.env.NODE_ENV !== "production") {
+      // Log once in dev for debugging
+      // eslint-disable-next-line no-console
+      console.error("[ErrorBoundary]", error);
+    }
   }, [error]);
+
   return (
-    <html>
-      <body className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-lg w-full rounded-xl border p-6 shadow-sm">
-          <h1 className="text-xl font-semibold mb-2">Something went wrong</h1>
-          {process.env.NODE_ENV !== "production"
-            ? <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-3 rounded border">{String(error.stack || error.message)}</pre>
-            : (error?.digest ? <p className="text-xs text-gray-500">Digest: {error.digest}</p> : null)}
-          <button onClick={() => reset()} className="mt-4 px-3 py-2 rounded bg-blue-600 text-white text-sm">Retry</button>
+    <div className="mx-auto max-w-2xl px-6 py-16 text-center">
+      <h1 className="text-3xl font-semibold tracking-tight">Something went wrong</h1>
+      <p className="mt-2 text-muted-foreground">
+        Please try again, or return to the homepage.
+      </p>
+      <div className="mt-6 flex items-center justify-center gap-3">
+        <button
+          onClick={() => reset()}
+          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring"
+        >
+          Try again
+        </button>
+        <Link
+          href="/"
+          className="rounded-md border px-4 py-2 hover:bg-gray-50"
+        >
+          Go Home
+        </Link>
+      </div>
+
+      {process.env.NODE_ENV !== "production" && error?.message ? (
+        <pre className="mt-8 overflow-auto rounded-lg bg-gray-100 p-4 text-left text-sm text-gray-700">
+          {error.message}
+        </pre>
+      ) : null}
         </div>
-      </body>
-    </html>
   );
 }

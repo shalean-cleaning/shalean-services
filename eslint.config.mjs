@@ -38,6 +38,22 @@ const eslintConfig = [
           alphabetize: { order: "asc", caseInsensitive: true },
         },
       ],
+      // Prevent inline remote URLs that can 404; enforce registry usage
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector:
+            "JSXOpeningElement[name.name='Image'] JSXAttribute[name.name='src'] Literal[value=/^https?:\\/\\//]",
+          message:
+            "Use local images or the IMAGES registry + <SafeImage>. Inline remote URLs are disallowed.",
+        },
+        {
+          selector:
+            "ImportDeclaration[source.value='next/image'] ImportSpecifier[imported.name='Image']",
+          message:
+            "Use the default import: `import Image from \"next/image\"` (no named import).",
+        },
+      ],
     },
   },
 ];

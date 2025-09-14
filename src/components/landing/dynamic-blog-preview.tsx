@@ -3,7 +3,8 @@
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
+import { IMAGES } from "@/lib/images";
 import Link from "next/link";
 
 import { useRecentBlogPosts } from "@/hooks/useHomepageData";
@@ -48,7 +49,7 @@ export default function DynamicBlogPreview() {
       slug: 'maintaining-clean-home-tips',
       excerpt: 'Keep your home spotless between professional cleaning visits with these expert tips and tricks.',
       content: 'Professional cleaning services are wonderful, but maintaining a clean home between visits is equally important...',
-      featured_image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=400&fit=crop',
+      featured_image: IMAGES.blog1,
       is_published: true,
       published_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: '',
@@ -60,7 +61,7 @@ export default function DynamicBlogPreview() {
       slug: 'eco-friendly-cleaning-benefits',
       excerpt: 'Discover why eco-friendly cleaning products are better for your health, home, and the environment.',
       content: 'Traditional cleaning products often contain harsh chemicals that can be harmful to your family and pets...',
-      featured_image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
+      featured_image: IMAGES.blog2,
       is_published: true,
       published_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: '',
@@ -72,7 +73,7 @@ export default function DynamicBlogPreview() {
       slug: 'choosing-right-cleaning-service',
       excerpt: 'Learn what to look for when selecting a professional cleaning service that meets your specific needs.',
       content: 'With so many cleaning services available, it can be overwhelming to choose the right one for your home...',
-      featured_image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop',
+      featured_image: IMAGES.blog3,
       is_published: true,
       published_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: '',
@@ -132,12 +133,13 @@ export default function DynamicBlogPreview() {
             >
               {/* Featured Image */}
               <div className="relative h-48 w-full">
-                <Image
-                  src={post.featured_image || '/placeholder-blog.jpg'}
+                <SafeImage
+                  src={post.featured_image || IMAGES.blog1}
                   alt={post.title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  fallbackSrc={IMAGES.blog1}
                 />
               </div>
 

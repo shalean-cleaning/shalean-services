@@ -1,7 +1,8 @@
 "use client";
 
 import { Star } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
+import { IMAGES } from "@/lib/images";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useFeaturedTestimonials } from "@/hooks/useHomepageData";
@@ -95,7 +96,7 @@ export default function DynamicTestimonials() {
       content: 'Shalean Services transformed our home! The cleaners are professional, thorough, and trustworthy. I can finally relax knowing our home is in good hands.',
       author_name: 'Jennifer Martinez',
       role: 'Homeowner',
-      author_image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
+      author_image: IMAGES.profile,
       rating: 5,
     },
     {
@@ -103,7 +104,7 @@ export default function DynamicTestimonials() {
       content: 'Outstanding service! The team arrived on time, worked efficiently, and left our apartment spotless. Highly recommend for anyone looking for reliable cleaning services.',
       author_name: 'Robert Thompson',
       role: 'Apartment Owner',
-      author_image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face',
+      author_image: IMAGES.profile,
       rating: 5,
     },
     {
@@ -111,7 +112,7 @@ export default function DynamicTestimonials() {
       content: 'As a busy professional, Shalean Services has been a lifesaver. They handle everything professionally and I never have to worry about the quality of their work.',
       author_name: 'Lisa Anderson',
       role: 'Business Owner',
-      author_image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face',
+      author_image: IMAGES.profile,
       rating: 5,
     },
     {
@@ -119,7 +120,7 @@ export default function DynamicTestimonials() {
       content: 'The eco-friendly products they use give me peace of mind, especially with young children at home. Great service and environmentally conscious!',
       author_name: 'Mark Rodriguez',
       role: 'Father of Two',
-      author_image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face',
+      author_image: IMAGES.profile,
       rating: 5,
     }
   ];
@@ -171,12 +172,13 @@ export default function DynamicTestimonials() {
                   {/* Author */}
                   <div className="flex items-center">
                     <div className="relative w-12 h-12 mr-4">
-                      <Image
+                      <SafeImage
                         src={imgSrc}
                         alt={alt}
                         fill
                         sizes="48px"
                         className="rounded-full object-cover"
+                        fallbackSrc={IMAGES.profile}
                       />
                     </div>
                     <div>
