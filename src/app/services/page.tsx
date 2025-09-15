@@ -4,44 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatZAR } from '@/lib/format';
+import { getServices } from '@/lib/services';
 
-// Mock services data for demonstration
-const mockServices = [
-  {
-    id: '1',
-    name: 'Standard House Cleaning',
-    slug: 'standard-house-cleaning',
-    description: 'Complete cleaning of all living areas including kitchen, bathrooms, bedrooms, and common areas',
-    base_price: 120.00,
-    duration_minutes: 120,
-  },
-  {
-    id: '2',
-    name: 'Apartment Cleaning',
-    slug: 'apartment-cleaning',
-    description: 'Thorough cleaning of apartment units including all rooms and appliances',
-    base_price: 100.00,
-    duration_minutes: 90,
-  },
-  {
-    id: '3',
-    name: 'Move-in/Move-out Cleaning',
-    slug: 'move-in-move-out-cleaning',
-    description: 'Comprehensive cleaning for new tenants or departing residents',
-    base_price: 200.00,
-    duration_minutes: 180,
-  },
-  {
-    id: '4',
-    name: 'Post-Construction Cleaning',
-    slug: 'post-construction-cleaning',
-    description: 'Specialized cleaning after construction or renovation work',
-    base_price: 250.00,
-    duration_minutes: 240,
-  },
-];
+export default async function ServicesPage() {
+  const services = await getServices();
 
-export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -55,7 +22,7 @@ export default function ServicesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {mockServices.map((service) => (
+          {services.map((service) => (
             <Card key={service.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">

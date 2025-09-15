@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin()
       .from('extras')
       .select('*')
       .order('id', { ascending: true });

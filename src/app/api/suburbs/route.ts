@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const regionId = searchParams.get('region_id');
 
-    let query = supabaseAdmin
+    let query = supabaseAdmin()
       .from('suburbs')
       .select(`
         id,

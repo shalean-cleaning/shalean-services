@@ -1,92 +1,17 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
-export default function AdminDashboard() {
+export default function AdminPage() {
   return (
-    <div className="min-h-screen">
-      <main className="p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">
-              Manage users, bookings, and system settings
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Users</CardTitle>
-                <CardDescription>Manage user accounts and roles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  View and manage all user accounts, update roles, and handle user issues.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Bookings</CardTitle>
-                <CardDescription>Oversee all bookings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Monitor all bookings, assign cleaners, and handle booking issues.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Services</CardTitle>
-                <CardDescription>Manage service offerings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Add, edit, and remove services and pricing rules.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Cleaners</CardTitle>
-                <CardDescription>Manage cleaner profiles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Review cleaner applications, manage availability, and handle ratings.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Payments</CardTitle>
-                <CardDescription>Financial oversight</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Monitor payments, handle refunds, and generate financial reports.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>System configuration</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Configure system settings, manage regions, and update policies.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        <div className="prose max-w-none">
+          <p className="text-lg text-gray-600 mb-6">
+            Administrative dashboard for managing the cleaning service platform.
+          </p>
+          <p className="text-gray-600">
+            This feature is coming soon.
+          </p>
         </div>
-      </main>
+      </div>
     </div>
-  )
+  );
 }

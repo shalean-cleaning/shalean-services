@@ -35,21 +35,21 @@ export default function Home() {
   const primaryServices = [
     { 
       name: "Standard Cleaning", 
-      slug: "standard-cleaning", 
+      slug: "standard-cleaning-small", 
       description: "Regular home cleaning service",
       icon: <Sparkles className="w-5 h-5 text-blue-600" />,
       price: "From R150"
     },
     { 
       name: "Deep Cleaning", 
-      slug: "deep-cleaning", 
+      slug: "deep-cleaning-apartment", 
       description: "Thorough deep clean service",
       icon: <Shield className="w-5 h-5 text-green-600" />,
       price: "From R300"
     },
     { 
       name: "Move-In/Out", 
-      slug: "move-in-out-cleaning", 
+      slug: "move-in-out-apartment", 
       description: "Complete move cleaning",
       icon: <Truck className="w-5 h-5 text-orange-600" />,
       price: "From R400"
@@ -237,7 +237,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
                 <MotionItem variants={popCard}>
                   <Button size="lg" asChild className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Link href="/booking/service/standard-cleaning" className="flex items-center">
+                    <Link href="/booking" className="flex items-center">
                       <Calendar className="w-5 h-5 mr-2" />
                       Book a Cleaning
                     </Link>

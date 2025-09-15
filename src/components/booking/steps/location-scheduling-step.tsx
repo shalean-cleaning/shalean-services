@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DateTimePicker } from '@/components/booking/date-time-picker';
@@ -48,6 +48,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     setAddress2,
     setPostcode,
     setSpecialInstructions,
+    setCurrentStep,
   } = useBookingStore();
 
   const [suburbs, setSuburbs] = useState<Suburb[]>([]);
@@ -60,9 +61,11 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    control,
+    formState: { errors, isValid, isSubmitting },
   } = useForm<LocationFormData>({
     resolver: zodResolver(locationSchema),
+    mode: "onChange",
     defaultValues: {
       region: selectedRegion || '',
       suburb: selectedSuburb || '',
@@ -77,6 +80,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
 
   const watchedRegion = watch('region');
   const watchedDate = watch('date');
+  const watchedSuburb = watch('suburb');
 
   // Fetch suburbs when region changes
   useEffect(() => {
@@ -99,7 +103,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
 
   // Fetch available times when date changes
   useEffect(() => {
-    if (watchedDate && selectedSuburb) {
+    if (watchedDate && watchedSuburb) {
       setLoadingTimes(true);
       
       fetch('/api/availability', {
@@ -108,31 +112,42 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          suburb_id: selectedSuburb,
+          suburb_id: watchedSuburb,
           date: watchedDate,
           service_duration: 120, // 2 hours default
         }),
       })
-        .then(res => res.json())
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            // If API fails, use default time slots
+            console.warn('Availability API failed, using default time slots');
+            return { available_slots: [] };
+          }
+        })
         .then(data => {
-          if (data.available_slots) {
+          if (data.available_slots && data.available_slots.length > 0) {
             setAvailableTimes(data.available_slots.map((slot: { time: string }) => slot.time));
           } else {
+            // Use default time slots if no specific availability
             setAvailableTimes([]);
           }
           setLoadingTimes(false);
         })
         .catch(err => {
           console.error('Error fetching available times:', err);
+          // Use default time slots on error
           setAvailableTimes([]);
           setLoadingTimes(false);
         });
     } else {
       setAvailableTimes([]);
     }
-  }, [watchedDate, selectedSuburb]);
+  }, [watchedDate, watchedSuburb]);
 
-  const onSubmit = (data: LocationFormData) => {
+  const onSubmit = async (data: LocationFormData) => {
+    // Persist all form data to the store
     setSelectedRegion(data.region);
     setSelectedSuburb(data.suburb);
     setSelectedDate(data.date);
@@ -141,8 +156,16 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     setAddress2(data.address2 || '');
     setPostcode(data.postcode);
     setSpecialInstructions(data.specialInstructions || '');
+    
+    // Advance to next step
+    setCurrentStep(5);
   };
 
+  const handlePrevious = () => {
+    setCurrentStep(3);
+  };
+
+  const ready = !loadingSuburbs && !loadingTimes;
 
   return (
     <div className="space-y-6">
@@ -166,25 +189,31 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Region *
                 </label>
-                <Select
-                  value={watchedRegion}
-                  onValueChange={(value) => {
-                    setValue('region', value);
-                    setValue('suburb', '');
-                    setSelectedRegion(value);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regions.map((region) => (
-                      <SelectItem key={region.id} value={region.id}>
-                        {region.name}, {region.state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="region"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setValue('suburb', '');
+                        setSelectedRegion(value);
+                      }}
+                    >
+                      <SelectTrigger className={errors.region ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select your region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((region) => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {region.name}, {region.state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.region && (
                   <p className="text-red-500 text-sm mt-1">{errors.region.message}</p>
                 )}
@@ -194,25 +223,31 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Suburb *
                 </label>
-                <Select
-                  value={watch('suburb')}
-                  onValueChange={(value) => {
-                    setValue('suburb', value);
-                    setSelectedSuburb(value);
-                  }}
-                  disabled={!watchedRegion || loadingSuburbs}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingSuburbs ? "Loading..." : "Select your suburb"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suburbs.map((suburb) => (
-                      <SelectItem key={suburb.id} value={suburb.id}>
-                        {suburb.name} {suburb.postcode && `(${suburb.postcode})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="suburb"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedSuburb(value);
+                      }}
+                      disabled={!watchedRegion || loadingSuburbs}
+                    >
+                      <SelectTrigger className={errors.suburb ? 'border-red-500' : ''}>
+                        <SelectValue placeholder={loadingSuburbs ? "Loading..." : "Select your suburb"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suburbs.map((suburb) => (
+                          <SelectItem key={suburb.id} value={suburb.id}>
+                            {suburb.name} {suburb.postcode && `(${suburb.postcode})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.suburb && (
                   <p className="text-red-500 text-sm mt-1">{errors.suburb.message}</p>
                 )}
@@ -228,6 +263,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
                   {...register('address')}
                   placeholder="123 Main Street"
                   className={errors.address ? 'border-red-500' : ''}
+                  aria-invalid={!!errors.address}
                 />
                 {errors.address && (
                   <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
@@ -252,6 +288,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
                   {...register('postcode')}
                   placeholder="2000"
                   className={errors.postcode ? 'border-red-500' : ''}
+                  aria-invalid={!!errors.postcode}
                 />
                 {errors.postcode && (
                   <p className="text-red-500 text-sm mt-1">{errors.postcode.message}</p>
@@ -262,14 +299,52 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
         </Card>
 
         {/* Date & Time Selection */}
-        <DateTimePicker
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-          onDateChange={setSelectedDate}
-          onTimeChange={setSelectedTime}
-          availableTimes={availableTimes}
-          loadingTimes={loadingTimes}
-        />
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date & Time *
+            </label>
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <Controller
+                  name="time"
+                  control={control}
+                  render={({ field: timeField }) => (
+                    <DateTimePicker
+                      selectedDate={field.value}
+                      selectedTime={timeField.value}
+                      onDateChange={(date) => {
+                        field.onChange(date);
+                        setSelectedDate(date);
+                        // Reset time when date changes
+                        timeField.onChange('');
+                        setSelectedTime(null);
+                      }}
+                      onTimeChange={(time) => {
+                        timeField.onChange(time);
+                        setSelectedTime(time);
+                      }}
+                      availableTimes={availableTimes}
+                      loadingTimes={loadingTimes}
+                    />
+                  )}
+                />
+              )}
+            />
+            {(errors.date || errors.time) && (
+              <div className="mt-2">
+                {errors.date && (
+                  <p className="text-red-500 text-sm">{errors.date.message}</p>
+                )}
+                {errors.time && (
+                  <p className="text-red-500 text-sm">{errors.time.message}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Special Instructions */}
         <Card>
@@ -293,6 +368,25 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
             </div>
           </CardContent>
         </Card>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center pt-6 border-t">
+          <button
+            type="button"
+            onClick={handlePrevious}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Previous
+          </button>
+
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting || !ready}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Processing...' : 'Next'}
+          </button>
+        </div>
       </form>
     </div>
   );

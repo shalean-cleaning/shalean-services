@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { suburb_id, date, service_duration } = body;
+    const { suburb_id, date } = body;
 
     if (!suburb_id || !date) {
       return NextResponse.json(
@@ -15,7 +15,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Supabase Edge Function
+    // For now, return mock available time slots
+    // TODO: Implement actual availability checking with Supabase Edge Function
+    const mockAvailableSlots = [
+      { time: '08:00', available: true },
+      { time: '10:00', available: true },
+      { time: '12:00', available: true },
+      { time: '14:00', available: true },
+      { time: '16:00', available: true },
+      { time: '18:00', available: true },
+    ];
+
+    return NextResponse.json({
+      available_slots: mockAvailableSlots,
+      date,
+      suburb_id,
+    });
+
+    // Original Supabase Edge Function call (commented out until function is deployed)
+    /*
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -50,6 +68,7 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     return NextResponse.json(data);
+    */
 
   } catch (error) {
     console.error('Error in availability API:', error);

@@ -12,7 +12,8 @@ interface BookingPageProps {
 
 async function getServiceData(slug: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/services/${slug}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    const response = await fetch(`${baseUrl}/api/services/${slug}`, {
       cache: 'no-store',
     });
 
@@ -34,7 +35,8 @@ async function getServiceData(slug: string) {
 
 async function getRegionsData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/regions`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    const response = await fetch(`${baseUrl}/api/regions`, {
       cache: 'no-store',
     });
 

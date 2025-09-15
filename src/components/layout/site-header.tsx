@@ -94,7 +94,7 @@ export default function SiteHeader() {
         {/* CTAs (desktop) */}
         <div className="hidden items-center gap-3 lg:flex">
           <Link
-            href="/booking/service/standard-cleaning"
+            href="/booking"
             className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
           >
             Book a Service
@@ -180,7 +180,7 @@ export default function SiteHeader() {
             {/* Mobile CTAs */}
             <div className="space-y-3">
               <Link
-                href="/booking/service/standard-cleaning"
+                href="/booking"
                 className="block w-full rounded-md border px-3 py-2 text-sm font-medium text-center hover:bg-gray-50"
                 onClick={() => setOpen(false)}
               >

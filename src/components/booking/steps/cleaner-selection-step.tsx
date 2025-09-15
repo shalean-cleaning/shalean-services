@@ -14,7 +14,6 @@ export function CleanerSelectionStep() {
     selectedSuburb,
     selectedDate,
     selectedTime,
-    selectedService,
     selectedCleanerId,
     availableCleaners,
     setSelectedCleanerId,
@@ -27,45 +26,52 @@ export function CleanerSelectionStep() {
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
-    const fetchAvailableCleaners = async () => {
-      if (!selectedSuburb || !selectedDate || !selectedTime) {
-        return;
-      }
-
-      setIsLoading(true);
+    const { selectedRegion, bedroomCount, bathroomCount } = useBookingStore.getState();
+    
+    if (!selectedRegion || !selectedSuburb || !selectedDate || !selectedTime) {
       setError(null);
+      setAvailableCleaners([]);
+      return;
+    }
 
-      try {
-        const response = await fetch('/api/cleaners/available', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            suburb_id: selectedSuburb,
-            date: selectedDate,
-            time: selectedTime,
-            service_id: selectedService?.id,
-          }),
-        });
+    const ac = new AbortController();
+    setIsLoading(true);
+    setError(null);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch available cleaners');
-        }
-
-        const data = await response.json();
-        setAvailableCleaners(data.available_cleaners || []);
-      } catch (err) {
-        console.error('Error fetching cleaners:', err);
-        setError('Failed to load available cleaners. Please try again.');
-        setAvailableCleaners([]);
-      } finally {
-        setIsLoading(false);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    fetch(`${baseUrl}/api/cleaners/availability`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        regionId: selectedRegion,
+        suburbId: selectedSuburb,
+        date: selectedDate,             // ISO string
+        timeSlot: selectedTime,        // "10:00"
+        bedrooms: bedroomCount ?? 1,
+        bathrooms: bathroomCount ?? 1,
+      }),
+      signal: ac.signal,
+      cache: "no-store",
+    })
+    .then(async (res) => {
+      const text = await res.text().catch(() => "");
+      if (!res.ok) {
+        console.error("[availability] status:", res.status, res.statusText, "body:", text);
+        throw new Error(text || `availability failed: ${res.status}`);
       }
-    };
+      return text ? JSON.parse(text) : { cleaners: [] };
+    })
+    .then((data) => setAvailableCleaners(Array.isArray(data.cleaners) ? data.cleaners : data))
+    .catch((err) => {
+      if (err.name !== "AbortError") {
+        setError("We couldn't load available cleaners. Please adjust date or time and try again.");
+        console.error(err);
+      }
+    })
+    .finally(() => setIsLoading(false));
 
-    fetchAvailableCleaners();
-  }, [selectedSuburb, selectedDate, selectedTime, selectedService?.id, setAvailableCleaners]);
+    return () => ac.abort();
+  }, [selectedSuburb, selectedDate, selectedTime, setAvailableCleaners]);
 
   const handleCleanerSelect = (cleanerId: string) => {
     setSelectedCleanerId(cleanerId);
@@ -175,7 +181,7 @@ export function CleanerSelectionStep() {
               No Cleaners Available
             </h3>
             <p className="text-gray-600 mb-4">
-              Unfortunately, no cleaners are available for the selected time slot.
+              No cleaners available for the selected time. Try another time.
             </p>
             <p className="text-sm text-gray-500">
               Try selecting a different time or date.

@@ -130,7 +130,7 @@ export default function CleanerShowcase() {
             </SelectContent>
           </Select>
           <Button size="lg" asChild className="w-full sm:w-auto">
-            <Link href="/quote">
+            <Link href="/booking">
               Book a Service
             </Link>
           </Button>
