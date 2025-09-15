@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getServerSupabase } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,10 +11,9 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const supabase = getServerSupabase();
     
     // Fetch service by slug
-    const { data: service, error: serviceError } = await supabase
+    const { data: service, error: serviceError } = await supabaseAdmin
       .from('services')
       .select(`
         *,
@@ -37,7 +36,7 @@ export async function GET(
     }
 
     // Fetch available extras
-    const { data: extras, error: extrasError } = await supabase
+    const { data: extras, error: extrasError } = await supabaseAdmin
       .from('extras')
       .select('*')
       .eq('is_active', true)
@@ -48,7 +47,7 @@ export async function GET(
     }
 
     // Fetch pricing rules for this service
-    const { data: pricingRules, error: pricingError } = await supabase
+    const { data: pricingRules, error: pricingError } = await supabaseAdmin
       .from('pricing_rules')
       .select('*')
       .eq('is_active', true);

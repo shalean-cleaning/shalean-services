@@ -22,7 +22,7 @@ const footerLinks = {
   ],
   contact: [
     { name: 'Contact Us', href: '/contact' },
-    { name: 'Get a Quote', href: '/quote' },
+    { name: 'Book Service', href: '/booking/service/standard-cleaning' },
     { name: 'Apply to Work', href: '/apply' },
     { name: 'Partner With Us', href: '/partners' },
   ],

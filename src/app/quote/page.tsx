@@ -1,150 +1,55 @@
-import { Calculator, CheckCircle, Phone, Zap } from "lucide-react";
-import type { Metadata } from "next";
+"use client";
+import { useState } from "react";
 
-import QuickQuote from "@/components/landing/quick-quote";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+export default function QuotePage() {
+  const [status, setStatus] = useState<"idle"|"loading"|"ok"|"error">("idle");
 
-export const metadata: Metadata = {
-  title: "Get a Free Quote",
-  description: "Get a free, no-obligation quote for professional cleaning services. Quick response within 24 hours.",
-};
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("loading");
+    const form = new FormData(e.currentTarget);
+    const payload = Object.fromEntries(form.entries());
+    try {
+      const res = await fetch("/api/quote", { method: "POST", body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error("Request failed");
+      setStatus("ok");
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      setStatus("error");
+    }
+  }
 
-export default function Quote() {
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/5 to-primary/10 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Get Your Free Quote
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Ready to experience professional cleaning services? Get your free, 
-              no-obligation quote today. We&apos;ll respond within 24 hours.
-            </p>
-          </div>
-        </div>
-      </section>
+    <div className="container mx-auto max-w-2xl py-10">
+      <h1 className="text-2xl font-semibold mb-2">Get a Free Quote</h1>
+      <p className="text-muted-foreground mb-6">
+        Tell us a bit about your home and preferred service. We'll reply with pricing and availability.
+      </p>
 
-      {/* Quick Quote Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Instant Quote Calculator</h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Get an instant price estimate for your cleaning service. No waiting, 
-                no hassle - just select your preferences and see your quote in real-time.
-              </p>
-              
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3">
-                  <Zap className="w-5 h-5 text-primary" />
-                  <span className="text-gray-600">Instant price calculation</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                  <span className="text-gray-600">Transparent pricing breakdown</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Calculator className="w-5 h-5 text-primary" />
-                  <span className="text-gray-600">Real-time updates</span>
-                </div>
-              </div>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Quote Calculator</CardTitle>
-                <CardDescription>
-                  Select your service preferences and get an instant price estimate.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <QuickQuote />
-              </CardContent>
-            </Card>
-          </div>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          <input name="name" required placeholder="Full name" className="input input-bordered w-full" />
+          <input name="email" required type="email" placeholder="Email" className="input input-bordered w-full" />
+          <input name="phone" required placeholder="Phone" className="input input-bordered w-full md:col-span-2" />
+          <input name="location" placeholder="Suburb / Area" className="input input-bordered w-full md:col-span-2" />
         </div>
-      </section>
-
-      {/* Pricing Information */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Transparent Pricing</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Our pricing is based on the size of your space, frequency of service, and specific requirements.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Residential Cleaning</h3>
-              <div className="text-3xl font-bold text-primary mb-4">Starting at $120</div>
-              <p className="text-gray-600 mb-4">Regular home cleaning services</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• All rooms cleaned</li>
-                <li>• Kitchen & bathroom deep clean</li>
-                <li>• Dusting & vacuuming</li>
-                <li>• Trash removal</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center border-2 border-primary">
-              <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium mb-4 inline-block">
-                Most Popular
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Commercial Cleaning</h3>
-              <div className="text-3xl font-bold text-primary mb-4">Starting at $200</div>
-              <p className="text-gray-600 mb-4">Professional office cleaning</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Office cleaning & maintenance</li>
-                <li>• Restroom sanitization</li>
-                <li>• Floor care & maintenance</li>
-                <li>• Window cleaning</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Deep Cleaning</h3>
-              <div className="text-3xl font-bold text-primary mb-4">Starting at $300</div>
-              <p className="text-gray-600 mb-4">Intensive cleaning service</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Complete home deep clean</li>
-                <li>• Inside appliances cleaned</li>
-                <li>• Baseboards & trim detailed</li>
-                <li>• Light fixtures cleaned</li>
-              </ul>
-            </div>
-          </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <select name="service" className="select select-bordered w-full">
+            <option>Standard Cleaning</option>
+            <option>Deep Cleaning</option>
+            <option>Move-In/Out</option>
+            <option>Airbnb</option>
+            <option>Post-Construction</option>
+          </select>
+          <input name="date" type="date" className="input input-bordered w-full" />
         </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Need Immediate Assistance?
-          </h2>
-          <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Call us directly for immediate quotes or to discuss your cleaning needs with our team.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="tel:+1555CLEANUP">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                <Phone className="mr-2 w-4 h-4" />
-                Call: (555) CLEAN-UP
-              </Button>
-            </a>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-primary">
-              Live Chat
-            </Button>
-          </div>
-        </div>
-      </section>
+        <textarea name="notes" placeholder="Anything else we should know?" className="textarea textarea-bordered w-full" rows={5} />
+        <button disabled={status==="loading"} className="btn btn-primary">
+          {status==="loading" ? "Sending..." : "Submit request"}
+        </button>
+        {status==="ok" && <p className="text-green-600">Thanks! We'll be in touch shortly.</p>}
+        {status==="error" && <p className="text-red-600">Something went wrong. Please try again.</p>}
+      </form>
     </div>
   );
 }

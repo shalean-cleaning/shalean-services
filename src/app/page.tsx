@@ -8,15 +8,12 @@ import {
   Home as HomeIcon, 
   Star,
   Users,
-  Clock,
   Play,
   ChevronRight,
   Sparkles,
   Heart,
   Baby,
   Truck,
-  Leaf,
-  Shirt,
   UserCheck,
   FileText,
   Headphones,
@@ -27,23 +24,36 @@ import { MotionSection, StaggerList, MotionItem } from '@/components/anim/Motion
 import { fadeUp, popCard, slideInLeft, slideInRight } from '@/components/anim/motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServiceCard } from '@/components/ui/service-card';
+import { AirbnbLogo, Property24Logo, PrivatePropertyLogo, GumtreeLogo, OLXLogo } from '@/components/ui/partner-logos';
 import { useParallax } from '@/hooks/useParallax';
 
 export default function Home() {
   const heroParallax = useParallax();
 
-  // Service icons data
-  const services = [
-    { icon: Sparkles, label: "Cleaning", color: "text-blue-600" },
-    { icon: Shield, label: "Deep Clean", color: "text-green-600" },
-    { icon: Leaf, label: "Outdoor", color: "text-emerald-600" },
-    { icon: Shirt, label: "Laundry", color: "text-purple-600" },
-    { icon: Baby, label: "Nanny", color: "text-pink-600" },
-    { icon: Heart, label: "Elder Care", color: "text-rose-600" },
-    { icon: Truck, label: "Move-In/Out", color: "text-orange-600" },
-    { icon: HomeIcon, label: "Airbnb", color: "text-indigo-600" },
-    { icon: Users, label: "Housekeeper", color: "text-cyan-600" },
-    { icon: Clock, label: "Maintenance", color: "text-amber-600" },
+  // Primary service cards data
+  const primaryServices = [
+    { 
+      name: "Standard Cleaning", 
+      slug: "standard-cleaning", 
+      description: "Regular home cleaning service",
+      icon: <Sparkles className="w-5 h-5 text-blue-600" />,
+      price: "From R150"
+    },
+    { 
+      name: "Deep Cleaning", 
+      slug: "deep-cleaning", 
+      description: "Thorough deep clean service",
+      icon: <Shield className="w-5 h-5 text-green-600" />,
+      price: "From R300"
+    },
+    { 
+      name: "Move-In/Out", 
+      slug: "move-in-out-cleaning", 
+      description: "Complete move cleaning",
+      icon: <Truck className="w-5 h-5 text-orange-600" />,
+      price: "From R400"
+    }
   ];
 
   // Value strip data
@@ -69,7 +79,7 @@ export default function Home() {
   const steps = [
     {
       title: "Choose your service",
-      description: "Select the rooms and add-ons you need.",
+      description: "Select rooms & add-ons as you need.",
       step: "1"
     },
     {
@@ -112,24 +122,28 @@ export default function Home() {
       name: "Ayanda M.",
       cleans: "200+ cleans",
       description: "Friendly, punctual, and thorough.",
+      location: "CBD, Sea Point",
       image: IMAGES.profile
     },
     {
       name: "Sarah K.",
       cleans: "150+ cleans", 
       description: "Detail-oriented and reliable.",
+      location: "Claremont, Rondebosch",
       image: IMAGES.profile
     },
     {
       name: "Thabo N.",
       cleans: "180+ cleans",
       description: "Professional and efficient.",
+      location: "Table View, Milnerton",
       image: IMAGES.profile
     },
     {
       name: "Lisa P.",
       cleans: "220+ cleans",
       description: "Experienced and trustworthy.",
+      location: "Constantia, Tokai",
       image: IMAGES.profile
     }
   ];
@@ -149,14 +163,18 @@ export default function Home() {
       icon: Headphones
     },
     {
-      title: "Quality guarantees",
+      title: "Quality guarantee",
       icon: Award
     }
   ];
 
   // Partners
   const partners = [
-    "Airbnb", "Booking.com", "Property24", "Private Property", "Gumtree", "OLX"
+    { name: "Airbnb", logo: <AirbnbLogo /> },
+    { name: "Property24", logo: <Property24Logo /> },
+    { name: "Private Property", logo: <PrivatePropertyLogo /> },
+    { name: "Gumtree", logo: <GumtreeLogo /> },
+    { name: "OLX", logo: <OLXLogo /> }
   ];
 
   // Blog posts
@@ -164,17 +182,20 @@ export default function Home() {
     {
       title: "The ultimate deep-clean checklist",
       image: IMAGES.blog1,
-      excerpt: "Everything you need for a thorough home deep clean."
+      excerpt: "Everything you need for a thorough home deep clean.",
+      slug: "deep-clean-checklist"
     },
     {
       title: "Pet-friendly cleaning: what to know",
       image: IMAGES.blog2,
-      excerpt: "Safe cleaning products and methods for pet owners."
+      excerpt: "Safe cleaning products and methods for pet owners.",
+      slug: "pet-friendly-cleaning"
     },
     {
       title: "Move-out day: a spotless plan",
       image: IMAGES.blog3,
-      excerpt: "How to leave your rental in perfect condition."
+      excerpt: "How to leave your rental in perfect condition.",
+      slug: "move-out-cleaning-guide"
     }
   ];
 
@@ -207,7 +228,7 @@ export default function Home() {
               
               <MotionItem variants={fadeUp}>
                 <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  Book trusted local cleaners in minutes and manage every visit from one place. 
+                  Book trusted local cleaners in minutes. 
                   <span className="font-semibold text-gray-800"> 100% satisfaction guaranteed.</span>
                 </p>
               </MotionItem>
@@ -216,30 +237,27 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
                 <MotionItem variants={popCard}>
                   <Button size="lg" asChild className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Link href="/booking" className="flex items-center">
+                    <Link href="/booking/service/standard-cleaning" className="flex items-center">
                       <Calendar className="w-5 h-5 mr-2" />
-                      Book a Service
+                      Book a Cleaning
                     </Link>
                   </Button>
                 </MotionItem>
                 <MotionItem variants={popCard}>
                   <Button size="lg" asChild variant="outline" className="text-lg px-8 py-4 border-2 hover:bg-gray-50 transition-all duration-300">
-                    <Link href="/apply" className="flex items-center">
+                    <Link href="/quote" className="flex items-center">
                       <Users className="w-5 h-5 mr-2" />
-                      Find Full-Time Help
+                      Get a Free Quote
                     </Link>
                   </Button>
                 </MotionItem>
               </div>
 
-              {/* Service Icons */}
-              <StaggerList className="flex flex-wrap justify-center lg:justify-start gap-3">
-                {services.map((service) => (
-                  <MotionItem key={service.label} variants={popCard}>
-                    <div className="flex items-center space-x-2 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                      <service.icon className={`w-5 h-5 ${service.color}`} />
-                      <span className="text-sm font-semibold text-gray-800">{service.label}</span>
-                    </div>
+              {/* Service Cards */}
+              <StaggerList className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                {primaryServices.map((service) => (
+                  <MotionItem key={service.slug} variants={popCard}>
+                    <ServiceCard {...service} />
                   </MotionItem>
                 ))}
               </StaggerList>
@@ -255,11 +273,12 @@ export default function Home() {
                 <div className="relative">
                   <SafeImage
                     src={IMAGES.hero}
-                    alt="Professional cleaning service"
+                    alt="Bright, clean living room after a professional home cleaning"
                     width={800}
                     height={600}
                     className="rounded-3xl shadow-2xl border-4 border-white/20"
                     priority
+                    sizes="(min-width:1024px) 50vw, 100vw"
                   />
                   {/* Floating elements */}
                   <div className="absolute -top-4 -right-4 bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
@@ -339,7 +358,7 @@ export default function Home() {
           <div className="text-center mt-12">
             <MotionItem variants={popCard}>
               <Button variant="outline" size="lg" asChild>
-                <Link href="/how-it-works">
+                <Link href="#how-it-works">
                   <Play className="w-5 h-5 mr-2" />
                   See How It Works
                 </Link>
@@ -350,7 +369,8 @@ export default function Home() {
       </MotionSection>
 
       {/* Full-Time Help */}
-      <MotionSection className="py-16 lg:py-24">
+      <section id="full-time">
+        <MotionSection className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <MotionItem variants={fadeUp}>
@@ -380,20 +400,23 @@ export default function Home() {
             ))}
           </StaggerList>
         </div>
-      </MotionSection>
+        </MotionSection>
+      </section>
 
       {/* Manage Hub */}
       <MotionSection className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <MotionItem variants={slideInLeft}>
-              <SafeImage
-                src={IMAGES.dashboard}
-                alt="Dashboard interface"
-                width={600}
-                height={400}
-                className="rounded-2xl shadow-xl"
-              />
+              <div className="relative w-full h-[220px] md:h-[280px] rounded-2xl overflow-hidden">
+                <SafeImage
+                  src={IMAGES.dashboard}
+                  alt="Calm home interior with soft light"
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                />
+              </div>
             </MotionItem>
             
             <div>
@@ -405,7 +428,7 @@ export default function Home() {
               
               <MotionItem variants={fadeUp}>
                 <p className="text-lg text-gray-600 mb-8">
-                  Track bookings, reschedule, chat with your cleaner, and view invoices in one place.
+                  Track bookings, reschedule, chat with your cleaner, and view invoices—all in one place.
                 </p>
               </MotionItem>
               
@@ -437,7 +460,7 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             {["All", "Top Rated", "Nearby", "Available this week"].map((filter) => (
               <MotionItem key={filter} variants={popCard}>
-                <Button variant="outline" className="relative group">
+                <Button variant="outline" className="relative group" aria-label={`Filter by ${filter}`}>
                   {filter}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
                 </Button>
@@ -453,19 +476,20 @@ export default function Home() {
                     <div className="relative w-24 h-24 mx-auto mb-4 overflow-hidden rounded-full">
                       <SafeImage
                         src={member.image}
-                        alt={member.name}
+                        alt={`${member.name}, professional cleaner`}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         fallbackSrc={IMAGES.profile}
                       />
                     </div>
                     <CardTitle className="text-lg">{member.name}</CardTitle>
-                    <div className="flex items-center justify-center space-x-1 mb-2">
+                    <div className="flex items-center justify-center space-x-1 mb-2" aria-label="5 star rating">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
                     <p className="text-sm text-gray-600">{member.cleans}</p>
+                    <p className="text-xs text-gray-500">{member.location}</p>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-center">
@@ -504,6 +528,12 @@ export default function Home() {
               </MotionItem>
             ))}
           </StaggerList>
+          
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-600">
+              All cleaners pass ID verification and in-person interviews.
+            </p>
+          </div>
         </div>
       </MotionSection>
 
@@ -519,9 +549,11 @@ export default function Home() {
               </MotionItem>
               
               <MotionItem variants={fadeUp}>
-                <p className="text-lg text-gray-600 mb-8">
-                  Set your schedule, grow your income, and get paid on time.
-                </p>
+                <ul className="text-lg text-gray-600 mb-8 space-y-2">
+                  <li>• Set your schedule</li>
+                  <li>• Grow your income</li>
+                  <li>• Get paid on time</li>
+                </ul>
               </MotionItem>
               
               <MotionItem variants={popCard}>
@@ -537,8 +569,8 @@ export default function Home() {
             <MotionItem variants={slideInRight}>
               <div className="relative">
                 <SafeImage
-                  src={IMAGES.cleaner}
-                  alt="Professional cleaner"
+                  src="https://images.unsplash.com/photo-1596464716121-8b45399f0f0e?w=1200&q=80&auto=format&fit=crop"
+                  alt="Professional cleaner smiling with cleaning tools"
                   width={600}
                   height={400}
                   className="rounded-2xl shadow-xl"
@@ -561,9 +593,10 @@ export default function Home() {
           <StaggerList className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
             {partners.map((partner, index) => (
               <MotionItem key={index} variants={fadeUp}>
-                <span className="text-gray-500 text-2xl font-semibold grayscale hover:grayscale-0 transition-all">
-                  {partner}
-                </span>
+                <div className="flex items-center gap-2">
+                  {partner.logo}
+                  <span className="sr-only">{partner.name}</span>
+                </div>
               </MotionItem>
             ))}
           </StaggerList>
@@ -584,28 +617,30 @@ export default function Home() {
           <StaggerList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogPosts.map((post, index) => (
               <MotionItem key={index} variants={fadeUp}>
-                <article className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
-                  <div className="relative h-48 w-full overflow-hidden">
-                    <SafeImage
-                      src={post.image}
-                      alt={post.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      fallbackSrc={IMAGES.blog1}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                      <ChevronRight className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
+                <Link href={`/blog/${post.slug}`} className="block">
+                  <article className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <SafeImage
+                        src={post.image}
+                        alt={`${post.title} - cleaning tips article`}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        fallbackSrc={IMAGES.blog1}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                        <ChevronRight className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </article>
+                    <div className="p-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    </div>
+                  </article>
+                </Link>
               </MotionItem>
             ))}
           </StaggerList>

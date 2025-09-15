@@ -94,10 +94,10 @@ export default function SiteHeader() {
         {/* CTAs (desktop) */}
         <div className="hidden items-center gap-3 lg:flex">
           <Link
-            href="/quote"
+            href="/booking/service/standard-cleaning"
             className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
           >
-            Get a Free Quote
+            Book a Service
           </Link>
           {user ? (
             <div className="flex items-center gap-2">
@@ -180,11 +180,11 @@ export default function SiteHeader() {
             {/* Mobile CTAs */}
             <div className="space-y-3">
               <Link
-                href="/quote"
+                href="/booking/service/standard-cleaning"
                 className="block w-full rounded-md border px-3 py-2 text-sm font-medium text-center hover:bg-gray-50"
                 onClick={() => setOpen(false)}
               >
-                Get a Free Quote
+                Book a Service
               </Link>
               
               {user ? (

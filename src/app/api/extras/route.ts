@@ -1,7 +1,7 @@
 // app/api/extras/route.ts
 import { NextResponse } from 'next/server';
 
-import { getServerSupabase } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,8 +15,7 @@ export async function GET() {
   }
 
   try {
-    const supabase = getServerSupabase();
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('extras')
       .select('*')
       .order('id', { ascending: true });

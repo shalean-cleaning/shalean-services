@@ -9,6 +9,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
+interface ServiceCategory {
+  id: string
+  name: string
+  description?: string
+  icon?: string
+  sort_order: number
+  services: ServiceItem[]
+}
+
+interface ServiceItem {
+  id: string
+  name: string
+  description?: string
+  base_price: number
+  duration_minutes: number
+  category_id: string
+  sort_order: number
+}
+
 interface Service {
   id: string
   name: string
@@ -56,7 +75,7 @@ interface QuickQuoteProps {
 }
 
 export default function QuickQuote({ isModal = false, onContinueToBooking }: QuickQuoteProps) {
-  const [services, setServices] = useState<Service[]>([])
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
   const [extras, setExtras] = useState<Extra[]>([])
   const [regions, setRegions] = useState<Region[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,48 +96,48 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
   const [serviceName, setServiceName] = useState<string>('')
   const [suburbName, setSuburbName] = useState<string>('')
 
-  // Helper function for fetching JSON with error context
-  async function fetchJSON<T>(name: string, url: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(url, { cache: 'no-store', ...init });
-    if (!res.ok) {
-      let body = '';
-      try { body = await res.text(); } catch {
-        // Ignore text parsing errors
-      }
-      console.error(`[QuickQuote] ${name} failed:`, {
-        url, status: res.status, statusText: res.statusText, body
-      });
-      throw new Error(`${name} failed with ${res.status} ${res.statusText}`);
-    }
-    return res.json();
-  }
 
   // Fetch data on component mount
   useEffect(() => {
-    setLoadError(null);
-    (async () => {
+    setLoadError(null)
+    ;(async () => {
       try {
-        const [servicesData, extrasData, regionsData] = await Promise.all([
-          fetchJSON<Service[]>('services', '/api/services'),
-          fetchJSON<Extra[]>('extras', '/api/extras'),
-          fetchJSON<Region[]>('regions', '/api/regions'),
-        ]);
-        setServices(servicesData);
-        setExtras(extrasData);
-        setRegions(regionsData);
+        const [servicesRes, regionsRes] = await Promise.all([
+          fetch('/api/services', { cache: 'no-store' }),
+          fetch('/api/regions', { cache: 'no-store' })
+        ])
+
+        if (!servicesRes.ok) {
+          let body = ''
+          try { body = await servicesRes.text() } catch (e) { console.warn('[QuickQuote] services response read error:', e) }
+          console.error('[QuickQuote] services response body:', body)
+          console.error('[QuickQuote] services failed:', { url: '/api/services', status: servicesRes.status, statusText: servicesRes.statusText })
+          throw new Error(`services failed with ${servicesRes.status} ${servicesRes.statusText}`)
+        }
+
+        if (!regionsRes.ok) {
+          let body = ''
+          try { body = await regionsRes.text() } catch (e) { console.warn('[QuickQuote] regions response read error:', e) }
+          console.error('[QuickQuote] regions response body:', body)
+          console.error('[QuickQuote] regions failed:', { url: '/api/regions', status: regionsRes.status, statusText: regionsRes.statusText })
+          throw new Error(`regions failed with ${regionsRes.status} ${regionsRes.statusText}`)
+        }
+
+        const servicesData = await servicesRes.json()
+        const regionsData = await regionsRes.json()
+
+        setServiceCategories(servicesData.categories ?? [])
+        setExtras(servicesData.extras ?? [])
+        setRegions(regionsData ?? [])
       } catch (err: unknown) {
-        console.error('[QuickQuote] bootstrap error:', err);
-        setLoadError(err instanceof Error ? err.message : 'Failed to fetch data');
+        console.error('[QuickQuote] bootstrap error:', err)
+        setLoadError(err instanceof Error ? err.message : 'Failed to fetch data')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    })();
+    })()
   }, [])
 
-  // PowerShell examples:
-  //   curl http://localhost:3000/api/services
-  //   curl http://localhost:3000/api/extras
-  //   curl http://localhost:3000/api/regions
 
   // Calculate quote when dependencies change
   const calculateQuote = useCallback(async () => {
@@ -205,11 +224,33 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     }))
     
     if (onContinueToBooking) {
-      const service = services.find(s => s.id === selectedService)
+      // Find the selected service from categories
+      let selectedServiceItem: ServiceItem | null = null
+      for (const category of serviceCategories) {
+        const service = category.services.find(service => service.id === selectedService)
+        if (service) {
+          selectedServiceItem = service
+          break
+        }
+      }
+      
       const region = regions.find(r => r.suburbs.some(s => s.id === selectedSuburb))
       const suburb = region?.suburbs.find(s => s.id === selectedSuburb)
       
-      if (service && suburb && quoteBreakdown) {
+      if (selectedServiceItem && suburb && quoteBreakdown) {
+        // Convert ServiceItem to Service format for compatibility
+        const service: Service = {
+          id: selectedServiceItem.id,
+          name: selectedServiceItem.name,
+          base_price: selectedServiceItem.base_price,
+          duration_minutes: selectedServiceItem.duration_minutes,
+          service_categories: {
+            id: selectedServiceItem.category_id,
+            name: serviceCategories.find(c => c.id === selectedServiceItem!.category_id)?.name || '',
+            description: serviceCategories.find(c => c.id === selectedServiceItem!.category_id)?.description
+          }
+        }
+        
         onContinueToBooking({
           service,
           suburb,
@@ -295,13 +336,20 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
             <SelectValue placeholder="Select a service" />
           </SelectTrigger>
           <SelectContent>
-            {services.map((service) => (
-              <SelectItem key={service.id} value={service.id}>
-                <div className="flex flex-col">
-                  <span className="font-medium">{service.name}</span>
-                  <span className="text-sm text-gray-500">${service.base_price} • {service.duration_minutes}min</span>
+            {serviceCategories.map((category) => (
+              <div key={category.id}>
+                <div className="px-2 py-1 text-sm font-medium text-gray-500 bg-gray-50">
+                  {category.name}
                 </div>
-              </SelectItem>
+                {category.services.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{service.name}</span>
+                      <span className="text-sm text-gray-500">${service.base_price} • {service.duration_minutes}min</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </div>
             ))}
           </SelectContent>
         </Select>
