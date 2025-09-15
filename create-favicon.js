@@ -6,7 +6,7 @@ async function createFavicon() {
   try {
     // Assuming you have a logo.png file in the project root
     const inputPath = path.join(__dirname, 'logo.png');
-    const outputPath = path.join(__dirname, 'src', 'app', 'favicon.ico');
+    const _outputPath = path.join(__dirname, 'src', 'app', 'favicon.ico');
     
     if (!fs.existsSync(inputPath)) {
       console.log('Please place your logo.png file in the project root');
