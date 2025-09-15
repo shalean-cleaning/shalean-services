@@ -15,14 +15,17 @@ export function CleanerSelectionStep() {
     selectedDate,
     selectedTime,
     selectedCleanerId,
+    autoAssign,
     availableCleaners,
     setSelectedCleanerId,
+    setAutoAssign,
     setAvailableCleaners,
     autoAssignCleaner,
   } = useBookingStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
@@ -78,7 +81,46 @@ export function CleanerSelectionStep() {
   };
 
   const handleAutoAssign = () => {
-    autoAssignCleaner();
+    setAutoAssign(true);
+  };
+
+  const canContinue = !!selectedCleanerId || autoAssign;
+
+  const handleContinue = async () => {
+    if (!canContinue) return;
+    
+    setIsSaving(true);
+    try {
+      // Get booking ID from store or create a temporary one
+      const { selectedService, bedroomCount, bathroomCount, selectedRegion, selectedSuburb, selectedDate, selectedTime, address, postcode } = useBookingStore.getState();
+      
+      // For now, we'll use a placeholder booking ID - in a real app, this would be created earlier in the flow
+      const bookingId = 'temp-booking-id'; // This should come from your booking creation flow
+      
+      const response = await fetch('/api/bookings/select-cleaner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          cleanerId: selectedCleanerId,
+          autoAssign,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save cleaner selection');
+      }
+      
+      // Navigate to next step or show success
+      // This would typically be handled by your booking stepper component
+      console.log('Cleaner selection saved successfully');
+      
+    } catch (error) {
+      console.error('Error saving cleaner selection:', error);
+      setError('Failed to save your selection. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Skeleton loading component
@@ -109,10 +151,16 @@ export function CleanerSelectionStep() {
       </div>
 
       {/* Auto-assign option */}
-      <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className={`p-4 border-2 transition-colors ${
+        autoAssign 
+          ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-500' 
+          : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              autoAssign ? 'bg-blue-600' : 'bg-blue-500'
+            }`}>
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -124,11 +172,15 @@ export function CleanerSelectionStep() {
           </div>
           <Button
             onClick={handleAutoAssign}
-            disabled={isLoading || availableCleaners.length === 0}
-            className="bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading}
+            className={`${
+              autoAssign 
+                ? 'bg-blue-600 hover:bg-blue-700' 
+                : 'bg-blue-500 hover:bg-blue-600'
+            }`}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Auto-assign
+            {autoAssign ? 'Selected' : 'Auto-assign'}
           </Button>
         </div>
       </Card>
@@ -181,10 +233,10 @@ export function CleanerSelectionStep() {
               No Cleaners Available
             </h3>
             <p className="text-gray-600 mb-4">
-              No cleaners available for the selected time. Try another time.
+              No cleaners available for the selected time. You can still continue with <span className="font-medium">Auto-assign Best Match</span>.
             </p>
             <p className="text-sm text-gray-500">
-              Try selecting a different time or date.
+              Try selecting a different time or date, or use Auto-assign above.
             </p>
           </Card>
         )}
@@ -205,23 +257,47 @@ export function CleanerSelectionStep() {
       </div>
 
       {/* Selected cleaner summary */}
-      {selectedCleanerId && (
-        <Card className="p-4 bg-green-50 border-green-200">
+      {(selectedCleanerId || autoAssign) && (
+        <Card className={`p-4 border-2 ${
+          autoAssign 
+            ? 'bg-blue-50 border-blue-200' 
+            : 'bg-green-50 border-green-200'
+        }`}>
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              autoAssign ? 'bg-blue-500' : 'bg-green-500'
+            }`}>
               <Clock className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-green-800">
-                Cleaner Selected Successfully
+              <p className={`font-semibold ${
+                autoAssign ? 'text-blue-800' : 'text-green-800'
+              }`}>
+                {autoAssign ? 'Auto-assign Selected' : 'Cleaner Selected Successfully'}
               </p>
-              <p className="text-sm text-green-600">
-                Your booking will be confirmed with the selected cleaner
+              <p className={`text-sm ${
+                autoAssign ? 'text-blue-600' : 'text-green-600'
+              }`}>
+                {autoAssign 
+                  ? 'We\'ll assign the best available cleaner for your booking'
+                  : 'Your booking will be confirmed with the selected cleaner'
+                }
               </p>
             </div>
           </div>
         </Card>
       )}
+
+      {/* Continue Button */}
+      <div className="flex justify-end pt-6">
+        <Button
+          onClick={handleContinue}
+          disabled={!canContinue || isSaving}
+          className="px-8"
+        >
+          {isSaving ? 'Saving...' : 'Continue to Review'}
+        </Button>
+      </div>
     </div>
   );
 }

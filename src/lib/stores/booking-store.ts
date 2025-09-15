@@ -31,6 +31,7 @@ export interface BookingState {
   
   // Cleaner selection
   selectedCleanerId: string | null;
+  autoAssign: boolean;
   availableCleaners: Array<{
     id: string;
     name: string;
@@ -67,6 +68,7 @@ export interface BookingState {
   setPostcode: (postcode: string) => void;
   setSpecialInstructions: (instructions: string) => void;
   setSelectedCleanerId: (cleanerId: string | null) => void;
+  setAutoAssign: (autoAssign: boolean) => void;
   setAvailableCleaners: (cleaners: Array<{
     id: string;
     name: string;
@@ -98,6 +100,7 @@ const initialState = {
   postcode: '',
   specialInstructions: '',
   selectedCleanerId: null,
+  autoAssign: false,
   availableCleaners: [],
   basePrice: 0,
   totalPrice: 0,
@@ -236,7 +239,11 @@ export const useBookingStore = create<BookingState>()(
       },
       
       setSelectedCleanerId: (cleanerId) => {
-        set({ selectedCleanerId: cleanerId });
+        set({ selectedCleanerId: cleanerId, autoAssign: false });
+      },
+      
+      setAutoAssign: (autoAssign) => {
+        set({ autoAssign, selectedCleanerId: null });
       },
       
       setAvailableCleaners: (cleaners) => {
@@ -244,17 +251,7 @@ export const useBookingStore = create<BookingState>()(
       },
       
       autoAssignCleaner: () => {
-        const { availableCleaners } = get();
-        if (availableCleaners.length > 0) {
-          // Deterministic auto-assign: pick the cleaner with highest rating
-          // If ratings are equal, pick the one with most experience
-          const bestCleaner = availableCleaners.reduce((best, current) => {
-            if (current.rating > best.rating) return current;
-            if (current.rating === best.rating && current.experienceYears > best.experienceYears) return current;
-            return best;
-          });
-          set({ selectedCleanerId: bestCleaner.id });
-        }
+        set({ autoAssign: true, selectedCleanerId: null });
       },
       
       calculateTotalPrice: () => {
@@ -306,6 +303,7 @@ export const useBookingStore = create<BookingState>()(
         postcode: state.postcode,
         specialInstructions: state.specialInstructions,
         selectedCleanerId: state.selectedCleanerId,
+        autoAssign: state.autoAssign,
         availableCleaners: state.availableCleaners,
         currentStep: state.currentStep,
       }),
