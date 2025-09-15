@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Extra } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { formatZAR } from '@/lib/format';
 
 interface ExtrasSelectionStepProps {
   extras: Extra[];
@@ -103,7 +104,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
                       )}
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="font-medium">Price: ${extra.price.toFixed(2)}</span>
+                        <span className="font-medium">Price: {formatZAR(extra.price * 100)}</span>
                         {extra.duration_minutes > 0 && (
                           <span>+{extra.duration_minutes} minutes</span>
                         )}
@@ -148,7 +149,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
           <ul className="text-sm text-green-800 space-y-1">
             {selectedExtras.map((extra) => (
               <li key={extra.id}>
-                • {extra.name} (×{extra.quantity}) - ${(extra.price * extra.quantity).toFixed(2)}
+                • {extra.name} (×{extra.quantity}) - {formatZAR(extra.price * extra.quantity * 100)}
               </li>
             ))}
           </ul>

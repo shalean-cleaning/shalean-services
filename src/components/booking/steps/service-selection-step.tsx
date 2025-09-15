@@ -5,6 +5,7 @@ import { CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Service, PricingRule } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { formatZAR } from '@/lib/format';
 
 interface ServiceSelectionStepProps {
   service: Service;
@@ -53,7 +54,7 @@ export function ServiceSelectionStep({ service }: ServiceSelectionStepProps) {
                 <div className="flex items-center gap-1">
                   <span className="font-medium">Base Price:</span>
                   <span className="text-lg font-semibold text-green-600">
-                    ${service.base_price.toFixed(2)}
+                    {formatZAR(service.base_price * 100)}
                   </span>
                 </div>
               </div>

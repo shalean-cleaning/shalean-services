@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { formatZAR } from '@/lib/format'
 
 interface ServiceCategory {
   id: string
@@ -511,25 +512,25 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Base Price</span>
-                <span>${quoteBreakdown.base_price.toFixed(2)}</span>
+                <span>{formatZAR(quoteBreakdown.base_price * 100)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Service Fee (10%)</span>
-                <span>${quoteBreakdown.service_fee.toFixed(2)}</span>
+                <span>{formatZAR(quoteBreakdown.service_fee * 100)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Delivery Fee</span>
-                <span>${quoteBreakdown.delivery_fee.toFixed(2)}</span>
+                <span>{formatZAR(quoteBreakdown.delivery_fee * 100)}</span>
               </div>
               {quoteBreakdown.extras_total > 0 && (
                 <div className="flex justify-between">
                   <span>Extras</span>
-                  <span>${quoteBreakdown.extras_total.toFixed(2)}</span>
+                  <span>{formatZAR(quoteBreakdown.extras_total * 100)}</span>
                 </div>
               )}
               <div className="border-t pt-2 flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span className="text-primary">${quoteBreakdown.total.toFixed(2)}</span>
+                <span className="text-primary">{formatZAR(quoteBreakdown.total * 100)}</span>
               </div>
             </div>
           </CardContent>

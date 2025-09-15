@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { formatZAR } from '@/lib/format';
 
 // Mock services data for demonstration
 const mockServices = [
@@ -76,7 +77,7 @@ export default function ServicesPage() {
                   <div className="flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
                     <span className="text-lg font-semibold text-green-600">
-                      ${service.base_price.toFixed(2)}
+                      {formatZAR(service.base_price * 100)}
                     </span>
                   </div>
                 </div>

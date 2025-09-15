@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Service, PricingRule } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { formatZAR } from '@/lib/format';
 
 interface BookingSummaryProps {
   service: Service;
@@ -96,27 +97,27 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Base service</span>
-          <span className="font-medium">${basePrice.toFixed(2)}</span>
+          <span className="font-medium">{formatZAR(basePrice * 100)}</span>
         </div>
 
         {bedroomCount > 1 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Additional bedrooms (×{bedroomCount - 1})</span>
-            <span className="font-medium">+${((bedroomCount - 1) * 20).toFixed(2)}</span>
+            <span className="font-medium">+{formatZAR((bedroomCount - 1) * 20 * 100)}</span>
           </div>
         )}
 
         {bathroomCount > 1 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Additional bathrooms (×{bathroomCount - 1})</span>
-            <span className="font-medium">+${((bathroomCount - 1) * 15).toFixed(2)}</span>
+            <span className="font-medium">+{formatZAR((bathroomCount - 1) * 15 * 100)}</span>
           </div>
         )}
 
         {deliveryFee > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Delivery fee</span>
-            <span className="font-medium">+${deliveryFee.toFixed(2)}</span>
+            <span className="font-medium">+{formatZAR(deliveryFee * 100)}</span>
           </div>
         )}
 
@@ -130,7 +131,7 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
                     <Plus className="w-3 h-3 text-gray-400" />
                     <span className="text-gray-600">{extra.name} (×{extra.quantity})</span>
                   </div>
-                  <span className="font-medium">+${(extra.price * extra.quantity).toFixed(2)}</span>
+                  <span className="font-medium">+{formatZAR(extra.price * extra.quantity * 100)}</span>
                 </div>
               ))}
             </div>
@@ -141,7 +142,7 @@ export function BookingSummary({ service: _service, pricingRules: _pricingRules 
         
         <div className="flex justify-between text-lg font-semibold">
           <span>Total</span>
-          <span className="text-green-600">${totalPrice.toFixed(2)}</span>
+          <span className="text-green-600">{formatZAR(totalPrice * 100)}</span>
         </div>
       </div>
 
