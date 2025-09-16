@@ -16,13 +16,10 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
             supabaseResponse.cookies.set(name, value, options)
-          )
+          })
         },
       },
     }
@@ -58,6 +55,20 @@ export async function middleware(request: NextRequest) {
       // Redirect to unauthorized page if not admin
       const url = request.nextUrl.clone()
       url.pathname = '/unauthorized'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Protect booking routes (except initial service selection)
+  if (request.nextUrl.pathname.startsWith('/booking/') && 
+      !request.nextUrl.pathname.startsWith('/booking/service/') &&
+      request.nextUrl.pathname !== '/booking') {
+    if (!user) {
+      // Redirect to login if not authenticated
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
+      url.searchParams.set('returnTo', returnTo)
       return NextResponse.redirect(url)
     }
   }

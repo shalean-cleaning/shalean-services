@@ -80,12 +80,6 @@ export function BookingReviewStep() {
         const result = await response.json();
         
         if (!response.ok) {
-          if (result.error === 'NEED_AUTH') {
-            // This shouldn't happen since we're server-guarded, but handle it
-            router.push('/auth/login?returnTo=/booking/review');
-            return;
-          }
-          
           throw new Error(result.message || result.error || `HTTP ${response.status}`);
         }
         
