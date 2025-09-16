@@ -25,13 +25,13 @@ const normalizeToUTC = (isoString: string): string => {
   }
 };
 
-// Strict input validation schema with comprehensive field validation
+// Flexible input validation schema for partial updates
 const DraftBookingSchema = z.object({
-  // Required fields with explicit validation (customerId derived from session)
-  serviceId: z.string().uuid("serviceId must be a valid UUID"),
+  // Core required fields (can be partial for updates)
+  serviceId: z.string().uuid("serviceId must be a valid UUID").optional(),
   regionId: z.string().uuid("regionId must be a valid UUID").optional(),
-  suburbId: z.string().uuid("suburbId must be a valid UUID"),
-  totalPrice: z.number().positive("totalPrice must be a positive number"),
+  suburbId: z.string().uuid("suburbId must be a valid UUID").optional(),
+  totalPrice: z.number().positive("totalPrice must be a positive number").optional(),
   
   // Time handling - either bookingDate + startTime OR startISO + endISO
   bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "bookingDate must be in YYYY-MM-DD format").optional(),
@@ -40,10 +40,35 @@ const DraftBookingSchema = z.object({
   endISO: z.string().refine(isValidISODate, "endISO must be a valid ISO 8601 datetime string").optional(),
   
   // Location details
-  address: z.string().min(1, "address is required"),
-  postcode: z.string().min(1, "postcode is required"),
+  address: z.string().min(1, "address is required").optional(),
+  postcode: z.string().min(1, "postcode is required").optional(),
   
   // Room counts and extras
+  bedrooms: z.number().int().min(1, "at least 1 bedroom required").default(1).optional(),
+  bathrooms: z.number().int().min(1, "at least 1 bathroom required").default(1).optional(),
+  extras: z.array(z.object({
+    id: z.string().uuid("extra id must be a valid UUID"),
+    quantity: z.number().int().min(1, "quantity must be at least 1").default(1),
+    price: z.number().positive("extra price must be positive")
+  })).default([]).optional(),
+  
+  // Optional fields
+  specialInstructions: z.string().optional(),
+  frequency: z.enum(['one-time', 'weekly', 'bi-weekly', 'monthly']).default('one-time').optional(),
+  timezone: z.string().default('Africa/Johannesburg').optional(),
+  
+  // Cleaner selection
+  selectedCleanerId: z.string().uuid("selectedCleanerId must be a valid UUID").optional(),
+  autoAssign: z.boolean().default(false).optional()
+});
+
+// Schema for complete booking creation (when all required fields are present)
+const CompleteBookingSchema = z.object({
+  serviceId: z.string().uuid("serviceId must be a valid UUID"),
+  suburbId: z.string().uuid("suburbId must be a valid UUID"),
+  totalPrice: z.number().positive("totalPrice must be a positive number"),
+  address: z.string().min(1, "address is required"),
+  postcode: z.string().min(1, "postcode is required"),
   bedrooms: z.number().int().min(1, "at least 1 bedroom required").default(1),
   bathrooms: z.number().int().min(1, "at least 1 bathroom required").default(1),
   extras: z.array(z.object({
@@ -51,15 +76,16 @@ const DraftBookingSchema = z.object({
     quantity: z.number().int().min(1, "quantity must be at least 1").default(1),
     price: z.number().positive("extra price must be positive")
   })).default([]),
-  
-  // Optional fields
   specialInstructions: z.string().optional(),
   frequency: z.enum(['one-time', 'weekly', 'bi-weekly', 'monthly']).default('one-time'),
   timezone: z.string().default('Africa/Johannesburg'),
-  
-  // Cleaner selection
   selectedCleanerId: z.string().uuid("selectedCleanerId must be a valid UUID").optional(),
-  autoAssign: z.boolean().default(false)
+  autoAssign: z.boolean().default(false),
+  // Time handling
+  bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "bookingDate must be in YYYY-MM-DD format").optional(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "startTime must be in HH:mm format").optional(),
+  startISO: z.string().refine(isValidISODate, "startISO must be a valid ISO 8601 datetime string").optional(),
+  endISO: z.string().refine(isValidISODate, "endISO must be a valid ISO 8601 datetime string").optional()
 }).refine(
   (data) => {
     // Either bookingDate + startTime OR startISO (endISO can be derived) must be provided
@@ -78,7 +104,7 @@ type DraftBookingInput = z.infer<typeof DraftBookingSchema>;
 // Session and profile management
 async function getOrCreateCustomerProfile(
   supabaseAdmin: ReturnType<typeof createSupabaseAdmin>,
-  supabaseServer: ReturnType<typeof createSupabaseServer>
+  supabaseServer: Awaited<ReturnType<typeof createSupabaseServer>>
 ): Promise<{ customerId: string; isGuest: boolean }> {
   try {
     // Get the current session
@@ -298,10 +324,10 @@ async function computeBookingPrice(
 }
 
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const supabaseAdmin = createSupabaseAdmin();
-    const supabaseServer = createSupabaseServer();
+    const supabaseServer = await createSupabaseServer();
 
     // Get customer profile from session
     let customerId: string;
@@ -359,7 +385,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     
-    // Validate input with Zod
+    // INSTRUMENTATION: Log input payload
+    logger.info('DRAFT API POST - Input payload:', JSON.stringify(body, null, 2));
+    logger.info('DRAFT API POST - Request headers:', JSON.stringify(req.headers, null, 2));
+    
+    // Validate input with flexible schema
     const validationResult = DraftBookingSchema.safeParse(body);
     if (!validationResult.success) {
       const errors = validationResult.error.issues.map(err => ({
@@ -367,24 +397,28 @@ export async function POST(req: Request) {
         message: err.message
       }));
       
+      logger.warn('DRAFT API POST - Validation failed:', errors);
       return NextResponse.json({
         success: false,
         error: "Validation failed",
         details: errors
-      }, { status: 400 });
+      }, { status: 422 });
     }
 
     const data = validationResult.data;
     const supabaseAdmin = createSupabaseAdmin();
-    const supabaseServer = createSupabaseServer();
+    const supabaseServer = await createSupabaseServer();
 
     // Get or create customer profile from session
     let customerId: string;
     try {
       const profileResult = await getOrCreateCustomerProfile(supabaseAdmin, supabaseServer);
       customerId = profileResult.customerId;
+      
+      // INSTRUMENTATION: Log auth result
+      logger.info('DRAFT API POST - Auth result:', { customerId, isGuest: profileResult.isGuest });
     } catch (error) {
-      logger.error("Authentication error:", error);
+      logger.error("DRAFT API POST - Authentication error:", error);
       
       return NextResponse.json({
         success: false,
@@ -393,14 +427,145 @@ export async function POST(req: Request) {
       }, { status: 401 });
     }
 
+    // Check if a draft booking already exists for this customer
+    const { data: existingDraft, error: draftCheckError } = await supabaseAdmin
+      .from('bookings')
+      .select('id, total_price, created_at, status, service_id, suburb_id, booking_date, start_time, end_time, address, postcode, bedrooms, bathrooms, special_instructions, cleaner_id, auto_assign')
+      .eq('customer_id', customerId)
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
+
+    // INSTRUMENTATION: Log draft check result
+    logger.info('DRAFT API POST - Draft check result:', { 
+      existingDraft: existingDraft ? { id: existingDraft.id, status: existingDraft.status } : null,
+      draftCheckError: draftCheckError ? { message: draftCheckError.message, code: draftCheckError.code } : null
+    });
+
+    // If we have an existing draft, handle it (idempotency)
+    if (existingDraft && !draftCheckError) {
+      // If no new data provided, just return existing draft
+      if (Object.keys(data).length === 0) {
+        logger.info(`Returning existing draft booking ${existingDraft.id} for customer ${customerId}`);
+        return NextResponse.json({
+          success: true,
+          bookingId: existingDraft.id,
+          totalPrice: existingDraft.total_price,
+          message: "Existing booking draft found"
+        }, { status: 200 });
+      }
+
+      // If new data provided, update the existing draft
+      logger.info(`Updating existing draft booking ${existingDraft.id} for customer ${customerId}`);
+      
+      // Prepare update data (only include fields that are provided and exist in the schema)
+      const updateData: any = {};
+      
+      if (data.serviceId) updateData.service_id = data.serviceId;
+      if (data.suburbId) updateData.suburb_id = data.suburbId;
+      if (data.specialInstructions !== undefined) updateData.special_instructions = data.specialInstructions;
+      if (data.selectedCleanerId !== undefined) updateData.cleaner_id = data.selectedCleanerId;
+      if (data.autoAssign !== undefined) updateData.auto_assign = data.autoAssign;
+      
+      // REMOVED: address, postcode, bedrooms, bathrooms - these fields don't exist in the bookings table
+      // TODO: These fields should be stored in a separate table or added to the schema if needed
+      
+      // Handle time updates
+      if (data.bookingDate) updateData.booking_date = data.bookingDate;
+      if (data.startTime) updateData.start_time = data.startTime;
+      if (data.startISO) {
+        updateData.booking_date = extractDateFromISO(data.startISO);
+        updateData.start_time = extractTimeFromISO(data.startISO);
+      }
+      
+      // Update total price if provided
+      if (data.totalPrice) updateData.total_price = data.totalPrice;
+      
+      // Only update if we have data to update
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateError } = await supabaseAdmin
+          .from('bookings')
+          .update(updateData)
+          .eq('id', existingDraft.id);
+
+        if (updateError) {
+          // INSTRUMENTATION: Log detailed update error
+          logger.error("DRAFT API POST - Booking update error:", {
+            message: updateError.message,
+            code: updateError.code,
+            details: updateError.details,
+            hint: updateError.hint,
+            updateData: JSON.stringify(updateData, null, 2)
+          });
+          
+          // Map specific database errors to appropriate HTTP status codes
+          if (updateError.code === '23505') { // Unique violation
+            return NextResponse.json({
+              success: false,
+              error: "Conflict",
+              details: "A booking with these details already exists",
+              code: updateError.code
+            }, { status: 409 });
+          } else if (updateError.code === '23503') { // Foreign key violation
+            return NextResponse.json({
+              success: false,
+              error: "Validation failed",
+              details: "Referenced record does not exist",
+              code: updateError.code
+            }, { status: 422 });
+          } else if (updateError.code === '23502') { // Not null violation
+            return NextResponse.json({
+              success: false,
+              error: "Validation failed",
+              details: "Required field is missing",
+              code: updateError.code
+            }, { status: 422 });
+          }
+          
+          return NextResponse.json({
+            success: false,
+            error: "Update failed",
+            details: updateError.message,
+            code: updateError.code
+          }, { status: 500 });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        bookingId: existingDraft.id,
+        totalPrice: updateData.total_price || existingDraft.total_price,
+        message: "Booking draft updated successfully"
+      }, { status: 200 });
+    }
+
+    // For new bookings, validate that we have all required fields
+    const completeValidationResult = CompleteBookingSchema.safeParse(data);
+    if (!completeValidationResult.success) {
+      const missingFields = completeValidationResult.error.issues.map(err => ({
+        field: err.path.join('.'),
+        message: err.message
+      }));
+      
+      return NextResponse.json({
+        success: false,
+        error: "Missing required fields for new booking",
+        details: missingFields,
+        guidance: "Please complete all required fields or update an existing draft"
+      }, { status: 422 });
+    }
+
+    const completeData = completeValidationResult.data;
+
     // Validate database references exist
-    const dbValidation = await validateDatabaseReferences(supabaseAdmin, data);
+    const dbValidation = await validateDatabaseReferences(supabaseAdmin, completeData);
     if (!dbValidation.isValid) {
       return NextResponse.json({
         success: false,
         error: "Validation failed",
         details: dbValidation.errors
-      }, { status: 400 });
+      }, { status: 422 });
     }
 
     // Handle time conversion and normalization
@@ -408,26 +573,26 @@ export async function POST(req: Request) {
     let endISO: string;
     let bookingDate: string;
 
-    if (data.bookingDate && data.startTime) {
+    if (completeData.bookingDate && completeData.startTime) {
       // Convert bookingDate + startTime to ISO
-      const timeResult = toAfricaJohannesburgISO(data.bookingDate, data.startTime);
+      const timeResult = toAfricaJohannesburgISO(completeData.bookingDate, completeData.startTime);
       startISO = normalizeToUTC(timeResult.startISO);
       endISO = normalizeToUTC(timeResult.endISO);
-      bookingDate = data.bookingDate;
-    } else if (data.startISO) {
+      bookingDate = completeData.bookingDate;
+    } else if (completeData.startISO) {
       // Use provided startISO and normalize to UTC
-      startISO = normalizeToUTC(data.startISO);
+      startISO = normalizeToUTC(completeData.startISO);
       bookingDate = extractDateFromISO(startISO);
       
       // Derive endISO from duration if not provided
-      if (data.endISO) {
-        endISO = normalizeToUTC(data.endISO);
+      if (completeData.endISO) {
+        endISO = normalizeToUTC(completeData.endISO);
       } else {
         // Get service duration and calculate end time
         const { data: serviceData, error: serviceError } = await supabaseAdmin
           .from('services')
           .select('duration_minutes')
-          .eq('id', data.serviceId)
+          .eq('id', completeData.serviceId)
           .single();
 
         if (serviceError || !serviceData) {
@@ -435,7 +600,7 @@ export async function POST(req: Request) {
             success: false,
             error: "Validation failed",
             details: [{ field: "serviceId", message: "Service not found" }]
-          }, { status: 400 });
+          }, { status: 422 });
         }
 
         const durationMinutes = serviceData.duration_minutes || 120; // Default 2 hours
@@ -448,147 +613,173 @@ export async function POST(req: Request) {
         success: false,
         error: "Validation failed",
         details: [{ field: "scheduling", message: "Missing required scheduling fields. Provide startISO/endISO or bookingDate+startTime." }]
-      }, { status: 400 });
+      }, { status: 422 });
     }
 
     // Compute server-side pricing
     const { totalPrice: computedPrice, breakdown } = await computeBookingPrice(
       supabaseAdmin,
-      data.serviceId,
-      data.suburbId,
-      data.extras
+      completeData.serviceId,
+      completeData.suburbId,
+      completeData.extras
     );
 
     // Validate computed price matches client price (with small tolerance for rounding)
-    const priceDifference = Math.abs(computedPrice - data.totalPrice);
+    const priceDifference = Math.abs(computedPrice - completeData.totalPrice);
     if (priceDifference > 0.01) {
-      logger.warn(`Price mismatch: client=${data.totalPrice}, server=${computedPrice}`);
+      logger.warn(`Price mismatch: client=${completeData.totalPrice}, server=${computedPrice}`);
       // Use server-computed price for security
     }
 
     // Prepare booking data for database insert with proper field mapping
+    // NOTE: Only include fields that actually exist in the bookings table schema
     const bookingData = {
       customer_id: customerId, // Use session-derived customerId
-      service_id: data.serviceId,
-      suburb_id: data.suburbId,
+      service_id: completeData.serviceId,
+      suburb_id: completeData.suburbId,
       booking_date: bookingDate,
       start_time: extractTimeFromISO(startISO),
       end_time: extractTimeFromISO(endISO),
       status: 'PENDING' as const,
       total_price: computedPrice,
-      notes: data.specialInstructions || null,
-      special_instructions: data.specialInstructions || null,
-      // Add cleaner selection fields
-      cleaner_id: data.selectedCleanerId || null,
-      auto_assign: data.autoAssign
+      notes: completeData.specialInstructions || null,
+      special_instructions: completeData.specialInstructions || null,
+      // Add cleaner selection fields (these exist in the schema)
+      cleaner_id: completeData.selectedCleanerId || null,
+      auto_assign: completeData.autoAssign
+      // REMOVED: address, postcode, bedrooms, bathrooms - these fields don't exist in the bookings table
+      // TODO: These fields should be stored in a separate table or added to the schema if needed
     };
 
-    // Validate all required fields are non-null before insert
-    const requiredFields = ['customer_id', 'service_id', 'suburb_id', 'booking_date', 'start_time', 'end_time', 'total_price'];
-    const nullFields = requiredFields.filter(field => {
-      const value = bookingData[field as keyof typeof bookingData];
-      return value === null || value === undefined || value === '';
-    });
+    // Create new booking
+    try {
+      // INSTRUMENTATION: Log booking data before insert
+      logger.info('DRAFT API POST - Attempting booking insert with data:', JSON.stringify(bookingData, null, 2));
+      
+      const { data: bookingResult, error: insertError } = await supabaseAdmin
+        .from('bookings')
+        .insert(bookingData)
+        .select('id')
+        .single();
 
-    if (nullFields.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: "Validation failed",
-        details: [{ field: "database", message: `Missing required fields: ${nullFields.join(', ')}` }]
-      }, { status: 400 });
-    }
-
-    // Check if a draft booking already exists for this customer
-    const { data: existingDraft, error: draftCheckError } = await supabaseAdmin
-      .from('bookings')
-      .select('id, total_price, created_at')
-      .eq('customer_id', customerId)
-      .eq('status', 'PENDING')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    let booking;
-    let isNewBooking = false;
-
-    if (existingDraft && !draftCheckError) {
-      // Draft already exists, return it
-      logger.info(`Found existing draft booking ${existingDraft.id} for customer ${customerId}`);
-      booking = existingDraft;
-      isNewBooking = false;
-    } else {
-      // No existing draft, create a new one
-      try {
-        const { data: bookingResult, error: insertError } = await supabaseAdmin
-          .from('bookings')
-          .insert(bookingData)
-          .select('id')
-          .single();
-
-        if (insertError) {
-          logger.error("Booking insert error:", insertError);
+      if (insertError) {
+        // INSTRUMENTATION: Log detailed insert error
+        logger.error("DRAFT API POST - Booking insert error:", {
+          message: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+          bookingData: JSON.stringify(bookingData, null, 2)
+        });
+        
+        // Map specific database errors to appropriate HTTP status codes
+        if (insertError.code === '23505') { // Unique violation
           return NextResponse.json({
             success: false,
-            error: "Database error",
-            details: insertError.message
+            error: "Conflict",
+            details: "A booking with these details already exists",
+            code: insertError.code
+          }, { status: 409 });
+        } else if (insertError.code === '23503') { // Foreign key violation
+          return NextResponse.json({
+            success: false,
+            error: "Validation failed",
+            details: "Referenced record does not exist",
+            code: insertError.code
+          }, { status: 422 });
+        } else if (insertError.code === '23502') { // Not null violation
+          return NextResponse.json({
+            success: false,
+            error: "Validation failed",
+            details: "Required field is missing",
+            code: insertError.code
+          }, { status: 422 });
+        } else if (insertError.code === 'PGRST204') { // Column doesn't exist
+          return NextResponse.json({
+            success: false,
+            error: "Schema error",
+            details: "Database schema mismatch - column does not exist",
+            code: insertError.code
           }, { status: 500 });
         }
-
-        booking = bookingResult;
-        isNewBooking = true;
-      } catch (dbError) {
-        logger.error("Database insert failed:", dbError);
+        
         return NextResponse.json({
           success: false,
           error: "Database error",
-          details: dbError instanceof Error ? dbError.message : "Unknown database error"
+          details: insertError.message,
+          code: insertError.code
         }, { status: 500 });
       }
-    }
 
-    // Insert booking extras if any
-    if (data.extras.length > 0) {
-      const bookingExtras = data.extras.map(extra => ({
-        booking_id: booking.id,
-        extra_id: extra.id,
-        quantity: extra.quantity,
-        price: extra.price
-      }));
+      // Insert booking extras if any
+      if (completeData.extras.length > 0) {
+        const bookingExtras = completeData.extras.map(extra => ({
+          booking_id: bookingResult.id,
+          extra_id: extra.id,
+          quantity: extra.quantity,
+          price: extra.price
+        }));
 
-      try {
-        const { error: extrasError } = await supabaseAdmin
-          .from('booking_extras')
-          .insert(bookingExtras);
+        try {
+          const { error: extrasError } = await supabaseAdmin
+            .from('booking_extras')
+            .insert(bookingExtras);
 
-        if (extrasError) {
-          logger.error("Booking extras insert error:", extrasError);
+          if (extrasError) {
+            // INSTRUMENTATION: Log detailed extras error
+            logger.error("DRAFT API POST - Booking extras insert error:", {
+              message: extrasError.message,
+              code: extrasError.code,
+              details: extrasError.details,
+              hint: extrasError.hint,
+              bookingExtras: JSON.stringify(bookingExtras, null, 2)
+            });
+            // Don't fail the whole request, just log the error
+          }
+        } catch (extrasDbError) {
+          logger.error("DRAFT API POST - Booking extras database insert failed:", extrasDbError);
           // Don't fail the whole request, just log the error
         }
-      } catch (extrasDbError) {
-        logger.error("Booking extras database insert failed:", extrasDbError);
-        // Don't fail the whole request, just log the error
       }
+
+      // Return success response for new booking
+      return NextResponse.json({
+        success: true,
+        bookingId: bookingResult.id,
+        totalPrice: computedPrice,
+        breakdown: breakdown,
+        message: "Booking draft created successfully"
+      }, { 
+        status: 201,
+        headers: {
+          'Location': `/booking/review?bookingId=${bookingResult.id}`
+        }
+      });
+
+    } catch (dbError) {
+      // INSTRUMENTATION: Log database error with full context
+      logger.error("DRAFT API POST - Database insert failed:", {
+        error: dbError,
+        message: dbError instanceof Error ? dbError.message : "Unknown database error",
+        stack: dbError instanceof Error ? dbError.stack : undefined
+      });
+      
+      return NextResponse.json({
+        success: false,
+        error: "Database error",
+        details: dbError instanceof Error ? dbError.message : "Unknown database error"
+      }, { status: 500 });
     }
-
-    // Return appropriate response based on whether this is a new or existing booking
-    const responseData = {
-      success: true,
-      bookingId: booking.id,
-      totalPrice: isNewBooking ? computedPrice : existingDraft.total_price,
-      breakdown: isNewBooking ? breakdown : undefined,
-      message: isNewBooking ? "Booking draft created successfully" : "Existing booking draft found"
-    };
-
-    return NextResponse.json(responseData, { 
-      status: isNewBooking ? 201 : 200,
-      headers: {
-        'Location': `/booking/review?bookingId=${booking.id}`
-      }
-    });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error("Draft booking creation failed:", error);
+    
+    // INSTRUMENTATION: Log top-level error with full context
+    logger.error("DRAFT API POST - Draft booking creation failed:", {
+      error: error,
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     
     return NextResponse.json({
       success: false,
