@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 /**
  * Creates a Supabase client with service role key (admin access, bypasses RLS)
@@ -15,12 +17,32 @@ export function createSupabaseAdmin() {
 /**
  * Creates a Supabase client with anon key (respects RLS, session-aware)
  * Use this for server-side operations that should respect user permissions
+ * This version properly reads cookies from the incoming request
  */
 export function createSupabaseServer() {
-  return createClient(
+  const cookieStore = cookies()
+
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
   )
 }
 

@@ -143,10 +143,41 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       const result = await response.json();
       
       if (response.ok) {
-        // If 200 → navigate to /booking/review
-        router.push('/booking/review');
+        // If 200 (existing draft) or 201 (new draft) → navigate to /booking/review
+        const bookingId = result.bookingId;
+        if (bookingId) {
+          router.push(`/booking/review?bookingId=${bookingId}`);
+        } else {
+          router.push('/booking/review');
+        }
+      } else if (response.status === 409) {
+        // Handle 409 as success - fetch existing draft and continue
+        try {
+          const existingResponse = await fetch('/api/bookings/draft', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (existingResponse.ok) {
+            const existingResult = await existingResponse.json();
+            const bookingId = existingResult.bookingId;
+            if (bookingId) {
+              router.push(`/booking/review?bookingId=${bookingId}`);
+            } else {
+              router.push('/booking/review');
+            }
+          } else {
+            // Fallback to review page without bookingId
+            router.push('/booking/review');
+          }
+        } catch (fallbackError) {
+          // Fallback to review page without bookingId
+          router.push('/booking/review');
+        }
       } else {
-        // If 400/409 → show field-specific messages from the response
+        // If 400/401/500 → show field-specific messages from the response
         const errorMessage = result.message || result.error || `HTTP ${response.status}`;
         setInlineError(errorMessage);
       }

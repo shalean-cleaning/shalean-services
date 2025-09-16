@@ -298,6 +298,63 @@ async function computeBookingPrice(
 }
 
 
+export async function GET(req: Request) {
+  try {
+    const supabaseAdmin = createSupabaseAdmin();
+    const supabaseServer = createSupabaseServer();
+
+    // Get customer profile from session
+    let customerId: string;
+    try {
+      const profileResult = await getOrCreateCustomerProfile(supabaseAdmin, supabaseServer);
+      customerId = profileResult.customerId;
+    } catch (error) {
+      logger.error("Authentication error:", error);
+      
+      return NextResponse.json({
+        success: false,
+        error: "NEED_AUTH",
+        message: "Please sign in to access your booking draft."
+      }, { status: 401 });
+    }
+
+    // Find existing draft booking for this customer
+    const { data: existingDraft, error: draftError } = await supabaseAdmin
+      .from('bookings')
+      .select('id, total_price, created_at, status')
+      .eq('customer_id', customerId)
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (draftError || !existingDraft) {
+      return NextResponse.json({
+        success: false,
+        error: "NOT_FOUND",
+        message: "No draft booking found"
+      }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      bookingId: existingDraft.id,
+      totalPrice: existingDraft.total_price,
+      message: "Existing booking draft found"
+    }, { status: 200 });
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    logger.error("Draft booking fetch failed:", error);
+    
+    return NextResponse.json({
+      success: false,
+      error: "Internal server error",
+      details: errorMessage
+    }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -441,32 +498,52 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Insert the booking with proper error handling
-    let booking;
-    try {
-      const { data: bookingResult, error: insertError } = await supabaseAdmin
-        .from('bookings')
-        .insert(bookingData)
-        .select('id')
-        .single();
+    // Check if a draft booking already exists for this customer
+    const { data: existingDraft, error: draftCheckError } = await supabaseAdmin
+      .from('bookings')
+      .select('id, total_price, created_at')
+      .eq('customer_id', customerId)
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-      if (insertError) {
-        logger.error("Booking insert error:", insertError);
+    let booking;
+    let isNewBooking = false;
+
+    if (existingDraft && !draftCheckError) {
+      // Draft already exists, return it
+      logger.info(`Found existing draft booking ${existingDraft.id} for customer ${customerId}`);
+      booking = existingDraft;
+      isNewBooking = false;
+    } else {
+      // No existing draft, create a new one
+      try {
+        const { data: bookingResult, error: insertError } = await supabaseAdmin
+          .from('bookings')
+          .insert(bookingData)
+          .select('id')
+          .single();
+
+        if (insertError) {
+          logger.error("Booking insert error:", insertError);
+          return NextResponse.json({
+            success: false,
+            error: "Database error",
+            details: insertError.message
+          }, { status: 500 });
+        }
+
+        booking = bookingResult;
+        isNewBooking = true;
+      } catch (dbError) {
+        logger.error("Database insert failed:", dbError);
         return NextResponse.json({
           success: false,
           error: "Database error",
-          details: insertError.message
-        }, { status: 409 });
+          details: dbError instanceof Error ? dbError.message : "Unknown database error"
+        }, { status: 500 });
       }
-
-      booking = bookingResult;
-    } catch (dbError) {
-      logger.error("Database insert failed:", dbError);
-      return NextResponse.json({
-        success: false,
-        error: "Database error",
-        details: dbError instanceof Error ? dbError.message : "Unknown database error"
-      }, { status: 409 });
     }
 
     // Insert booking extras if any
@@ -493,13 +570,21 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({
+    // Return appropriate response based on whether this is a new or existing booking
+    const responseData = {
       success: true,
-      id: booking.id,
-      totalPrice: computedPrice,
-      breakdown,
-      message: "Booking draft created successfully"
-    }, { status: 201 });
+      bookingId: booking.id,
+      totalPrice: isNewBooking ? computedPrice : existingDraft.total_price,
+      breakdown: isNewBooking ? breakdown : undefined,
+      message: isNewBooking ? "Booking draft created successfully" : "Existing booking draft found"
+    };
+
+    return NextResponse.json(responseData, { 
+      status: isNewBooking ? 201 : 200,
+      headers: {
+        'Location': `/booking/review?bookingId=${booking.id}`
+      }
+    });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
