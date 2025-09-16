@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { buildReturnToUrl } from '@/lib/utils'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -41,7 +42,8 @@ export async function middleware(request: NextRequest) {
       // Redirect to login if not authenticated
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
-      url.searchParams.set('redirectTo', request.nextUrl.pathname)
+      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
+      url.searchParams.set('returnTo', returnTo)
       return NextResponse.redirect(url)
     }
 
@@ -66,7 +68,8 @@ export async function middleware(request: NextRequest) {
       // Redirect to login if not authenticated
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
-      url.searchParams.set('redirectTo', request.nextUrl.pathname)
+      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
+      url.searchParams.set('returnTo', returnTo)
       return NextResponse.redirect(url)
     }
 

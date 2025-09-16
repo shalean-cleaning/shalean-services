@@ -16,8 +16,8 @@ export function BookingReviewStep() {
     bedroomCount,
     bathroomCount,
     selectedExtras,
-    selectedRegion,
-    selectedSuburb,
+    _selectedRegion,
+    _selectedSuburb,
     selectedDate,
     selectedTime,
     selectedCleanerId,
@@ -28,7 +28,7 @@ export function BookingReviewStep() {
     totalPrice,
     availableCleaners,
     composeDraftPayload,
-    createDraftBooking
+    _createDraftBooking
   } = useBookingStore();
 
   const [isLoading, setIsLoading] = useState(false);

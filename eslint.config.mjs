@@ -7,6 +7,20 @@ import tsParser from "@typescript-eslint/parser";
 export default [
   js.configs.recommended,
   {
+    ignores: [
+      "node_modules/**", 
+      ".next/**", 
+      "dist/**", 
+      "build/**",
+      "**/.next/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      ".next/static/**",
+      "**/.next/static/**"
+    ],
+  },
+  {
     files: ["**/*.{js,jsx,ts,tsx}"],
     ignores: [
       "node_modules/**", 
@@ -16,7 +30,9 @@ export default [
       "**/.next/**",
       "**/node_modules/**",
       "**/dist/**",
-      "**/build/**"
+      "**/build/**",
+      ".next/static/**",
+      "**/.next/static/**"
     ],
     plugins: {
       "@next/next": nextPlugin,

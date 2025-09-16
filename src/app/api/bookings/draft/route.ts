@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -328,7 +327,6 @@ export async function POST(req: Request) {
       const profileResult = await getOrCreateCustomerProfile(supabaseAdmin, supabaseServer);
       customerId = profileResult.customerId;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
       logger.error("Authentication error:", error);
       
       return NextResponse.json({

@@ -1,14 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase-client'
 
-export default function SignupPage() {
+function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -16,6 +17,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') || '/booking/review'
   
   const supabase = createClient()
 
@@ -33,6 +37,7 @@ export default function SignupPage() {
             first_name: firstName,
             last_name: lastName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
         },
       })
 
@@ -64,7 +69,7 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <Link href="/auth/login">
+              <Link href={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>
                 <Button variant="outline" className="w-full">
                   Back to Sign In
                 </Button>
@@ -153,12 +158,20 @@ export default function SignupPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-blue-600 hover:text-blue-500">
+            <Link href={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`} className="text-blue-600 hover:text-blue-500">
               Sign in
             </Link>
           </div>
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
   )
 }
