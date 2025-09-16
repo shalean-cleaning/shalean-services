@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { BookingReviewStep } from '@/components/booking/steps/booking-review-step';
+import { BookingContextRestorer } from '@/components/auth/BookingContextRestorer';
 
 export default async function BookingReviewPage() {
   const supabase = createSupabaseServer();
@@ -26,11 +27,13 @@ export default async function BookingReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BookingReviewStep />
+    <BookingContextRestorer>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BookingReviewStep />
+        </div>
       </div>
-    </div>
+    </BookingContextRestorer>
   );
 }
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { getAndClearBookingContext } from '@/lib/utils';
 
 export function BookingReviewStep() {
   const router = useRouter();
@@ -31,6 +32,24 @@ export function BookingReviewStep() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draftCreated, setDraftCreated] = useState(false);
+
+  // Check if we need to redirect back to booking flow
+  useEffect(() => {
+    const bookingContext = getAndClearBookingContext();
+    
+    // If we have no booking data and no context, redirect to start
+    if (!selectedService && !bookingContext) {
+      router.push('/booking');
+      return;
+    }
+    
+    // If we have context indicating user was on an earlier step, redirect back
+    if (bookingContext && bookingContext.currentStep && bookingContext.currentStep < 5) {
+      const serviceSlug = bookingContext.serviceSlug || 'standard-cleaning';
+      router.push(`/booking/service/${serviceSlug}?step=${bookingContext.currentStep}`);
+      return;
+    }
+  }, [selectedService, router]);
 
   // Create draft booking on component mount
   useEffect(() => {

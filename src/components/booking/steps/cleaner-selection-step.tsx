@@ -2,14 +2,14 @@
 
 import { Sparkles, Users, Clock, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import { CleanerCard } from '../cleaner-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
-import { buildReturnToUrl } from '@/lib/utils';
+import { buildBookingReturnToUrl } from '@/lib/utils';
 
 interface CleanerSelectionStepProps {
   onNext?: () => void;
@@ -31,7 +31,6 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
   } = useBookingStore();
 
   const router = useRouter();
-  const _searchParams = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,8 +148,12 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         router.push('/booking/review');
       } else if (response.status === 401 && result.error === 'NEED_AUTH') {
         // If 401 (NEED_AUTH) → redirect to /login with proper returnTo
-        // Build returnTo URL preserving current step context
-        const returnTo = buildReturnToUrl('/booking/review', '');
+        // Build returnTo URL preserving current step context and booking data
+        const { selectedService, currentStep } = useBookingStore.getState();
+        const returnTo = buildBookingReturnToUrl('/booking/review', {
+          currentStep: currentStep,
+          serviceSlug: selectedService?.slug,
+        });
         router.push(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
       } else {
         // If 400/409 → show field-specific messages from the response

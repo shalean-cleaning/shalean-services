@@ -9,13 +9,12 @@ import { LocationSchedulingStep } from './steps/location-scheduling-step';
 import { RoomsSelectionStep } from './steps/rooms-selection-step';
 import { ServiceSelectionStep } from './steps/service-selection-step';
 import { Button } from '@/components/ui/button';
-import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
+import { Service, Extra, Region } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
 interface BookingStepperProps {
   service: Service;
   extras: Extra[];
-  pricingRules: PricingRule[];
   regions: Region[];
 }
 
@@ -27,7 +26,7 @@ const steps = [
   { id: 5, title: 'Cleaner', description: 'Select your cleaner' },
 ];
 
-export function BookingStepper({ service, extras, pricingRules, regions }: BookingStepperProps) {
+export function BookingStepper({ service, extras, regions }: BookingStepperProps) {
   const {
     currentStep,
     setCurrentStep,
@@ -90,7 +89,6 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
         return (
           <ServiceSelectionStep 
             service={service}
-            pricingRules={pricingRules}
           />
         );
       case 2:

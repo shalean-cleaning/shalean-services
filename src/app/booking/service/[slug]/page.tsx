@@ -63,7 +63,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
     notFound();
   }
 
-  const { service, extras, pricingRules } = serviceData;
+  const { service, extras } = serviceData;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,7 +75,6 @@ export default async function BookingPage({ params }: BookingPageProps) {
               <BookingStepper 
                 service={service}
                 extras={extras}
-                pricingRules={pricingRules}
                 regions={regions}
               />
             </div>
@@ -86,7 +85,6 @@ export default async function BookingPage({ params }: BookingPageProps) {
             <div className="sticky top-8">
               <BookingSummary 
                 service={service}
-                pricingRules={pricingRules}
               />
             </div>
           </div>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase-client'
-import { validateReturnTo } from '@/lib/utils'
+import { validateReturnTo, getAndClearBookingContext } from '@/lib/utils'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -36,9 +36,17 @@ function LoginForm() {
       if (error) {
         setError(error.message)
       } else {
-        // Validate returnTo and redirect
-        const validatedReturnTo = validateReturnTo(returnTo)
-        router.push(validatedReturnTo)
+        // Check for booking context first
+        const bookingContext = getAndClearBookingContext()
+        
+        if (bookingContext) {
+          // If we have booking context, redirect to the stored path
+          router.push(bookingContext.returnPath)
+        } else {
+          // Validate returnTo and redirect
+          const validatedReturnTo = validateReturnTo(returnTo)
+          router.push(validatedReturnTo)
+        }
         router.refresh()
       }
     } catch {

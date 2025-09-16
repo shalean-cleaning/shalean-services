@@ -30,7 +30,6 @@ export default function SiteHeader() {
   const mounted = useRef(false);
   useEffect(() => {
     if (mounted.current && process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
       console.warn("[SiteHeader] Duplicate header mounted!");
     }
     mounted.current = true;
