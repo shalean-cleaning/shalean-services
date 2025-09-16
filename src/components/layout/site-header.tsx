@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { AuthModal } from '@/components/auth/AuthModal';
-import { LogoutButton } from '@/components/auth/LogoutButton';
+import { UserAvatar } from '@/components/auth/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useAuth';
 
@@ -99,21 +99,8 @@ export default function SiteHeader() {
           >
             Book a Service
           </Link>
-          {user ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-blue-600" />
-                </div>
-                <span className="text-sm font-medium">
-                  {profile?.first_name || user.email}
-                </span>
-              </div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/account">Dashboard</Link>
-              </Button>
-              <LogoutButton variant="ghost" size="sm" />
-            </div>
+          {user && profile ? (
+            <UserAvatar profile={profile} />
           ) : (
             <>
               <Button 
@@ -187,27 +174,19 @@ export default function SiteHeader() {
                 Book a Service
               </Link>
               
-              {user ? (
+              {user && profile ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600" />
-                    </div>
+                    <UserAvatar profile={profile} />
                     <div>
                       <p className="font-medium">
-                        {profile?.first_name || user.email}
+                        {profile.first_name} {profile.last_name}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {profile?.role?.toLowerCase()}
+                        {profile.role?.toLowerCase()}
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href="/account" onClick={() => setOpen(false)}>
-                      Dashboard
-                    </Link>
-                  </Button>
-                  <LogoutButton variant="outline" className="w-full" />
                 </div>
               ) : (
                 <div className="space-y-2">
