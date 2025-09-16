@@ -144,6 +144,7 @@ export interface Booking {
   total_price: number;
   notes?: string;
   special_instructions?: string;
+  auto_assign: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -289,6 +290,7 @@ export interface BookingDetailsView {
   total_price: number;
   notes?: string;
   special_instructions?: string;
+  auto_assign: boolean;
   created_at: string;
   updated_at: string;
   customer_first_name: string;

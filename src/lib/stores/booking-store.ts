@@ -84,6 +84,8 @@ export interface BookingState {
   calculateTotalPrice: () => void;
   setCurrentStep: (step: number) => void;
   resetBooking: () => void;
+  createDraftBooking: () => Promise<{ success: boolean; id?: string; error?: string }>;
+  composeDraftPayload: () => any;
 }
 
 const initialState = {
@@ -285,6 +287,90 @@ export const useBookingStore = create<BookingState>()(
       
       resetBooking: () => {
         set(initialState);
+      },
+      
+      composeDraftPayload: () => {
+        const state = get();
+        
+        // Validate required fields
+        if (!state.selectedService) {
+          throw new Error("Service selection is required");
+        }
+        if (!state.selectedSuburb) {
+          throw new Error("Suburb selection is required");
+        }
+        if (!state.address.trim()) {
+          throw new Error("Address is required");
+        }
+        if (!state.postcode.trim()) {
+          throw new Error("Postcode is required");
+        }
+
+        // Determine time format
+        let timePayload: any = {};
+        if (state.selectedDate && state.selectedTime) {
+          timePayload = {
+            bookingDate: state.selectedDate,
+            startTime: state.selectedTime
+          };
+        } else {
+          throw new Error("Date and time selection are required");
+        }
+
+        return {
+          serviceId: state.selectedService.id,
+          regionId: state.selectedRegion,
+          suburbId: state.selectedSuburb,
+          totalPrice: state.totalPrice,
+          address: state.address,
+          postcode: state.postcode,
+          bedrooms: state.bedroomCount,
+          bathrooms: state.bathroomCount,
+          extras: state.selectedExtras.map(extra => ({
+            id: extra.id,
+            quantity: extra.quantity,
+            price: extra.price
+          })),
+          specialInstructions: state.specialInstructions,
+          frequency: 'one-time' as const,
+          timezone: 'Africa/Johannesburg',
+          ...timePayload
+        };
+      },
+      
+      createDraftBooking: async () => {
+        try {
+          const payload = get().composeDraftPayload();
+          
+          const response = await fetch('/api/bookings/draft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok) {
+            return { 
+              success: false, 
+              error: result.error || `HTTP ${response.status}`,
+              details: result.details 
+            };
+          }
+          
+          return { 
+            success: true, 
+            id: result.id,
+            totalPrice: result.totalPrice,
+            breakdown: result.breakdown
+          };
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          return { success: false, error: errorMessage };
+        }
       },
     }),
     {

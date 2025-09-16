@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseServer } from '@/lib/supabase/server';
 
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_BASE_URL;
@@ -9,7 +9,7 @@ export async function GET() {
   let dbOk = false; let dbErr: string | null = null;
   try {
     if (url && anon) {
-      const supabase = createClient(url, anon);
+      const supabase = createSupabaseServer();
       const { error } = await supabase.from('service_categories').select('id').limit(1);
       if (!error) dbOk = true; else dbErr = error.message;
     }

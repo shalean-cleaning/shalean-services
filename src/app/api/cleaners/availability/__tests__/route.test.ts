@@ -3,24 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { POST } from '@/app/api/cleaners/availability/route';
 
-// Mock Supabase client
-vi.mock('@/lib/supabase', () => ({
-  supabaseClient: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          data: [],
-          error: null,
-        })),
-        in: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            data: [],
-            error: null,
-          })),
-        })),
-      })),
-    })),
-  },
+// Mock the server helper function
+vi.mock('@/server/cleaners', () => ({
+  fetchAvailableCleaners: vi.fn(),
 }));
 
 describe('/api/cleaners/availability', () => {
@@ -42,23 +27,10 @@ describe('/api/cleaners/availability', () => {
   });
 
   it('returns empty array when no cleaners are available', async () => {
-    const { supabaseClient } = await import('@/lib/supabase');
+    const { fetchAvailableCleaners } = await import('@/server/cleaners');
     
     // Mock empty results
-    vi.mocked(supabaseClient.from).mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          data: [],
-          error: null,
-        })),
-        in: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            data: [],
-            error: null,
-          })),
-        })),
-      })),
-    } as any);
+    vi.mocked(fetchAvailableCleaners).mockResolvedValue([]);
 
     const request = new NextRequest('http://localhost/api/cleaners/availability', {
       method: 'POST',
@@ -77,68 +49,34 @@ describe('/api/cleaners/availability', () => {
 
     expect(response.status).toBe(200);
     expect(data.cleaners).toEqual([]);
+    expect(fetchAvailableCleaners).toHaveBeenCalledWith({
+      area: 'CBD',
+      serviceSlug: 'standard-cleaning',
+      startISO: '2024-01-15T10:00:00.000Z',
+      endISO: '2024-01-15T10:00:00.000Z',
+      limit: 20
+    });
   });
 
   it('successfully returns available cleaners', async () => {
-    const { supabaseClient } = await import('@/lib/supabase');
+    const { fetchAvailableCleaners } = await import('@/server/cleaners');
     
-    const mockCleanerLocations = [
-      { cleaner_id: 'cleaner-1' },
-      { cleaner_id: 'cleaner-2' },
-    ];
-
     const mockCleaners = [
       {
         id: 'cleaner-1',
+        full_name: 'John Doe',
         rating: 4.8,
-        total_ratings: 127,
-        experience_years: 5,
-        bio: 'Professional cleaner',
-        profiles: {
-          first_name: 'John',
-          last_name: 'Doe',
-          avatar_url: 'https://example.com/avatar.jpg',
-        },
+        area_label: 'CBD, Sea Point',
+      },
+      {
+        id: 'cleaner-2',
+        full_name: 'Jane Smith',
+        rating: 4.9,
+        area_label: 'Claremont',
       },
     ];
 
-    // Mock the chain of Supabase calls
-    const mockChain = {
-      select: vi.fn(() => mockChain),
-      eq: vi.fn(() => mockChain),
-      in: vi.fn(() => mockChain),
-    };
-
-    vi.mocked(supabaseClient.from)
-      .mockReturnValueOnce({
-        ...mockChain,
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            data: mockCleanerLocations,
-            error: null,
-          })),
-        })),
-      } as any)
-      .mockReturnValueOnce({
-        ...mockChain,
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            data: [],
-            error: null,
-          })),
-        })),
-      } as any)
-      .mockReturnValueOnce({
-        ...mockChain,
-        select: vi.fn(() => ({
-          in: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              data: mockCleaners,
-              error: null,
-            })),
-          })),
-        })),
-      } as any);
+    vi.mocked(fetchAvailableCleaners).mockResolvedValue(mockCleaners);
 
     const request = new NextRequest('http://localhost/api/cleaners/availability', {
       method: 'POST',
@@ -156,31 +94,25 @@ describe('/api/cleaners/availability', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.cleaners).toHaveLength(1);
+    expect(data.cleaners).toHaveLength(2);
     expect(data.cleaners[0]).toMatchObject({
       id: 'cleaner-1',
       name: 'John Doe',
       rating: 4.8,
-      totalRatings: 127,
-      experienceYears: 5,
-      bio: 'Professional cleaner',
-      avatarUrl: 'https://example.com/avatar.jpg',
+      totalRatings: 50,
+      experienceYears: 3,
+      bio: 'Professional cleaner with 4.8 star rating',
+      avatarUrl: null,
       eta: '15-30 min',
       badges: ['Verified', 'Insured'],
+      areaLabel: 'CBD, Sea Point',
     });
   });
 
-  it('handles database errors gracefully', async () => {
-    const { supabaseClient } = await import('@/lib/supabase');
+  it('handles server errors gracefully', async () => {
+    const { fetchAvailableCleaners } = await import('@/server/cleaners');
     
-    vi.mocked(supabaseClient.from).mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          data: null,
-          error: new Error('Database connection failed'),
-        })),
-      })),
-    } as any);
+    vi.mocked(fetchAvailableCleaners).mockRejectedValue(new Error('Database connection failed'));
 
     const request = new NextRequest('http://localhost/api/cleaners/availability', {
       method: 'POST',

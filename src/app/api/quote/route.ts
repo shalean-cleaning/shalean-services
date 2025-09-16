@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (url && key) {
-      const supabase = createClient(url, key);
+      const supabase = createSupabaseAdmin();
       await supabase.from("quotes").insert({
         name: body.name ?? null,
         email: body.email ?? null,

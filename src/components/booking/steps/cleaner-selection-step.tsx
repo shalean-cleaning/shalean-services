@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Users, Clock, AlertCircle } from 'lucide-react';
+import { Sparkles, Users, Clock, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { CleanerCard } from '../cleaner-card';
@@ -9,7 +9,13 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
-export function CleanerSelectionStep() {
+interface CleanerSelectionStepProps {
+  onNext?: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+}
+
+export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = true }: CleanerSelectionStepProps) {
   const {
     selectedSuburb,
     selectedDate,
@@ -20,12 +26,12 @@ export function CleanerSelectionStep() {
     setSelectedCleanerId,
     setAutoAssign,
     setAvailableCleaners,
-    autoAssignCleaner,
   } = useBookingStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
@@ -78,46 +84,77 @@ export function CleanerSelectionStep() {
 
   const handleCleanerSelect = (cleanerId: string) => {
     setSelectedCleanerId(cleanerId);
+    // setAutoAssign is already handled in the store to clear autoAssign when selecting a cleaner
   };
 
   const handleAutoAssign = () => {
     setAutoAssign(true);
+    // setSelectedCleanerId is already handled in the store to clear selectedCleanerId when auto-assigning
   };
 
   const canContinue = !!selectedCleanerId || autoAssign;
 
-  const handleContinue = async () => {
-    if (!canContinue) return;
+
+  async function handleContinue() {
+    // Clear any previous inline errors
+    setInlineError(null);
+    
+    if (!canContinue) {
+      setInlineError('Please select a cleaner or enable auto-assign to continue');
+      return;
+    }
     
     setIsSaving(true);
     try {
-      // Get booking ID from store or create a temporary one
-      const { selectedService, bedroomCount, bathroomCount, selectedRegion, selectedSuburb, selectedDate, selectedTime, address, postcode } = useBookingStore.getState();
-      
-      // For now, we'll use a placeholder booking ID - in a real app, this would be created earlier in the flow
-      const bookingId = 'temp-booking-id'; // This should come from your booking creation flow
-      
-      const response = await fetch('/api/bookings/select-cleaner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId,
-          cleanerId: selectedCleanerId,
-          autoAssign,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save cleaner selection');
+      // Persist selection: if auto-assign → autoAssign: true & clear selectedCleanerId; else set selectedCleanerId & autoAssign: false
+      if (autoAssign) {
+        // Auto-assign mode: set autoAssign true, clear selectedCleanerId
+        const { setAutoAssign } = useBookingStore.getState();
+        setAutoAssign(true);
+      } else {
+        // Manual selection: set autoAssign false, persist selectedCleanerId
+        const { setSelectedCleanerId } = useBookingStore.getState();
+        setSelectedCleanerId(selectedCleanerId);
       }
       
-      // Navigate to next step or show success
-      // This would typically be handled by your booking stepper component
-      console.log('Cleaner selection saved successfully');
+      // Build the payload from the store via a single composer
+      const { composeDraftPayload } = useBookingStore.getState();
+      const payload = composeDraftPayload();
       
-    } catch (error) {
-      console.error('Error saving cleaner selection:', error);
-      setError('Failed to save your selection. Please try again.');
+      // Add cleaner selection to payload
+      const payloadWithCleaner = {
+        ...payload,
+        selectedCleanerId: selectedCleanerId || undefined,
+        autoAssign: autoAssign
+      };
+      
+      // POST /api/bookings/draft
+      const response = await fetch('/api/bookings/draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payloadWithCleaner),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        // If 200 → navigate to /booking/review
+        window.location.href = '/booking/review';
+      } else if (response.status === 401 && result.error === 'NEED_AUTH') {
+        // If 401 (NEED_AUTH) → redirect to /login?returnTo=/booking/review
+        window.location.href = '/auth/login?returnTo=/booking/review';
+      } else {
+        // If 400/409 → show field-specific messages from the response
+        const errorMessage = result.message || result.error || `HTTP ${response.status}`;
+        setInlineError(errorMessage);
+      }
+      
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create booking draft";
+      console.error('Error creating booking draft:', errorMessage);
+      setInlineError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -200,6 +237,16 @@ export function CleanerSelectionStep() {
             </div>
           )}
         </div>
+
+        {/* Inline error display */}
+        {inlineError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
+              <p className="text-sm text-red-700">{inlineError}</p>
+            </div>
+          </div>
+        )}
 
         {/* Loading state */}
         {isLoading && (
@@ -288,14 +335,35 @@ export function CleanerSelectionStep() {
         </Card>
       )}
 
-      {/* Continue Button */}
-      <div className="flex justify-end pt-6">
+      {/* Navigation Footer */}
+      <div className="flex justify-between items-center pt-6 border-t">
+        <Button
+          variant="outline"
+          onClick={onPrevious}
+          disabled={!canGoBack}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Previous
+        </Button>
+
         <Button
           onClick={handleContinue}
           disabled={!canContinue || isSaving}
           className="px-8"
+          aria-disabled={!canContinue || isSaving}
+          aria-label={
+            canContinue 
+              ? 'Continue to Booking' 
+              : 'Select a cleaner to continue'
+          }
         >
-          {isSaving ? 'Saving...' : 'Continue to Review'}
+          {isSaving 
+            ? 'Saving...' 
+            : canContinue 
+              ? 'Continue to Booking' 
+              : 'Select a cleaner to continue'
+          }
         </Button>
       </div>
     </div>

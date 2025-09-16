@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchAvailableCleaners } from '@/server/cleaners';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,42 +16,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Supabase Edge Function
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Convert date and time to ISO timestamps for the RPC
+    const startISO = new Date(`${date}T${time}:00`).toISOString();
+    const endISO = new Date(`${date}T${time}:00`).toISOString();
+    
+    // For now, use a default area - you can enhance this to map suburb_id to area names
+    const area = "CBD"; // This should be mapped from suburb_id to actual area names
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json(
-        { error: 'Missing Supabase configuration' },
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(`${supabaseUrl}/functions/v1/get-available-cleaners`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-      },
-      body: JSON.stringify({
-        suburb_id,
-        date,
-        time,
-        service_id: service_id || null,
-      }),
+    // Use the new RPC function
+    const cleaners = await fetchAvailableCleaners({
+      area,
+      serviceSlug: service_id || "standard-cleaning",
+      startISO,
+      endISO,
+      limit: 20
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Edge function error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to fetch available cleaners' },
-        { status: response.status }
-      );
-    }
+    // Transform the data to match the expected format
+    const transformedCleaners = cleaners.map(cleaner => ({
+      id: cleaner.id,
+      name: cleaner.full_name,
+      rating: cleaner.rating || 0,
+      area: cleaner.area_label || "Cape Town"
+    }));
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json({ cleaners: transformedCleaners });
 
   } catch (error) {
     console.error('Error in available cleaners API:', error);

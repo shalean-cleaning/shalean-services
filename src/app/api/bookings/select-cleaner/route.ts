@@ -1,34 +1,57 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // required for service-role on Vercel
+
+type Payload = {
+  bookingId: string;
+  cleanerId?: string | null;
+  autoAssign?: boolean;
+};
+
+function reply(error: string | null, data?: any, status = 200) {
+  return NextResponse.json(
+    error ? { ok: false, error } : { ok: true, ...data },
+    { status: error ? status : 200 }
+  );
+}
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json(); // { bookingId, cleanerId|null, autoAssign:boolean }
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!; // server only
-    const sb = createClient(url, key);
+    const { bookingId, cleanerId = null, autoAssign = false } = (await req.json()) as Payload;
+    if (!bookingId) return reply("Missing bookingId", null, 400);
 
-    const { bookingId, cleanerId, autoAssign } = body;
-    
-    if (!bookingId) {
-      return NextResponse.json({ ok: false, error: "bookingId is required" }, { status: 400 });
+    const sb = createSupabaseAdmin();
+
+    // 1) Ensure booking exists
+    const { data: booking, error: findErr } = await sb
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .single();
+    if (findErr || !booking) return reply(`Booking not found for id=${bookingId}`, null, 404);
+
+    // 2) Try multiple shapes to cover schema variants (cleaner_id vs cleaner, with/without auto_assign)
+    const attempts: Array<Record<string, any>> = [
+      { auto_assign: !!autoAssign, cleaner_id: cleanerId },
+      { auto_assign: !!autoAssign, cleaner: cleanerId },
+      { cleaner_id: cleanerId },
+      { cleaner: cleanerId },
+    ];
+
+    let lastErr: any = null;
+    for (const updates of attempts) {
+      const { error } = await sb.from("bookings").update(updates).eq("id", bookingId);
+      if (!error) return reply(null, { applied: updates });
+      lastErr = error;
+      const msg = (error?.message || "").toLowerCase();
+      // Only keep trying if it's a "column does not exist" error
+      if (!(msg.includes("column") && msg.includes("does not exist"))) break;
     }
 
-    const updates: any = { auto_assign: !!autoAssign };
-    if (cleanerId) updates.cleaner_id = cleanerId;
-    if (!cleanerId && autoAssign) updates.cleaner_id = null;
-
-    const { error } = await sb.from("bookings").update(updates).eq("id", bookingId);
-    if (error) {
-      console.error("Error updating booking:", error);
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Error in select-cleaner API:", error);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return reply(`Failed to update booking: ${lastErr?.message || "Unknown error"}`, null, 500);
+  } catch (e: any) {
+    console.error("[select-cleaner] fatal", e);
+    return reply(e?.message || "Unexpected server error", null, 500);
   }
 }

@@ -40,6 +40,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
     selectedDate,
     selectedTime,
     selectedCleanerId,
+    autoAssign,
     address,
     postcode,
   } = useBookingStore();
@@ -77,7 +78,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
       case 4:
         return !!(selectedRegion && selectedSuburb && selectedDate && selectedTime && address && postcode);
       case 5:
-        return !!selectedCleanerId;
+        return !!selectedCleanerId || autoAssign;
       default:
         return false;
     }
@@ -114,7 +115,14 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
         );
       case 5:
         return (
-          <CleanerSelectionStep />
+          <CleanerSelectionStep 
+            onNext={() => {
+              // Navigate to review page instead of step 6
+              window.location.href = '/booking/review';
+            }}
+            onPrevious={handlePrevious}
+            canGoBack={currentStep > 1}
+          />
         );
       default:
         return null;
@@ -172,7 +180,7 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
       </div>
 
       {/* Navigation - Only show for steps that don't have their own navigation */}
-      {currentStep !== 4 && (
+      {currentStep !== 4 && currentStep !== 5 && (
         <div className="flex justify-between items-center pt-6 border-t">
           <Button
             variant="outline"
@@ -185,28 +193,14 @@ export function BookingStepper({ service, extras, pricingRules, regions }: Booki
           </Button>
 
           <div className="flex gap-2">
-            {currentStep < 5 ? (
-              <Button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className="flex items-center gap-2"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => {
-                  // TODO: Navigate to booking confirmation
-                  console.log('Proceed to booking confirmation');
-                }}
-                disabled={!canProceed()}
-                className="flex items-center gap-2"
-              >
-                Continue to Booking
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            )}
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed()}
+              className="flex items-center gap-2"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       )}

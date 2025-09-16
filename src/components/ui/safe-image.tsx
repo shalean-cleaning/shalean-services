@@ -1,5 +1,5 @@
 "use client";
-import Image, { ImageProps } from "next/image";
+import Image, { ImageProps, StaticImageData } from "next/image";
 import { useState, useMemo } from "react";
 
 type Props = ImageProps & { fallbackSrc?: string };
@@ -10,7 +10,7 @@ export default function SafeImage({
   fallbackSrc = "/images/placeholder-card.svg",
   ...rest
 }: Props) {
-  const initial = useMemo(() => (typeof src === "string" ? src : (src as any)), [src]);
+  const initial = useMemo(() => (typeof src === "string" ? src : (src as string | StaticImageData)), [src]);
   const [current, setCurrent] = useState(initial);
 
   return (

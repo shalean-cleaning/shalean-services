@@ -1,4 +1,5 @@
 import { Service } from "@/lib/database.types";
+import { logger } from "@/lib/logger";
 
 export async function getServices(): Promise<Service[]> {
   try {
@@ -13,7 +14,7 @@ export async function getServices(): Promise<Service[]> {
     // Extract all services from categories
     const allServices: Service[] = [];
     if (data?.categories) {
-      data.categories.forEach((category: any) => {
+      data.categories.forEach((category: { services?: Service[] }) => {
         if (category.services) {
           allServices.push(...category.services);
         }
@@ -22,7 +23,7 @@ export async function getServices(): Promise<Service[]> {
     
     return allServices;
   } catch (error) {
-    console.error("[getServices] error:", error);
+    logger.error("[getServices] error:", error);
     return [];
   }
 }
