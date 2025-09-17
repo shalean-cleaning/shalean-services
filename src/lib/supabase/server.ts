@@ -7,9 +7,20 @@ import { cookies } from 'next/headers'
  * Use this for server-side operations that need full database access
  */
 export function createSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    supabaseUrl,
+    serviceRoleKey,
     { auth: { persistSession: false } }
   )
 }
@@ -20,11 +31,22 @@ export function createSupabaseAdmin() {
  * This version properly reads cookies from the incoming request
  */
 export async function createSupabaseServer() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+  }
+
+  if (!anonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
+  }
+
   const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    anonKey,
     {
       cookies: {
         getAll() {
@@ -51,7 +73,12 @@ export async function createSupabaseServer() {
 let _supabaseAdmin: ReturnType<typeof createSupabaseAdmin> | null = null;
 export const supabaseAdmin = () => {
   if (!_supabaseAdmin) {
-    _supabaseAdmin = createSupabaseAdmin();
+    try {
+      _supabaseAdmin = createSupabaseAdmin();
+    } catch (error) {
+      console.error('Failed to create Supabase admin client:', error);
+      throw error;
+    }
   }
   return _supabaseAdmin;
 }

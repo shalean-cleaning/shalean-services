@@ -10,7 +10,7 @@ const clientEnvSchema = z.object({
 const serverEnvSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   PAYSTACK_SECRET_KEY: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required for admin operations"),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 });
 
