@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
 export const runtime = "nodejs";
 
 export async function GET(
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -96,7 +97,6 @@ export async function GET(
     }, { status: 200 });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error("Error in GET /api/bookings/[id]:", error);
     
     return NextResponse.json({

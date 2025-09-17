@@ -49,7 +49,7 @@ async function testDraftIdempotency() {
     console.log('✅ Created first draft:', draft1.id);
     
     // Try to create second draft (should fail due to unique constraint)
-    const { data: draft2, error: error2 } = await supabase
+    const { data: _draft2, error: error2 } = await supabase
       .from('bookings')
       .insert({
         customer_id: testCustomerId,
@@ -255,7 +255,7 @@ async function testRLSPolicies() {
     
     return true;
     
-  } catch (error) {
+  } catch {
     console.log('⚠️  RLS policy test skipped (expected in some environments)');
     return true;
   }

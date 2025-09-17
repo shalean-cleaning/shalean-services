@@ -12,10 +12,10 @@ try {
   if (!fetch) {
     throw new Error('No built-in fetch');
   }
-} catch (error) {
+} catch {
   try {
     fetch = require('node-fetch');
-  } catch (requireError) {
+  } catch {
     console.error('❌ No fetch implementation available. Please install node-fetch or use Node.js 18+');
     process.exit(1);
   }
@@ -123,7 +123,7 @@ async function testDraftAPIFixes() {
       
       try {
         responseData = JSON.parse(responseText);
-      } catch (parseError) {
+      } catch {
         responseData = { raw: responseText };
       }
 

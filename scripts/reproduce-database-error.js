@@ -12,10 +12,10 @@ try {
   if (!fetch) {
     throw new Error('No built-in fetch');
   }
-} catch (error) {
+} catch {
   try {
     fetch = require('node-fetch');
-  } catch (requireError) {
+  } catch {
     console.error('❌ No fetch implementation available. Please install node-fetch or use Node.js 18+');
     process.exit(1);
   }
@@ -64,7 +64,7 @@ async function reproduceError() {
     
     try {
       responseData = JSON.parse(responseText);
-    } catch (parseError) {
+    } catch {
       responseData = { raw: responseText };
     }
 
@@ -79,7 +79,7 @@ async function reproduceError() {
       console.log('\n✅ Got 401 (expected without auth) - no database error');
       console.log('💡 To test database errors, you need to be authenticated.');
     } else {
-      console.log(`\n📊 Got status ${response.status} - check if this is the error you\'re seeing`);
+      console.log(`\n📊 Got status ${response.status} - check if this is the error you're seeing`);
     }
 
   } catch (error) {

@@ -4,11 +4,6 @@ import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
-// Validation schema for booking confirmation
-const ConfirmBookingSchema = {
-  bookingId: "string"
-};
-
 export async function POST(req: Request) {
   try {
     const payload = await req.json();

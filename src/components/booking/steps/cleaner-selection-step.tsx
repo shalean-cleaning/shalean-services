@@ -172,7 +172,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
             // Fallback to review page without bookingId
             router.push('/booking/review');
           }
-        } catch (fallbackError) {
+        } catch {
           // Fallback to review page without bookingId
           router.push('/booking/review');
         }
