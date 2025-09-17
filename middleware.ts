@@ -59,10 +59,23 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect booking routes (except initial service selection)
+  // Protect booking routes (except initial service selection and public pages)
   if (request.nextUrl.pathname.startsWith('/booking/') && 
       !request.nextUrl.pathname.startsWith('/booking/service/') &&
-      request.nextUrl.pathname !== '/booking') {
+      request.nextUrl.pathname !== '/booking' &&
+      !request.nextUrl.pathname.startsWith('/booking/enhanced')) {
+    if (!user) {
+      // Redirect to login if not authenticated
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
+      url.searchParams.set('returnTo', returnTo)
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Protect enhanced booking routes (require authentication)
+  if (request.nextUrl.pathname.startsWith('/booking/enhanced')) {
     if (!user) {
       // Redirect to login if not authenticated
       const url = request.nextUrl.clone()

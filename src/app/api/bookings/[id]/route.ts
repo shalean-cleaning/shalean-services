@@ -1,107 +1,186 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServer } from '@/lib/supabase/server';
-import { logger } from '@/lib/logger';
-
-export const runtime = "nodejs";
+import { createClient } from '@/lib/supabase-server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id: bookingId } = await params;
+    const supabase = await createClient()
     
-    if (!bookingId) {
-      return NextResponse.json({ 
-        error: "booking_not_found",
-        message: "Booking ID is required" 
-      }, { status: 400 });
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    // Create server client that reads cookies for authentication
-    const supabase = await createSupabaseServer();
+    const bookingId = params.id
 
-    // Get the current user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json({
-        error: "authentication_required",
-        message: "Please sign in to access booking details"
-      }, { status: 401 });
-    }
-
-    const customerId = session.user.id;
-
-    // Fetch booking with ownership check
-    const { data: booking, error: bookingError } = await supabase
+    // Fetch the booking with items - RLS will ensure user can only access their own bookings
+    const { data: booking, error: fetchError } = await supabase
       .from('bookings')
       .select(`
-        id,
-        customer_id,
-        total_price,
-        status,
-        created_at,
-        updated_at,
-        service_id,
-        suburb_id,
-        bedroom_count,
-        bathroom_count,
-        selected_date,
-        selected_time,
-        address,
-        postcode,
-        special_instructions,
-        cleaner_id,
-        auto_assign,
-        services (name),
-        suburbs (name),
-        payments (
+        *,
+        booking_items (
           id,
-          status,
-          reference,
-          amount_minor,
-          created_at
+          service_item_id,
+          item_type,
+          qty,
+          unit_price,
+          subtotal
         )
       `)
       .eq('id', bookingId)
-      .eq('customer_id', customerId) // Ownership filter
-      .single();
+      .single()
 
-    if (bookingError) {
-      if (bookingError.code === 'PGRST116') {
-        return NextResponse.json({ 
-          error: "booking_not_found",
-          message: "Booking not found or access denied" 
-        }, { status: 404 });
+    if (fetchError) {
+      console.error('Error fetching booking:', fetchError)
+      
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Booking not found' },
+          { status: 404 }
+        )
       }
       
-      logger.error('Error fetching booking:', bookingError);
-      return NextResponse.json({ 
-        error: "fetch_failed",
-        message: "Failed to fetch booking details" 
-      }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch booking' },
+        { status: 500 }
+      )
     }
 
-    if (!booking) {
-      return NextResponse.json({ 
-        error: "booking_not_found",
-        message: "Booking not found or access denied" 
-      }, { status: 404 });
+    // Additional security check - ensure user owns this booking or is admin
+    if (booking.customer_id !== user.id) {
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role !== 'ADMIN') {
+        return NextResponse.json(
+          { error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
     }
 
-    // Return the booking data
-    return NextResponse.json({
-      success: true,
-      booking: booking
-    }, { status: 200 });
+    return NextResponse.json({ booking })
 
   } catch (error) {
-    logger.error("Error in GET /api/bookings/[id]:", error);
+    console.error('Unexpected error in booking GET API:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createClient()
     
-    return NextResponse.json({
-      error: "internal_error",
-      message: "Internal server error"
-    }, { status: 500 });
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const bookingId = params.id
+    const updates = await request.json()
+
+    // First, check if the booking exists and user has access
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('customer_id, status')
+      .eq('id', bookingId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Booking not found' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(
+        { error: 'Failed to fetch booking' },
+        { status: 500 }
+      )
+    }
+
+    // Check if user owns this booking or is admin
+    if (existingBooking.customer_id !== user.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role !== 'ADMIN') {
+        return NextResponse.json(
+          { error: 'Forbidden' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Only allow updates to DRAFT or READY_FOR_PAYMENT bookings
+    if (!['DRAFT', 'READY_FOR_PAYMENT'].includes(existingBooking.status)) {
+      return NextResponse.json(
+        { error: 'Cannot update booking in current status' },
+        { status: 400 }
+      )
+    }
+
+    // Update the booking
+    const { data: updatedBooking, error: updateError } = await supabase
+      .from('bookings')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+      .select(`
+        *,
+        booking_items (
+          id,
+          service_item_id,
+          item_type,
+          qty,
+          unit_price,
+          subtotal
+        )
+      `)
+      .single()
+
+    if (updateError) {
+      console.error('Error updating booking:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update booking' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ booking: updatedBooking })
+
+  } catch (error) {
+    console.error('Unexpected error in booking PUT API:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

@@ -7,7 +7,7 @@ import { Suspense, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { createClient } from '@/lib/supabase-client'
+import { useAuth } from '@/hooks/useAuth'
 import { validateReturnTo, getAndClearBookingContext } from '@/lib/utils'
 
 function LoginForm() {
@@ -20,7 +20,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/booking/review'
   
-  const supabase = createClient()
+  const { signIn, signInWithOtp } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,25 +28,15 @@ function LoginForm() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // Check for booking context first
+      const bookingContext = getAndClearBookingContext()
+      const redirectTo = bookingContext ? bookingContext.returnPath : validateReturnTo(returnTo)
+      
+      const { error } = await signIn(email, password, redirectTo)
 
       if (error) {
         setError(error.message)
       } else {
-        // Check for booking context first
-        const bookingContext = getAndClearBookingContext()
-        
-        if (bookingContext) {
-          // If we have booking context, redirect to the stored path
-          router.push(bookingContext.returnPath)
-        } else {
-          // Validate returnTo and redirect
-          const validatedReturnTo = validateReturnTo(returnTo)
-          router.push(validatedReturnTo)
-        }
         router.refresh()
       }
     } catch {
@@ -66,12 +56,7 @@ function LoginForm() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
-        },
-      })
+      const { error } = await signInWithOtp(email, returnTo)
 
       if (error) {
         setError(error.message)

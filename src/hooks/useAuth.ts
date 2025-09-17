@@ -1,7 +1,8 @@
 'use client'
 
-import type { User } from '@supabase/supabase-js'
+import type { User, AuthError } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase-client'
 
@@ -12,6 +13,7 @@ export interface UserProfile {
   email: string
   first_name: string
   last_name: string
+  full_name: string
   phone?: string
   role: UserRole
   avatar_url?: string
@@ -24,6 +26,13 @@ export interface AuthUser {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+}
+
+export interface AuthMethods {
+  signIn: (email: string, password: string, returnTo?: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, userData?: { first_name?: string; last_name?: string }, returnTo?: string) => Promise<{ error: AuthError | null }>
+  signOut: () => Promise<{ error: AuthError | null }>
+  signInWithOtp: (email: string, returnTo?: string) => Promise<{ error: AuthError | null }>
 }
 
 export function useUser(): AuthUser {
@@ -103,5 +112,76 @@ export function useRequireAuth() {
     profile,
     loading,
     isAuthenticated: !loading && !!user
+  }
+}
+
+export function useAuth(): AuthUser & AuthMethods {
+  const { user, profile, loading } = useUser()
+  const router = useRouter()
+  const supabase = createClient()
+
+  const signIn = async (email: string, password: string, returnTo?: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (!error && returnTo) {
+      router.push(returnTo)
+    }
+
+    return { error }
+  }
+
+  const signUp = async (
+    email: string, 
+    password: string, 
+    userData?: { first_name?: string; last_name?: string },
+    returnTo?: string
+  ) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData,
+      },
+    })
+
+    if (!error && returnTo) {
+      router.push(returnTo)
+    }
+
+    return { error }
+  }
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    
+    if (!error) {
+      router.push('/')
+    }
+
+    return { error }
+  }
+
+  const signInWithOtp = async (email: string, returnTo?: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo || '/booking/review')}`,
+      },
+    })
+
+    return { error }
+  }
+
+  return {
+    user,
+    profile,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    signInWithOtp,
   }
 }

@@ -16,13 +16,29 @@ ADD COLUMN IF NOT EXISTS bedrooms INTEGER,
 ADD COLUMN IF NOT EXISTS bathrooms INTEGER;
 
 -- Add CHECK constraints for data validation (safe for NULLs)
-ALTER TABLE bookings 
-ADD CONSTRAINT IF NOT EXISTS check_bedrooms_positive 
-CHECK (bedrooms IS NULL OR bedrooms >= 0);
-
-ALTER TABLE bookings 
-ADD CONSTRAINT IF NOT EXISTS check_bathrooms_positive 
-CHECK (bathrooms IS NULL OR bathrooms >= 0);
+-- Note: We'll add these constraints without IF NOT EXISTS since PostgreSQL doesn't support it
+DO $$
+BEGIN
+    -- Add bedrooms constraint if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'check_bedrooms_positive'
+    ) THEN
+        ALTER TABLE bookings 
+        ADD CONSTRAINT check_bedrooms_positive 
+        CHECK (bedrooms IS NULL OR bedrooms >= 0);
+    END IF;
+    
+    -- Add bathrooms constraint if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'check_bathrooms_positive'
+    ) THEN
+        ALTER TABLE bookings 
+        ADD CONSTRAINT check_bathrooms_positive 
+        CHECK (bathrooms IS NULL OR bathrooms >= 0);
+    END IF;
+END $$;
 
 -- Add partial unique index for draft idempotency
 -- This ensures only one DRAFT booking per customer

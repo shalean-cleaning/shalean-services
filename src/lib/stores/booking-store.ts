@@ -1,25 +1,49 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { Service, Extra } from '@/lib/database.types';
+import { Service, Booking, BookingItem } from '@/lib/database.types';
 
 export interface BookingState {
-  // Service selection
-  selectedService: Service | null;
+  // Core booking data
+  bookingId: string | null;
+  serviceSlug: string | null;
+  rooms: {
+    bedrooms: number;
+    bathrooms: number;
+  };
+  extras: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+  regionId: string | null;
+  suburbId: string | null;
+  startISO: string | null;
+  endISO: string | null;
+  cleanerId: string | null;
+  customerInfo: {
+    address: string;
+    address2?: string;
+    postcode: string;
+    specialInstructions?: string;
+  };
+  pricing: {
+    basePrice: number;
+    totalPrice: number;
+    deliveryFee: number;
+  };
   
-  // Room counts
+  // Legacy fields for backward compatibility
+  selectedService: Service | null;
   bedroomCount: number;
   bathroomCount: number;
-  
-  // Selected extras
   selectedExtras: Array<{
     id: string;
     name: string;
     price: number;
     quantity: number;
   }>;
-  
-  // Location and scheduling
   selectedRegion: string | null;
   selectedSuburb: string | null;
   selectedDate: string | null;
@@ -28,8 +52,6 @@ export interface BookingState {
   address2?: string;
   postcode: string;
   specialInstructions?: string;
-  
-  // Cleaner selection
   selectedCleanerId: string | null;
   autoAssign: boolean;
   availableCleaners: Array<{
@@ -43,20 +65,16 @@ export interface BookingState {
     eta?: string;
     badges?: string[];
   }>;
-  
-  // Pricing
   basePrice: number;
   totalPrice: number;
   deliveryFee: number;
-  
-  // Current step
   currentStep: number;
   
   // Actions
   setSelectedService: (service: Service | null) => void;
   setBedroomCount: (count: number) => void;
   setBathroomCount: (count: number) => void;
-  addExtra: (extra: Extra) => void;
+  addExtra: (extra: { id: string; name: string; price: number }) => void;
   removeExtra: (extraId: string) => void;
   updateExtraQuantity: (extraId: string, quantity: number) => void;
   setSelectedRegion: (regionId: string | null) => void;
@@ -87,9 +105,39 @@ export interface BookingState {
   createDraftBooking: () => Promise<{ success: boolean; id?: string; error?: string }>;
   updateBooking: (bookingId: string, updates: Partial<any>) => Promise<{ success: boolean; error?: string }>;
   composeDraftPayload: () => any;
+  
+  // New actions for enhanced booking system
+  hydrateFromServer: (booking: Booking & { booking_items?: BookingItem[] }) => void;
+  savePartial: (data: Partial<BookingState>) => void;
 }
 
 const initialState = {
+  // Core booking data
+  bookingId: null,
+  serviceSlug: null,
+  rooms: {
+    bedrooms: 1,
+    bathrooms: 1,
+  },
+  extras: [],
+  regionId: null,
+  suburbId: null,
+  startISO: null,
+  endISO: null,
+  cleanerId: null,
+  customerInfo: {
+    address: '',
+    address2: '',
+    postcode: '',
+    specialInstructions: '',
+  },
+  pricing: {
+    basePrice: 0,
+    totalPrice: 0,
+    deliveryFee: 0,
+  },
+  
+  // Legacy fields for backward compatibility
   selectedService: null,
   bedroomCount: 1,
   bathroomCount: 1,
@@ -407,10 +455,122 @@ export const useBookingStore = create<BookingState>()(
           return { success: false, error: errorMessage };
         }
       },
+
+      // New actions for enhanced booking system
+      hydrateFromServer: (booking) => {
+        const bookingItems = booking.booking_items || [];
+        
+        set({
+          // Core booking data
+          bookingId: booking.id,
+          serviceSlug: booking.service_slug,
+          rooms: {
+            bedrooms: booking.bedrooms || 1,
+            bathrooms: booking.bathrooms || 1,
+          },
+          extras: bookingItems.map(item => ({
+            id: item.service_item_id,
+            name: item.item_type || 'Service Item',
+            price: item.unit_price,
+            quantity: item.qty,
+          })),
+          regionId: booking.region_id,
+          suburbId: booking.suburb_id,
+          startISO: booking.start_ts,
+          endISO: booking.end_ts,
+          cleanerId: booking.cleaner_id,
+          customerInfo: {
+            address: booking.address || '',
+            postcode: booking.postcode || '',
+            specialInstructions: booking.special_instructions || '',
+          },
+          pricing: {
+            basePrice: 0, // Will be calculated from service
+            totalPrice: booking.total_price,
+            deliveryFee: 0, // Will be calculated from suburb
+          },
+          
+          // Legacy fields for backward compatibility
+          bedroomCount: booking.bedrooms || 1,
+          bathroomCount: booking.bathrooms || 1,
+          selectedExtras: bookingItems.map(item => ({
+            id: item.service_item_id,
+            name: item.item_type || 'Service Item',
+            price: item.unit_price,
+            quantity: item.qty,
+          })),
+          selectedRegion: booking.region_id,
+          selectedSuburb: booking.suburb_id,
+          selectedDate: booking.booking_date,
+          selectedTime: booking.start_time,
+          address: booking.address || '',
+          postcode: booking.postcode || '',
+          specialInstructions: booking.special_instructions || '',
+          selectedCleanerId: booking.cleaner_id,
+          autoAssign: booking.auto_assign || false,
+          totalPrice: booking.total_price,
+        });
+      },
+
+      savePartial: (data) => {
+        set((state) => {
+          const newState = { ...state };
+          
+          // Update core fields
+          if (data.bookingId !== undefined) newState.bookingId = data.bookingId;
+          if (data.serviceSlug !== undefined) newState.serviceSlug = data.serviceSlug;
+          if (data.rooms !== undefined) newState.rooms = { ...state.rooms, ...data.rooms };
+          if (data.extras !== undefined) newState.extras = data.extras;
+          if (data.regionId !== undefined) newState.regionId = data.regionId;
+          if (data.suburbId !== undefined) newState.suburbId = data.suburbId;
+          if (data.startISO !== undefined) newState.startISO = data.startISO;
+          if (data.endISO !== undefined) newState.endISO = data.endISO;
+          if (data.cleanerId !== undefined) newState.cleanerId = data.cleanerId;
+          if (data.customerInfo !== undefined) newState.customerInfo = { ...state.customerInfo, ...data.customerInfo };
+          if (data.pricing !== undefined) newState.pricing = { ...state.pricing, ...data.pricing };
+          
+          // Update legacy fields for backward compatibility
+          if (data.selectedService !== undefined) newState.selectedService = data.selectedService;
+          if (data.bedroomCount !== undefined) newState.bedroomCount = data.bedroomCount;
+          if (data.bathroomCount !== undefined) newState.bathroomCount = data.bathroomCount;
+          if (data.selectedExtras !== undefined) newState.selectedExtras = data.selectedExtras;
+          if (data.selectedRegion !== undefined) newState.selectedRegion = data.selectedRegion;
+          if (data.selectedSuburb !== undefined) newState.selectedSuburb = data.selectedSuburb;
+          if (data.selectedDate !== undefined) newState.selectedDate = data.selectedDate;
+          if (data.selectedTime !== undefined) newState.selectedTime = data.selectedTime;
+          if (data.address !== undefined) newState.address = data.address;
+          if (data.address2 !== undefined) newState.address2 = data.address2;
+          if (data.postcode !== undefined) newState.postcode = data.postcode;
+          if (data.specialInstructions !== undefined) newState.specialInstructions = data.specialInstructions;
+          if (data.selectedCleanerId !== undefined) newState.selectedCleanerId = data.selectedCleanerId;
+          if (data.autoAssign !== undefined) newState.autoAssign = data.autoAssign;
+          if (data.availableCleaners !== undefined) newState.availableCleaners = data.availableCleaners;
+          if (data.basePrice !== undefined) newState.basePrice = data.basePrice;
+          if (data.totalPrice !== undefined) newState.totalPrice = data.totalPrice;
+          if (data.deliveryFee !== undefined) newState.deliveryFee = data.deliveryFee;
+          if (data.currentStep !== undefined) newState.currentStep = data.currentStep;
+          
+          return newState;
+        });
+      },
     }),
     {
       name: 'booking-store',
       partialize: (state) => ({
+        // Core booking data
+        bookingId: state.bookingId,
+        serviceSlug: state.serviceSlug,
+        rooms: state.rooms,
+        extras: state.extras,
+        regionId: state.regionId,
+        suburbId: state.suburbId,
+        startISO: state.startISO,
+        endISO: state.endISO,
+        cleanerId: state.cleanerId,
+        customerInfo: state.customerInfo,
+        pricing: state.pricing,
+        
+        // Legacy fields for backward compatibility
         selectedService: state.selectedService,
         bedroomCount: state.bedroomCount,
         bathroomCount: state.bathroomCount,
