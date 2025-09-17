@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
 export const runtime = "nodejs";
 
 export async function GET(
-  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
