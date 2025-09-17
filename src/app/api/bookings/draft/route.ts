@@ -40,12 +40,12 @@ const DraftBookingSchema = z.object({
   endISO: z.string().refine(isValidISODate, "endISO must be a valid ISO 8601 datetime string").optional(),
   
   // Location details
-  address: z.string().min(1, "address is required").optional(),
-  postcode: z.string().min(1, "postcode is required").optional(),
+  address: z.string().min(1, "address cannot be empty").optional(),
+  postcode: z.string().min(1, "postcode cannot be empty").optional(),
   
   // Room counts and extras
-  bedrooms: z.number().int().min(1, "at least 1 bedroom required").default(1).optional(),
-  bathrooms: z.number().int().min(1, "at least 1 bathroom required").default(1).optional(),
+  bedrooms: z.number().int().min(0, "bedrooms must be non-negative").optional(),
+  bathrooms: z.number().int().min(0, "bathrooms must be non-negative").optional(),
   extras: z.array(z.object({
     id: z.string().uuid("extra id must be a valid UUID"),
     quantity: z.number().int().min(1, "quantity must be at least 1").default(1),
@@ -67,10 +67,11 @@ const CompleteBookingSchema = z.object({
   serviceId: z.string().uuid("serviceId must be a valid UUID"),
   suburbId: z.string().uuid("suburbId must be a valid UUID"),
   totalPrice: z.number().positive("totalPrice must be a positive number"),
-  address: z.string().min(1, "address is required"),
-  postcode: z.string().min(1, "postcode is required"),
-  bedrooms: z.number().int().min(1, "at least 1 bedroom required").default(1),
-  bathrooms: z.number().int().min(1, "at least 1 bathroom required").default(1),
+  // Customer detail fields (now included in schema)
+  address: z.string().min(1, "address cannot be empty").optional(),
+  postcode: z.string().min(1, "postcode cannot be empty").optional(),
+  bedrooms: z.number().int().min(0, "bedrooms must be non-negative").optional(),
+  bathrooms: z.number().int().min(0, "bathrooms must be non-negative").optional(),
   extras: z.array(z.object({
     id: z.string().uuid("extra id must be a valid UUID"),
     quantity: z.number().int().min(1, "quantity must be at least 1").default(1),
@@ -209,7 +210,7 @@ async function validateDatabaseReferences(
     }
 
     // Validate extras exist
-    if (data.extras.length > 0) {
+    if (data.extras && data.extras.length > 0) {
       const extraIds = data.extras.map(extra => extra.id);
       const { data: extras, error: extrasError } = await supabase
         .from('extras')
@@ -349,7 +350,7 @@ export async function GET() {
       .from('bookings')
       .select('id, total_price, created_at, status')
       .eq('customer_id', customerId)
-      .eq('status', 'PENDING')
+      .eq('status', 'DRAFT')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -432,7 +433,7 @@ export async function POST(req: Request) {
       .from('bookings')
       .select('id, total_price, created_at, status, service_id, suburb_id, booking_date, start_time, end_time, address, postcode, bedrooms, bathrooms, special_instructions, cleaner_id, auto_assign')
       .eq('customer_id', customerId)
-      .eq('status', 'PENDING')
+      .eq('status', 'DRAFT')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
@@ -468,8 +469,11 @@ export async function POST(req: Request) {
       if (data.selectedCleanerId !== undefined) updateData.cleaner_id = data.selectedCleanerId;
       if (data.autoAssign !== undefined) updateData.auto_assign = data.autoAssign;
       
-      // REMOVED: address, postcode, bedrooms, bathrooms - these fields don't exist in the bookings table
-      // TODO: These fields should be stored in a separate table or added to the schema if needed
+      // New customer detail fields
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.postcode !== undefined) updateData.postcode = data.postcode;
+      if (data.bedrooms !== undefined) updateData.bedrooms = data.bedrooms;
+      if (data.bathrooms !== undefined) updateData.bathrooms = data.bathrooms;
       
       // Handle time updates
       if (data.bookingDate) updateData.booking_date = data.bookingDate;
@@ -640,15 +644,18 @@ export async function POST(req: Request) {
       booking_date: bookingDate,
       start_time: extractTimeFromISO(startISO),
       end_time: extractTimeFromISO(endISO),
-      status: 'PENDING' as const,
+      status: 'DRAFT' as const,
       total_price: computedPrice,
       notes: completeData.specialInstructions || null,
       special_instructions: completeData.specialInstructions || null,
       // Add cleaner selection fields (these exist in the schema)
       cleaner_id: completeData.selectedCleanerId || null,
-      auto_assign: completeData.autoAssign
-      // REMOVED: address, postcode, bedrooms, bathrooms - these fields don't exist in the bookings table
-      // TODO: These fields should be stored in a separate table or added to the schema if needed
+      auto_assign: completeData.autoAssign,
+      // New customer detail fields
+      address: completeData.address || null,
+      postcode: completeData.postcode || null,
+      bedrooms: completeData.bedrooms || null,
+      bathrooms: completeData.bathrooms || null
     };
 
     // Create new booking

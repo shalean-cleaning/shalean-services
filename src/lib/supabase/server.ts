@@ -19,8 +19,8 @@ export function createSupabaseAdmin() {
  * Use this for server-side operations that should respect user permissions
  * This version properly reads cookies from the incoming request
  */
-export function createSupabaseServer() {
-  const cookieStore = cookies()
+export async function createSupabaseServer() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

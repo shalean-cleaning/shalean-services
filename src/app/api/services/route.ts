@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 export async function GET() {
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   const { data: cats, error: catsErr } = await supabase
     .from('service_categories')
     .select('id,name,slug,description,icon,sort_order')

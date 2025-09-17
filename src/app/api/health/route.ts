@@ -9,7 +9,7 @@ export async function GET() {
   let dbOk = false; let dbErr: string | null = null;
   try {
     if (url && anon) {
-      const supabase = createSupabaseServer();
+      const supabase = await createSupabaseServer();
       const { error } = await supabase.from('service_categories').select('id').limit(1);
       if (!error) dbOk = true; else dbErr = error.message;
     }

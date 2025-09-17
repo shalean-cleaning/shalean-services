@@ -85,6 +85,7 @@ export interface BookingState {
   setCurrentStep: (step: number) => void;
   resetBooking: () => void;
   createDraftBooking: () => Promise<{ success: boolean; id?: string; error?: string }>;
+  updateBooking: (bookingId: string, updates: Partial<any>) => Promise<{ success: boolean; error?: string }>;
   composeDraftPayload: () => any;
 }
 
@@ -362,9 +363,43 @@ export const useBookingStore = create<BookingState>()(
           
           return { 
             success: true, 
-            id: result.id,
+            id: result.bookingId,
             totalPrice: result.totalPrice,
             breakdown: result.breakdown
+          };
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      updateBooking: async (bookingId: string, updates: Partial<any>) => {
+        try {
+          const response = await fetch('/api/bookings/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingId,
+              ...updates
+            }),
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok) {
+            return { 
+              success: false, 
+              error: result.error || `HTTP ${response.status}`,
+              details: result.details 
+            };
+          }
+          
+          return { 
+            success: true,
+            message: result.message
           };
           
         } catch (error) {

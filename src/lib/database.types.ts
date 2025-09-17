@@ -2,8 +2,8 @@
 // Generated from Supabase schema
 
 export type UserRole = 'CUSTOMER' | 'CLEANER' | 'ADMIN';
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+export type BookingStatus = 'DRAFT' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'READY_FOR_PAYMENT';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'INITIALIZED';
 export type NotificationType = 'BOOKING_CONFIRMED' | 'BOOKING_REMINDER' | 'PAYMENT_RECEIVED' | 'CLEANER_ASSIGNED' | 'RATING_REQUEST';
 
 export interface Profile {
@@ -145,6 +145,10 @@ export interface Booking {
   notes?: string;
   special_instructions?: string;
   auto_assign: boolean;
+  address?: string;
+  postcode?: string;
+  bedrooms?: number;
+  bathrooms?: number;
   created_at: string;
   updated_at: string;
 }
@@ -172,9 +176,13 @@ export interface Payment {
   id: string;
   booking_id: string;
   amount: number;
+  amount_minor: number;
   status: PaymentStatus;
   payment_method?: string;
   transaction_id?: string;
+  reference?: string;
+  gateway?: string;
+  gateway_payload?: Record<string, unknown>;
   processed_at?: string;
   created_at: string;
   updated_at: string;
