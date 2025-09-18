@@ -36,7 +36,7 @@ export function getClientEnv(): ClientEnv {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
+      const missingVars = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
       throw new Error(`Missing or invalid client environment variables:\n${missingVars}\n\nPlease check your .env.local file and ensure all required variables are set.`);
     }
     throw error;
@@ -60,7 +60,7 @@ export function getServerEnv(): ServerEnv {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
+      const missingVars = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
       throw new Error(`Missing or invalid server environment variables:\n${missingVars}\n\nPlease check your .env.local file and ensure all required variables are set.`);
     }
     throw error;
