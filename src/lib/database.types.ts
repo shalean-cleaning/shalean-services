@@ -656,6 +656,18 @@ export type Database = {
           end_ts: string
         }[]
       }
+      calculate_booking_price: {
+        Args: {
+          p_service_id: string
+          p_suburb_id: string
+          p_extras: string
+        }
+        Returns: {
+          base_price: number
+          extras_price: number
+          total_price: number
+        }[]
+      }
     }
     Enums: {
       user_role: 'ADMIN' | 'CLEANER' | 'CUSTOMER'
