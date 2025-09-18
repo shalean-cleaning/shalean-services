@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
-import { AuthModal } from '@/components/auth/AuthModal';
 import { UserAvatar } from '@/components/auth/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useAuth';
@@ -22,8 +21,6 @@ const NAV = [
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const { user, profile } = useUser();
 
   // Dev-only guard to detect accidental double mounts
@@ -46,10 +43,6 @@ export default function SiteHeader() {
 
   const filteredNav = NAV.filter(shouldShowLink);
 
-  const openAuthModal = (mode: 'login' | 'signup') => {
-    setAuthModalMode(mode);
-    setAuthModalOpen(true);
-  };
 
   return (
     <header
@@ -102,20 +95,22 @@ export default function SiteHeader() {
             <UserAvatar profile={profile} />
           ) : (
             <>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => openAuthModal('login')}
-                className="text-sm font-medium hover:text-blue-700"
-              >
-                Log In
-              </Button>
-              <Button
-                onClick={() => openAuthModal('signup')}
-                className="inline-flex items-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
-              >
-                Sign Up
-              </Button>
+              <LinkSafe href="/auth/login">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-sm font-medium hover:text-blue-700"
+                >
+                  Log In
+                </Button>
+              </LinkSafe>
+              <LinkSafe href="/auth/signup">
+                <Button
+                  className="inline-flex items-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                >
+                  Sign Up
+                </Button>
+              </LinkSafe>
             </>
           )}
         </div>
@@ -189,38 +184,29 @@ export default function SiteHeader() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      openAuthModal('login');
-                      setOpen(false);
-                    }}
-                  >
-                    Log In
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      openAuthModal('signup');
-                      setOpen(false);
-                    }}
-                  >
-                    Sign Up
-                  </Button>
+                  <LinkSafe href="/auth/login">
+                    <Button 
+                      className="w-full"
+                      onClick={() => setOpen(false)}
+                    >
+                      Log In
+                    </Button>
+                  </LinkSafe>
+                  <LinkSafe href="/auth/signup">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setOpen(false)}
+                    >
+                      Sign Up
+                    </Button>
+                  </LinkSafe>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-      
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        defaultMode={authModalMode}
-      />
     </header>
   );
 }

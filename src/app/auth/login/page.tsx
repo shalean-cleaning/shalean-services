@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
-import { validateReturnTo, getAndClearBookingContext } from '@/lib/utils'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -18,9 +17,9 @@ function LoginForm() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo') || '/booking/review'
+  const returnTo = searchParams.get('returnTo') || '/'
   
-  const { signIn, signInWithOtp } = useAuth()
+  const { signIn } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,11 +27,7 @@ function LoginForm() {
     setError('')
 
     try {
-      // Check for booking context first
-      const bookingContext = getAndClearBookingContext()
-      const redirectTo = bookingContext ? bookingContext.returnPath : validateReturnTo(returnTo)
-      
-      const { error } = await signIn(email, password, redirectTo)
+      const { error } = await signIn(email, password, returnTo)
 
       if (error) {
         setError(error.message)
@@ -46,31 +41,6 @@ function LoginForm() {
     }
   }
 
-  const handleMagicLink = async () => {
-    if (!email) {
-      setError('Please enter your email address')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const { error } = await signInWithOtp(email, returnTo)
-
-      if (error) {
-        setError(error.message)
-      } else {
-        setError('')
-        // Show success message - user will be redirected via email
-        alert('Check your email for the magic link!')
-      }
-    } catch {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -118,18 +88,6 @@ function LoginForm() {
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
-          
-          <div className="mt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={handleMagicLink}
-              disabled={loading || !email}
-            >
-              {loading ? 'Sending...' : 'Send Magic Link'}
-            </Button>
-          </div>
           
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}

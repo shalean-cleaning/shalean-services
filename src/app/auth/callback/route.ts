@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { validateReturnTo, getAndClearBookingContext } from '@/lib/utils'
+import { validateReturnTo } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -33,18 +33,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // Check for booking context first
-      const bookingContext = getAndClearBookingContext()
-      const redirectTo = bookingContext ? bookingContext.returnPath : validatedReturnTo
-      
-      // Create a response with the redirect
-      const response = NextResponse.redirect(`${origin}${redirectTo}`)
-      
-      // Add a script to check for booking context on the client side
-      // This handles the case where we need to restore booking context after auth
-      response.headers.set('X-Booking-Context-Check', 'true')
-      
-      return response
+      // Redirect to the validated return URL
+      return NextResponse.redirect(`${origin}${validatedReturnTo}`)
     }
   }
 

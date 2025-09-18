@@ -19,7 +19,7 @@ function SignupForm() {
   const [success, setSuccess] = useState(false)
   
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo') || '/booking/review'
+  const returnTo = searchParams.get('returnTo') || '/'
   
   const supabase = createClient()
 

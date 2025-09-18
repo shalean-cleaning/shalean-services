@@ -30,54 +30,11 @@ export default function DynamicTeamGrid() {
     );
   }
 
-  // Fallback team data
-  const fallbackTeamMembers = [
-    {
-      id: '1',
-      email: 'sarah.johnson@shalean.com',
-      first_name: 'Sarah',
-      last_name: 'Johnson',
-      role: 'ADMIN',
-      avatar_url: '/images/placeholder.png',
-      created_at: '',
-      updated_at: ''
-    },
-    {
-      id: '2',
-      email: 'mike.chen@shalean.com',
-      first_name: 'Mike',
-      last_name: 'Chen',
-      role: 'ADMIN',
-      avatar_url: '/images/placeholder.png',
-      is_active: true,
-      created_at: '',
-      updated_at: ''
-    },
-    {
-      id: '3',
-      email: 'emma.davis@shalean.com',
-      first_name: 'Emma',
-      last_name: 'Davis',
-      role: 'ADMIN',
-      avatar_url: '/images/placeholder.png',
-      is_active: true,
-      created_at: '',
-      updated_at: ''
-    },
-    {
-      id: '4',
-      email: 'david.wilson@shalean.com',
-      first_name: 'David',
-      last_name: 'Wilson',
-      role: 'ADMIN',
-      avatar_url: '/images/placeholder.png',
-      is_active: true,
-      created_at: '',
-      updated_at: ''
-    }
-  ];
+  // No fallback data - all data must come from Supabase
 
-  const displayTeamMembers = teamMembers && teamMembers.length > 0 ? teamMembers : fallbackTeamMembers;
+  if (!teamMembers || teamMembers.length === 0) return null;
+
+  const displayTeamMembers = teamMembers;
 
   return (
     <section className="py-16 sm:py-20">

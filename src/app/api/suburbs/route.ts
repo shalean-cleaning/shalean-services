@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
           state
         )
       `)
-      .eq('is_active', true)
+      .eq('active', true)
       .order('name', { ascending: true });
 
     if (regionId) {

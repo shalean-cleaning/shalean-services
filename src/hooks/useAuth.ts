@@ -32,7 +32,6 @@ export interface AuthMethods {
   signIn: (email: string, password: string, returnTo?: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string, userData?: { first_name?: string; last_name?: string }, returnTo?: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
-  signInWithOtp: (email: string, returnTo?: string) => Promise<{ error: AuthError | null }>
 }
 
 export function useUser(): AuthUser {
@@ -174,16 +173,6 @@ export function useAuth(): AuthUser & AuthMethods {
     return { error }
   }
 
-  const signInWithOtp = async (email: string, returnTo?: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo || '/booking/review')}`,
-      },
-    })
-
-    return { error }
-  }
 
   return {
     user,
@@ -192,6 +181,5 @@ export function useAuth(): AuthUser & AuthMethods {
     signIn,
     signUp,
     signOut,
-    signInWithOtp,
   }
 }

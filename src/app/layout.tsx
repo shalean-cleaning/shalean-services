@@ -5,10 +5,8 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 import { Providers } from "@/app/providers";
-import { CookieConsent } from "@/components/site/cookie-consent";
 import { Footer } from "@/components/site/footer";
 import SiteHeader from "@/components/layout/site-header";
-import { SkipLink } from "@/components/site/skip-link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -104,9 +102,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Skip to content link for accessibility */}
-        <SkipLink />
-        
         <Providers>
           <div className="min-h-screen flex flex-col">
             <SiteHeader />
@@ -117,7 +112,6 @@ export default function RootLayout({
           </div>
         </Providers>
         
-        <CookieConsent />
         <Toaster position="top-right" richColors />
       </body>
     </html>

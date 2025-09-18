@@ -12,17 +12,8 @@ export async function getServices(): Promise<Service[]> {
     }
     const data = await res.json();
     
-    // Extract all services from categories
-    const allServices: Service[] = [];
-    if (data?.categories) {
-      data.categories.forEach((category: { services?: Service[] }) => {
-        if (category.services) {
-          allServices.push(...category.services);
-        }
-      });
-    }
-    
-    return allServices;
+    // Return services directly (no categories in PRD schema)
+    return data?.services || [];
   } catch (error) {
     logger.error("[getServices] error:", error);
     return [];

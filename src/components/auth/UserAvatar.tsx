@@ -65,9 +65,9 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard" className="cursor-pointer">
+          <Link href="/account" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+            <span>Account</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
