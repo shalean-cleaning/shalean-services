@@ -18,6 +18,7 @@ export type Database = {
           full_name: string
           phone: string | null
           role: 'ADMIN' | 'CLEANER' | 'CUSTOMER'
+          avatar_url: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -30,6 +31,7 @@ export type Database = {
           full_name: string
           phone?: string | null
           role?: 'ADMIN' | 'CLEANER' | 'CUSTOMER'
+          avatar_url?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -42,6 +44,7 @@ export type Database = {
           full_name?: string
           phone?: string | null
           role?: 'ADMIN' | 'CLEANER' | 'CUSTOMER'
+          avatar_url?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -225,8 +228,11 @@ export type Database = {
           profile_id: string
           is_active: boolean
           is_available: boolean
-          rating: number
-          total_ratings: number
+          rating: number | null
+          total_ratings: number | null
+          experience_years: number | null
+          bio: string | null
+          hourly_rate: number | null
           created_at: string
           updated_at: string
         }
@@ -235,8 +241,11 @@ export type Database = {
           profile_id: string
           is_active?: boolean
           is_available?: boolean
-          rating?: number
-          total_ratings?: number
+          rating?: number | null
+          total_ratings?: number | null
+          experience_years?: number | null
+          bio?: string | null
+          hourly_rate?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -245,8 +254,11 @@ export type Database = {
           profile_id?: string
           is_active?: boolean
           is_available?: boolean
-          rating?: number
-          total_ratings?: number
+          rating?: number | null
+          total_ratings?: number | null
+          experience_years?: number | null
+          bio?: string | null
+          hourly_rate?: number | null
           created_at?: string
           updated_at?: string
         }

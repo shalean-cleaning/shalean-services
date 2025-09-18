@@ -127,17 +127,17 @@ export async function POST(req: NextRequest) {
           availableCleaners.push({
             id: cleaner.id,
             name: `${profile.first_name} ${profile.last_name}`,
-            rating: cleaner.rating || 0,
-            totalRatings: cleaner.total_ratings || 0,
-            experienceYears: cleaner.experience_years || 0,
-            bio: cleaner.bio || null,
-            avatarUrl: profile.avatar_url || null,
-            hourlyRate: cleaner.hourly_rate || null,
+            rating: (cleaner as any).rating || 0,
+            totalRatings: (cleaner as any).total_ratings || 0,
+            experienceYears: (cleaner as any).experience_years || 0,
+            bio: (cleaner as any).bio || null,
+            avatarUrl: (profile as any).avatar_url || null,
+            hourlyRate: (cleaner as any).hourly_rate || null,
             eta: "15-30 min", // Default ETA - could be calculated based on location
             badges: [
-              ...(cleaner.rating >= 4.5 ? ["Top Rated"] : []),
-              ...(cleaner.experience_years >= 5 ? ["Experienced"] : []),
-              ...(cleaner.total_ratings >= 50 ? ["Popular"] : []),
+              ...((cleaner as any).rating >= 4.5 ? ["Top Rated"] : []),
+              ...((cleaner as any).experience_years >= 5 ? ["Experienced"] : []),
+              ...((cleaner as any).total_ratings >= 50 ? ["Popular"] : []),
               "Verified"
             ]
           });
