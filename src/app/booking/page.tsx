@@ -52,7 +52,7 @@ export default async function BookingPage() {
                       </span>
                     </div>
                     <Button asChild className="w-full">
-                      <Link href={`/booking/service/${service.slug}`}>
+                      <Link href={`/book/${service.slug}`}>
                         <Calendar className="w-4 h-4 mr-2" />
                         Book This Service
                       </Link>

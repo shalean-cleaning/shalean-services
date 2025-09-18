@@ -35,12 +35,13 @@ export async function GET(
       );
     }
 
-    // Fetch available extras
+    // Fetch available extras (service items with is_extra = true)
     const { data: extras, error: extrasError } = await supabaseAdmin()
-      .from('extras')
+      .from('service_items')
       .select('*')
       .eq('is_active', true)
-      .order('sort_order', { ascending: true });
+      .eq('is_extra', true)
+      .order('name', { ascending: true });
 
     if (extrasError) {
       console.error('Error fetching extras:', extrasError);

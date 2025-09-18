@@ -18,9 +18,11 @@ export async function GET() {
 
   try {
     const { data, error } = await supabaseAdmin()
-      .from('extras')
+      .from('service_items')
       .select('*')
-      .order('id', { ascending: true });
+      .eq('is_extra', true)
+      .eq('is_active', true)
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('[api/extras] Supabase error:', error);

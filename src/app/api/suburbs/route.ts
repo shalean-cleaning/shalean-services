@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         name,
         postcode,
         delivery_fee,
+        price_adjustment_pct,
         region_id,
         regions!inner (
           id,

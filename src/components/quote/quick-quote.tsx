@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calculator, Mail, ArrowRight } from 'lucide-react';
+import { Loader2, Calculator, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Types
@@ -18,6 +18,7 @@ interface Service {
   slug: string;
   description: string;
   base_fee: number;
+  base_price: number;
   per_bedroom: number;
   per_bathroom: number;
   service_fee_flat: number;
@@ -174,7 +175,7 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
     }
 
     // Base price
-    const basePrice = service.base_fee || 0;
+    const basePrice = service.base_price || service.base_fee || 0;
     
     // Room pricing
     const roomPrice = 
@@ -354,6 +355,17 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
     );
   }
 
+  if (services.length === 0 || areas.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+          <p className="text-red-600">Unable to load quote data. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -366,33 +378,28 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
             </p>
           </div>
 
-          {/* Service Selection */}
+          {/* Service + Rooms Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">1. Select Service</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={quoteState.serviceId || ''} onValueChange={handleServiceChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a cleaning service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} - From R{service.base_fee}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          {/* Rooms Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">2. Rooms & Bathrooms</CardTitle>
+              <CardTitle className="text-lg">1. Service & Rooms</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Select Service</label>
+                <Select value={quoteState.serviceId || ''} onValueChange={handleServiceChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a cleaning service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name} - From R{service.base_price || service.base_fee}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Bedrooms</label>
@@ -419,7 +426,7 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
           {/* Extras Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">3. Add Extras</CardTitle>
+              <CardTitle className="text-lg">2. Add Extras</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {extras.map((extra) => {
@@ -456,44 +463,42 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
             </CardContent>
           </Card>
 
-          {/* Frequency Selection */}
+          {/* Frequency + Location Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">4. Frequency</CardTitle>
+              <CardTitle className="text-lg">3. Frequency & Location</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Select value={quoteState.frequency} onValueChange={handleFrequencyChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="one-time">One-time</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          {/* Location Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">5. Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={quoteState.areaId || ''} onValueChange={handleAreaChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your area" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areas.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>
-                      {area.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Frequency</label>
+                <Select value={quoteState.frequency} onValueChange={handleFrequencyChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="one-time">One-time</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">Location</label>
+                <Select value={quoteState.areaId || ''} onValueChange={handleAreaChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {areas.map((area) => (
+                      <SelectItem key={area.id} value={area.id}>
+                        {area.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -556,6 +561,22 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
                   <span>R{priceBreakdown.total.toFixed(2)}</span>
                 </div>
 
+                {/* What's Included Section */}
+                {quoteState.serviceId && (
+                  <div className="mt-4 pt-4 border-t">
+                    <h4 className="font-medium mb-2">What's Included:</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Professional cleaning service</li>
+                      <li>• All cleaning supplies and equipment</li>
+                      <li>• {quoteState.bedrooms} bedroom{quoteState.bedrooms > 1 ? 's' : ''} and {quoteState.bathrooms} bathroom{quoteState.bathrooms > 1 ? 's' : ''}</li>
+                      {quoteState.selectedExtras.length > 0 && (
+                        <li>• {quoteState.selectedExtras.length} extra service{quoteState.selectedExtras.length > 1 ? 's' : ''}</li>
+                      )}
+                      <li>• 100% satisfaction guarantee</li>
+                    </ul>
+                  </div>
+                )}
+
                 {/* Email Quote */}
                 <div className="space-y-3">
                   <Input
@@ -566,7 +587,7 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
                   />
                   <Button
                     onClick={handleEmailQuote}
-                    disabled={submitting || !quoteState.email}
+                    disabled={submitting || !quoteState.email || !quoteState.serviceId || !quoteState.areaId}
                     className="w-full"
                     variant="outline"
                   >
@@ -582,6 +603,7 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
                 {/* Continue to Booking */}
                 <Button
                   onClick={handleContinueToBooking}
+                  disabled={!quoteState.serviceId || !quoteState.areaId}
                   className="w-full"
                   size="lg"
                 >

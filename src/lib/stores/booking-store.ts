@@ -309,15 +309,19 @@ export const useBookingStore = create<BookingState>()(
       calculateTotalPrice: () => {
         const { basePrice, bedroomCount, bathroomCount, selectedExtras, deliveryFee } = get();
         
-        // Base price calculation (simplified - in real app, you'd use pricing rules)
+        // Base price calculation
         let roomPrice = basePrice;
         
         // Add pricing for additional bedrooms/bathrooms
+        // These values should ideally come from pricing rules in the database
+        const additionalBedroomPrice = 20; // $20 per additional bedroom
+        const additionalBathroomPrice = 15; // $15 per additional bathroom
+        
         if (bedroomCount > 1) {
-          roomPrice += (bedroomCount - 1) * 20; // $20 per additional bedroom
+          roomPrice += (bedroomCount - 1) * additionalBedroomPrice;
         }
         if (bathroomCount > 1) {
-          roomPrice += (bathroomCount - 1) * 15; // $15 per additional bathroom
+          roomPrice += (bathroomCount - 1) * additionalBathroomPrice;
         }
         
         // Add extras
