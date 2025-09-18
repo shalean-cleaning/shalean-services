@@ -13,12 +13,22 @@ const ServerEnv = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
-export const env = ServerEnv.parse({
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
+// Lazy validation to prevent client-side evaluation
+let _env: z.infer<typeof ServerEnv> | null = null;
 
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
+  get(_target, prop) {
+    if (!_env) {
+      _env = ServerEnv.parse({
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
+        RESEND_API_KEY: process.env.RESEND_API_KEY,
+
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      });
+    }
+    return _env[prop as keyof typeof _env];
+  }
 });

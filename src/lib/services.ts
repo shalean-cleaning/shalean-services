@@ -1,3 +1,4 @@
+import 'server-only';
 import { Service } from "@/lib/database.types";
 import { logger } from "@/lib/logger";
 
