@@ -536,6 +536,63 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          id: string
+          email: string
+          service_id: string
+          suburb_id: string
+          bedrooms: number
+          bathrooms: number
+          extras: string | null
+          total_price: number
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          service_id: string
+          suburb_id: string
+          bedrooms: number
+          bathrooms: number
+          extras?: string | null
+          total_price: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          service_id?: string
+          suburb_id?: string
+          bedrooms?: number
+          bathrooms?: number
+          extras?: string | null
+          total_price?: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_suburb_id_fkey"
+            columns: ["suburb_id"]
+            isOneToOne: false
+            referencedRelation: "suburbs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       booking_details_view: {
@@ -693,6 +750,7 @@ export type Suburb = Database['public']['Tables']['suburbs']['Row']
 export type ContentBlock = Database['public']['Tables']['content_blocks']['Row']
 export type BlogPost = Database['public']['Tables']['blog_posts']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']
+export type Quote = Database['public']['Tables']['quotes']['Row']
 
 // View types
 export type BookingDetailsView = Database['public']['Views']['booking_details_view']['Row']
@@ -710,6 +768,7 @@ export type SuburbInsert = Database['public']['Tables']['suburbs']['Insert']
 export type ContentBlockInsert = Database['public']['Tables']['content_blocks']['Insert']
 export type BlogPostInsert = Database['public']['Tables']['blog_posts']['Insert']
 export type TestimonialInsert = Database['public']['Tables']['testimonials']['Insert']
+export type QuoteInsert = Database['public']['Tables']['quotes']['Insert']
 
 // Update types
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
@@ -723,6 +782,7 @@ export type SuburbUpdate = Database['public']['Tables']['suburbs']['Update']
 export type ContentBlockUpdate = Database['public']['Tables']['content_blocks']['Update']
 export type BlogPostUpdate = Database['public']['Tables']['blog_posts']['Update']
 export type TestimonialUpdate = Database['public']['Tables']['testimonials']['Update']
+export type QuoteUpdate = Database['public']['Tables']['quotes']['Update']
 
 // Enum types
 export type UserRole = Database['public']['Enums']['user_role']
