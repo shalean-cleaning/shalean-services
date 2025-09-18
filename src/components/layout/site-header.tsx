@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import LinkSafe from "@/components/LinkSafe";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -59,10 +59,10 @@ export default function SiteHeader() {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <LinkSafe href="/" className="flex items-center gap-2 shrink-0">
           <div className="h-8 w-8 rounded-xl bg-blue-600" />
           <span className="text-lg font-semibold tracking-tight">Shalean</span>
-        </Link>
+        </LinkSafe>
 
         {/* Nav (desktop) */}
         <nav className="hidden lg:block">
@@ -74,7 +74,7 @@ export default function SiteHeader() {
                   : pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <li key={item.href} className="whitespace-nowrap">
-                  <Link
+                  <LinkSafe
                     href={item.href}
                     className={[
                       "inline-flex items-center rounded-md px-1.5 py-1 text-sm font-medium transition-colors",
@@ -83,7 +83,7 @@ export default function SiteHeader() {
                     aria-current={active ? "page" : undefined}
                   >
                     {item.label}
-                  </Link>
+                  </LinkSafe>
                 </li>
               );
             })}
@@ -92,12 +92,12 @@ export default function SiteHeader() {
 
         {/* CTAs (desktop) */}
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
+          <LinkSafe
             href="/booking"
             className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
           >
             Book a Service
-          </Link>
+          </LinkSafe>
           {user && profile ? (
             <UserAvatar profile={profile} />
           ) : (
@@ -146,7 +146,7 @@ export default function SiteHeader() {
                       : pathname === item.href || pathname.startsWith(item.href + "/");
                   return (
                     <li key={item.href} className="whitespace-nowrap">
-                      <Link
+                      <LinkSafe
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={[
@@ -156,7 +156,7 @@ export default function SiteHeader() {
                         aria-current={active ? "page" : undefined}
                       >
                         {item.label}
-                      </Link>
+                      </LinkSafe>
                     </li>
                   );
                 })}
@@ -165,13 +165,13 @@ export default function SiteHeader() {
 
             {/* Mobile CTAs */}
             <div className="space-y-3">
-              <Link
+              <LinkSafe
                 href="/booking"
                 className="block w-full rounded-md border px-3 py-2 text-sm font-medium text-center hover:bg-gray-50"
                 onClick={() => setOpen(false)}
               >
                 Book a Service
-              </Link>
+              </LinkSafe>
               
               {user && profile ? (
                 <div className="space-y-3">

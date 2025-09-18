@@ -1,5 +1,5 @@
 import { Facebook, Twitter, Linkedin, Mail, Phone, MapPin, Apple, Play } from 'lucide-react'
-import Link from 'next/link'
+import LinkSafe from '@/components/LinkSafe'
 
 const footerLinks = {
   company: [
@@ -93,12 +93,12 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.name}>
-                  <Link
+                  <LinkSafe
                     href={link.href}
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     {link.name}
-                  </Link>
+                  </LinkSafe>
                 </li>
               ))}
             </ul>
@@ -110,12 +110,12 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  <Link
+                  <LinkSafe
                     href={link.href}
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     {link.name}
-                  </Link>
+                  </LinkSafe>
                 </li>
               ))}
             </ul>
@@ -127,12 +127,12 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.contact.map((link) => (
                 <li key={link.name}>
-                  <Link
+                  <LinkSafe
                     href={link.href}
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     {link.name}
-                  </Link>
+                  </LinkSafe>
                 </li>
               ))}
             </ul>
@@ -161,13 +161,13 @@ export function Footer() {
             {/* Legal Links */}
             <div className="flex flex-wrap gap-6">
               {footerLinks.legal.map((link) => (
-                <Link
+                <LinkSafe
                   key={link.name}
                   href={link.href}
                   className="text-gray-400 hover:text-white text-sm transition-colors"
                 >
                   {link.name}
-                </Link>
+                </LinkSafe>
               ))}
             </div>
           </div>

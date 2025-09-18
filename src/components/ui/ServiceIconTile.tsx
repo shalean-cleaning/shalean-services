@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import LinkSafe from "@/components/LinkSafe";
 
 type Props = {
   icon: LucideIcon;
@@ -24,7 +25,7 @@ export default function ServiceIconTile({
   className,
 }: Props) {
   return (
-    <a href={href} className="block">
+    <LinkSafe href={href} className="block">
       <div className={cn(
         "flex flex-col items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow",
         className
@@ -39,6 +40,6 @@ export default function ServiceIconTile({
           {label}
         </span>
       </div>
-    </a>
+    </LinkSafe>
   );
 }

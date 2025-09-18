@@ -11,7 +11,7 @@ import {
   Calendar,
   Shield
 } from 'lucide-react'
-import Link from 'next/link'
+import LinkSafe from '@/components/LinkSafe'
 
 import { Button } from '@/components/ui/button'
 import { useHeroContent } from '@/hooks/useHomepageData'
@@ -130,14 +130,14 @@ export default function DynamicHero() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Button size="lg" asChild className="text-lg px-8 py-3">
-              <Link href={primaryLink}>
+              <LinkSafe href={primaryLink}>
                 {primaryCta}
-              </Link>
+              </LinkSafe>
             </Button>
             <Button variant="outline" size="lg" asChild className="text-lg px-8 py-3">
-              <Link href={secondaryLink}>
+              <LinkSafe href={secondaryLink}>
                 {secondaryCta}
-              </Link>
+              </LinkSafe>
             </Button>
           </motion.div>
         </div>
