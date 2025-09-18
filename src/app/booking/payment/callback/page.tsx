@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 import CallbackClient from './CallbackClient';
 
 interface PaymentCallbackPageProps {
-  searchParams: { reference?: string };
+  searchParams: Promise<{ reference?: string }>;
 }
 
-export default function PaymentCallbackPage({ searchParams }: PaymentCallbackPageProps) {
-  const reference = searchParams.reference || null;
+export default async function PaymentCallbackPage({ searchParams }: PaymentCallbackPageProps) {
+  const params = await searchParams;
+  const reference = params.reference || null;
 
   return (
     <Suspense fallback={
