@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase-client'
-import { Booking, BookingInsert, BookingUpdate, BookingStatus } from './database.types'
+import { BookingInsert, BookingUpdate, BookingStatus } from './database.types'
 
 const supabase = createClient()
 
