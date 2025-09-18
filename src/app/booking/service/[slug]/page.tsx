@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { BookingStepper } from '@/components/booking/booking-stepper';
 import { BookingSummary } from '@/components/booking/booking-summary';
-import { Service, Extra, PricingRule, Region } from '@/lib/database.types';
+import { Service, ServiceItem, Region } from '@/lib/database.types';
 
 interface BookingPageProps {
   params: Promise<{
@@ -24,8 +24,8 @@ async function getServiceData(slug: string) {
     const data = await response.json();
     return data as {
       service: Service;
-      extras: Extra[];
-      pricingRules: PricingRule[];
+      extras: ServiceItem[];
+      pricingRules: any[];
     };
   } catch (error) {
     console.error('Error fetching service data:', error);
