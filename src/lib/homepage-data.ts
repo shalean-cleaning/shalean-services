@@ -102,7 +102,7 @@ export async function getContentBlocks(sectionKey: string) {
     const { data, error } = await supabase
       .from('content_blocks')
       .select('*')
-      .eq('content_type', sectionKey)
+      .eq('section_key', sectionKey)
       .eq('is_active', true)
       .order('order_index', { ascending: true })
 
@@ -180,19 +180,23 @@ export async function getFeaturedTestimonials(limit: number = 4) {
 export async function getTeamMembers() {
   const supabase = await createSupabaseServer()
   
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'ADMIN')
-    .eq('is_active', true)
-    .order('created_at', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
 
-  if (error) {
-    console.error('Error fetching team members:', error)
+    if (error) {
+      console.warn('Team members table not available:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.warn('Team members table not available:', error)
     return []
   }
-
-  return data || []
 }
 
 // Icon mapping utility
