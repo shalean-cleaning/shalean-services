@@ -11,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Region, Area } from '@/lib/database.types';
+
+// Type for the areas API response (includes additional properties from suburbs)
+interface AreaWithPostcode extends Area {
+  postcode?: string;
+  delivery_fee?: number;
+  region?: any;
+}
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useAvailability } from '@/hooks/useAvailability';
 
@@ -50,7 +57,7 @@ export function LocationSchedulingStep({ regions: _regions }: LocationScheduling
     setCurrentStep,
   } = useBookingStore();
 
-  const [areas, setAreas] = useState<Area[]>([]);
+  const [areas, setAreas] = useState<AreaWithPostcode[]>([]);
   const [loadingAreas, setLoadingAreas] = useState(false);
 
   const {
