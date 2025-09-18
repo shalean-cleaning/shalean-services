@@ -13,7 +13,6 @@ export default function Error({
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
       // Log once in dev for debugging
-      // eslint-disable-next-line no-console
       console.error("[ErrorBoundary]", error);
     }
   }, [error]);

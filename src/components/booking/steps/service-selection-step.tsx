@@ -3,13 +3,12 @@
 import { CheckCircle } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import { Service, PricingRule } from '@/lib/database.types';
+import { Service } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { formatZAR } from '@/lib/format';
 
 interface ServiceSelectionStepProps {
   service: Service;
-  pricingRules: PricingRule[];
 }
 
 export function ServiceSelectionStep({ service }: ServiceSelectionStepProps) {

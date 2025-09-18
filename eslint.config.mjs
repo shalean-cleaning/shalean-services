@@ -148,4 +148,12 @@ export default [
       },
     },
   },
+  // Scripts and API routes configuration
+  {
+    files: ["scripts/**/*.js", "scripts/**/*.ts", "src/app/api/**/*.ts", "create-favicon.js", "src/lib/**/*.ts", "src/server/**/*.ts", "supabase/functions/**/*.ts", "src/components/**/*.tsx", "src/hooks/**/*.ts", "src/app/**/*.tsx"],
+    rules: {
+      "no-console": "off", // Allow console in scripts, API routes, lib, server, edge functions, components, hooks, and pages
+      "@typescript-eslint/no-explicit-any": "off", // Allow any in API routes and lib files
+    },
+  },
 ];

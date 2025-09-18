@@ -1,15 +1,17 @@
+import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { env } from '@/env.server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  if (!env.NEXT_PUBLIC_SUPABASE_URL) {
     return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 });
   }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY && !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json({ error: 'Missing Supabase key (service or anon)' }, { status: 500 });
   }
 
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
           state
         )
       `)
-      .eq('is_active', true)
+      .eq('active', true)
       .order('name', { ascending: true });
 
     if (regionId) {

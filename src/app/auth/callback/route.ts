@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // Redirect to the validated returnTo URL or default to booking review
+      // Redirect to the validated return URL
       return NextResponse.redirect(`${origin}${validatedReturnTo}`)
     }
   }

@@ -87,45 +87,9 @@ export default function DynamicTestimonials() {
     );
   }
 
-  if (!testimonials) return null
+  if (!testimonials || testimonials.length === 0) return null
 
-  // Fallback testimonial data
-  const fallbackTestimonials: Testimonial[] = [
-    {
-      id: '1',
-      content: 'Shalean Services transformed our home! The cleaners are professional, thorough, and trustworthy. I can finally relax knowing our home is in good hands.',
-      author_name: 'Jennifer Martinez',
-      role: 'Homeowner',
-      author_image: IMAGES.profile,
-      rating: 5,
-    },
-    {
-      id: '2',
-      content: 'Outstanding service! The team arrived on time, worked efficiently, and left our apartment spotless. Highly recommend for anyone looking for reliable cleaning services.',
-      author_name: 'Robert Thompson',
-      role: 'Apartment Owner',
-      author_image: IMAGES.profile,
-      rating: 5,
-    },
-    {
-      id: '3',
-      content: 'As a busy professional, Shalean Services has been a lifesaver. They handle everything professionally and I never have to worry about the quality of their work.',
-      author_name: 'Lisa Anderson',
-      role: 'Business Owner',
-      author_image: IMAGES.profile,
-      rating: 5,
-    },
-    {
-      id: '4',
-      content: 'The eco-friendly products they use give me peace of mind, especially with young children at home. Great service and environmentally conscious!',
-      author_name: 'Mark Rodriguez',
-      role: 'Father of Two',
-      author_image: IMAGES.profile,
-      rating: 5,
-    }
-  ];
-
-  const displayTestimonials = testimonials && testimonials.length > 0 ? testimonials : fallbackTestimonials;
+  const displayTestimonials = testimonials;
 
   return (
     <section className="py-16 sm:py-20 bg-gray-50">

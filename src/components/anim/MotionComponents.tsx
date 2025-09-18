@@ -19,7 +19,6 @@ export function MotionSection({
 }: MotionSectionProps) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     margin: viewportMargin as any, 
     once: true 
   });

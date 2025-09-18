@@ -2,37 +2,56 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 export async function GET() {
-  const supabase = createSupabaseServer();
-  const { data: cats, error: catsErr } = await supabase
-    .from('service_categories')
-    .select('id,name,slug,description,icon,sort_order')
-    .order('sort_order', { ascending: true });
-  if (catsErr) return NextResponse.json({ error: catsErr.message }, { status: 500 });
-
+  const supabase = await createSupabaseServer();
+  
+  // Get services with pricing information
   const { data: svcs, error: svcsErr } = await supabase
     .from('services')
-    .select('id,category_id,name,slug,base_price,description,duration_minutes,sort_order');
+    .select(`
+      id,
+      name,
+      slug,
+      description,
+      base_fee,
+      active,
+      service_pricing (
+        per_bedroom,
+        per_bathroom,
+        service_fee_flat,
+        service_fee_pct
+      )
+    `)
+    .eq('active', true)
+    .order('name');
   if (svcsErr) return NextResponse.json({ error: svcsErr.message }, { status: 500 });
 
-  const servicesNormalized = (svcs ?? []).map(s => {
-    const price = s.base_price != null ? Number(s.base_price) : null;
-    const cents = price != null ? Math.round(price * 100) : null;
-    return { ...s, base_price_cents: cents, base_price: price };
-  });
-
-  const byCat = new Map<string, any[]>();
-  servicesNormalized.forEach(s => {
-    const arr = byCat.get(s.category_id) ?? [];
-    arr.push(s);
-    byCat.set(s.category_id, arr);
-  });
-
+  // Get extras
   const { data: ex, error: exErr } = await supabase
     .from('extras')
-    .select('id,name,slug,price,description,duration_minutes,sort_order')
+    .select('id,name,slug,price,description,active')
+    .eq('active', true)
     .order('name');
   if (exErr) return NextResponse.json({ error: exErr.message }, { status: 500 });
 
-  const categories = (cats ?? []).map(c => ({ ...c, services: byCat.get(c.id) ?? [] }));
-  return NextResponse.json({ categories, extras: ex ?? [] });
+  // Normalize services data
+  const servicesNormalized = (svcs ?? []).map(s => {
+    const price = s.base_fee != null ? Number(s.base_fee) : null;
+    const cents = price != null ? Math.round(price * 100) : null;
+    return { 
+      ...s, 
+      base_price_cents: cents, 
+      base_price: price,
+      // Flatten pricing data
+      per_bedroom: s.service_pricing?.[0]?.per_bedroom || 0,
+      per_bathroom: s.service_pricing?.[0]?.per_bathroom || 0,
+      service_fee_flat: s.service_pricing?.[0]?.service_fee_flat || 0,
+      service_fee_pct: s.service_pricing?.[0]?.service_fee_pct || 0
+    };
+  });
+
+  // Return services and extras in a flat structure (no categories in PRD)
+  return NextResponse.json({ 
+    services: servicesNormalized, 
+    extras: ex ?? [] 
+  });
 }

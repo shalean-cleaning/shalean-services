@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, CreditCard, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,66 +31,236 @@ export function BookingReviewStep() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draftCreated, setDraftCreated] = useState(false);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [bookingStatus, setBookingStatus] = useState<'DRAFT' | 'PENDING' | 'READY_FOR_PAYMENT' | 'PAID' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'>('DRAFT');
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
-  // Create draft booking on component mount
+  // Check if we need to redirect back to booking flow
   useEffect(() => {
-    const createDraft = async () => {
+    // If we have no booking data, redirect to start
+    if (!selectedService) {
+      router.push('/booking');
+      return;
+    }
+  }, [selectedService, router]);
+
+  // Check for existing draft or create/update draft on component mount
+  useEffect(() => {
+    const handleDraft = async () => {
       if (draftCreated) return;
       
       setIsLoading(true);
       setError(null);
       
       try {
-        const payload = composeDraftPayload();
-        
-        // Add cleaner selection to payload
-        const payloadWithCleaner = {
-          ...payload,
-          selectedCleanerId: selectedCleanerId || undefined,
-          autoAssign: autoAssign
-        };
-        
-        const response = await fetch('/api/bookings/draft', {
-          method: 'POST',
+        // First, try to get existing draft
+        const getResponse = await fetch('/api/bookings/draft', {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payloadWithCleaner),
         });
         
-        const result = await response.json();
-        
-        if (!response.ok) {
-          if (result.error === 'NEED_AUTH') {
-            // This shouldn't happen since we're server-guarded, but handle it
-            router.push('/auth/login?returnTo=/booking/review');
+        if (getResponse.ok) {
+          const getResult = await getResponse.json();
+          if (getResult.success && getResult.bookingId) {
+            setDraftCreated(true);
+            setBookingId(getResult.bookingId);
+            setBookingStatus('DRAFT'); // Default status for existing draft
+            
+            // Check if booking is already paid
+            const statusResponse = await fetch(`/api/bookings/${getResult.bookingId}`);
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              setBookingStatus(statusData.booking?.status || 'PENDING');
+            }
             return;
           }
-          
-          throw new Error(result.message || result.error || `HTTP ${response.status}`);
         }
         
-        setDraftCreated(true);
+        // If no existing draft, try to create/update with current data
+        try {
+          const payload = composeDraftPayload();
+          
+          // Add cleaner selection to payload
+          const payloadWithCleaner = {
+            ...payload,
+            selectedCleanerId: selectedCleanerId || undefined,
+            autoAssign: autoAssign
+          };
+          
+          const response = await fetch('/api/bookings/draft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payloadWithCleaner),
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            setDraftCreated(true);
+            setBookingId(result.bookingId);
+            setBookingStatus('DRAFT');
+            
+            // Check if booking is already paid
+            if (result.bookingId) {
+              const statusResponse = await fetch(`/api/bookings/${result.bookingId}`);
+              if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                setBookingStatus(statusData.booking?.status || 'PENDING');
+              }
+            }
+          } else {
+            // Handle validation errors with user guidance
+            if (response.status === 422 && result.details) {
+              const missingFields = result.details.map((detail: any) => detail.field).join(', ');
+              setError(`Please complete the following: ${missingFields}. Use the back button to return to the previous steps.`);
+            } else {
+              setError(result.message || result.error || `Failed to create booking draft (${response.status})`);
+            }
+          }
+          
+        } catch (payloadError) {
+          // Handle composeDraftPayload errors (missing required fields)
+          if (payloadError instanceof Error) {
+            setError(`${payloadError.message}. Please use the back button to complete the missing information.`);
+          } else {
+            setError("Please complete all required fields. Use the back button to return to the previous steps.");
+          }
+        }
         
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to create booking draft";
+        const errorMessage = err instanceof Error ? err.message : "Failed to access booking draft";
         setError(errorMessage);
-        console.error('Error creating draft:', err);
+        console.error('Error handling draft:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    createDraft();
+    handleDraft();
   }, [composeDraftPayload, selectedCleanerId, autoAssign, draftCreated, router]);
 
-  const handleCompleteBooking = () => {
-    // TODO: Implement payment flow
-    console.log('Complete booking - payment flow to be implemented');
+  const handleConfirmBooking = async () => {
+    if (!bookingId) {
+      setError('We\'re preparing your booking. Please wait a moment and try again.');
+      return;
+    }
+
+    setIsConfirming(true);
+    setError(null);
+
+    try {
+      // Confirm the booking (validate required fields and set status)
+      const confirmResponse = await fetch('/api/bookings/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: bookingId
+        }),
+      });
+
+      const confirmData = await confirmResponse.json();
+
+      if (!confirmData.success) {
+        if (confirmData.error === 'MISSING_REQUIRED_FIELDS' && confirmData.details?.missingFields) {
+          setMissingFields(confirmData.details.missingFields);
+          setError(`Please complete the following information: ${confirmData.details.missingFields.join(', ')}. Use the back button to return to the previous steps.`);
+        } else {
+          throw new Error(confirmData.message || confirmData.error || 'Failed to confirm booking');
+        }
+        return;
+      }
+
+      // Update booking status
+      setBookingStatus(confirmData.data.status);
+      
+      // If ready for payment, proceed to payment
+      if (confirmData.data.isReadyForPayment) {
+        await handleCompleteBooking();
+      }
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking";
+      setError(errorMessage);
+      console.error('Booking confirmation error:', err);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (bookingStatus === 'PAID') {
+      return; // Already paid, button should be disabled
+    }
+
+    // Ensure we have a valid bookingId before proceeding
+    if (!bookingId) {
+      setError('We\'re preparing your booking. Please wait a moment and try again.');
+      return;
+    }
+
+    setIsPaymentLoading(true);
+    setError(null);
+
+    try {
+      // Initiate payment with the stored bookingId
+      const paymentResponse = await fetch('/api/payments/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: bookingId
+        }),
+      });
+
+      const paymentData = await paymentResponse.json();
+
+      if (!paymentData.success) {
+        throw new Error(paymentData.error || 'Failed to initiate payment');
+      }
+
+      // Redirect to Paystack
+      window.location.href = paymentData.authorization_url;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
+      setError(errorMessage);
+      console.error('Payment initiation error:', err);
+    } finally {
+      setIsPaymentLoading(false);
+    }
   };
 
   const handlePrevious = () => {
     router.back();
+  };
+
+  const navigateToStep = (step: number) => {
+    const serviceSlug = selectedService?.slug || 'standard-cleaning';
+    router.push(`/booking/service/${serviceSlug}?step=${step}`);
+  };
+
+  const getStepForField = (field: string): number => {
+    const fieldStepMap: Record<string, number> = {
+      'service': 1,
+      'bedrooms': 2,
+      'bathrooms': 2,
+      'address': 3,
+      'postcode': 3,
+      'booking_date': 3,
+      'start_time': 3,
+      'location': 3,
+      'total_price': 1
+    };
+    return fieldStepMap[field] || 1;
   };
 
   const selectedCleaner = selectedCleanerId 
@@ -132,8 +302,26 @@ export function BookingReviewStep() {
           <div className="flex items-center">
             <AlertCircle className="w-8 h-8 text-red-500 mr-3" />
             <div>
-              <h3 className="text-lg font-semibold text-red-800">Error Creating Booking</h3>
+              <h3 className="text-lg font-semibold text-red-800">Booking Incomplete</h3>
               <p className="text-red-700">{error}</p>
+              {missingFields.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-red-800 mb-2">Missing information:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {missingFields.map((field) => (
+                      <Button
+                        key={field}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigateToStep(getStepForField(field))}
+                        className="text-red-700 border-red-300 hover:bg-red-100"
+                      >
+                        Complete {field}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="mt-4 flex gap-2">
@@ -286,14 +474,60 @@ export function BookingReviewStep() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <Button 
-                onClick={handleCompleteBooking}
-                className="w-full"
-                size="lg"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Complete Payment
-              </Button>
+              {bookingStatus === 'PAID' ? (
+                <Button 
+                  disabled
+                  className="w-full"
+                  size="lg"
+                  variant="outline"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Already Paid
+                </Button>
+              ) : bookingStatus === 'READY_FOR_PAYMENT' ? (
+                <Button 
+                  onClick={handleCompleteBooking}
+                  disabled={isPaymentLoading || !bookingId}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isPaymentLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing Payment...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Complete Payment
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleConfirmBooking}
+                  disabled={isConfirming || !bookingId}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isConfirming ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Confirming...
+                    </>
+                  ) : !bookingId ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Preparing Booking...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Confirm & Proceed to Payment
+                    </>
+                  )}
+                </Button>
+              )}
               
               <Button 
                 variant="outline" 

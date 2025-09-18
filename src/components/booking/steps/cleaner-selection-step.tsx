@@ -2,14 +2,13 @@
 
 import { Sparkles, Users, Clock, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import { CleanerCard } from '../cleaner-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
-import { buildReturnToUrl } from '@/lib/utils';
 
 interface CleanerSelectionStepProps {
   onNext?: () => void;
@@ -31,7 +30,6 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
   } = useBookingStore();
 
   const router = useRouter();
-  const _searchParams = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -145,15 +143,41 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       const result = await response.json();
       
       if (response.ok) {
-        // If 200 → navigate to /booking/review
-        router.push('/booking/review');
-      } else if (response.status === 401 && result.error === 'NEED_AUTH') {
-        // If 401 (NEED_AUTH) → redirect to /login with proper returnTo
-        // Build returnTo URL preserving current step context
-        const returnTo = buildReturnToUrl('/booking/review', '');
-        router.push(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
+        // If 200 (existing draft) or 201 (new draft) → navigate to /booking/review
+        const bookingId = result.bookingId;
+        if (bookingId) {
+          router.push(`/booking/review?bookingId=${bookingId}`);
+        } else {
+          router.push('/booking/review');
+        }
+      } else if (response.status === 409) {
+        // Handle 409 as success - fetch existing draft and continue
+        try {
+          const existingResponse = await fetch('/api/bookings/draft', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (existingResponse.ok) {
+            const existingResult = await existingResponse.json();
+            const bookingId = existingResult.bookingId;
+            if (bookingId) {
+              router.push(`/booking/review?bookingId=${bookingId}`);
+            } else {
+              router.push('/booking/review');
+            }
+          } else {
+            // Fallback to review page without bookingId
+            router.push('/booking/review');
+          }
+        } catch {
+          // Fallback to review page without bookingId
+          router.push('/booking/review');
+        }
       } else {
-        // If 400/409 → show field-specific messages from the response
+        // If 400/401/500 → show field-specific messages from the response
         const errorMessage = result.message || result.error || `HTTP ${response.status}`;
         setInlineError(errorMessage);
       }

@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { buildReturnToUrl } from '@/lib/utils'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -16,13 +15,10 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
             supabaseResponse.cookies.set(name, value, options)
-          )
+          })
         },
       },
     }
@@ -42,8 +38,7 @@ export async function middleware(request: NextRequest) {
       // Redirect to login if not authenticated
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
-      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
-      url.searchParams.set('returnTo', returnTo)
+      url.searchParams.set('returnTo', request.nextUrl.pathname)
       return NextResponse.redirect(url)
     }
 
@@ -55,35 +50,9 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile?.role !== 'ADMIN') {
-      // Redirect to unauthorized page if not admin
+      // Redirect to home if not admin
       const url = request.nextUrl.clone()
-      url.pathname = '/unauthorized'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // Protect cleaner routes
-  if (request.nextUrl.pathname.startsWith('/cleaner')) {
-    if (!user) {
-      // Redirect to login if not authenticated
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      const returnTo = buildReturnToUrl(request.nextUrl.pathname, request.nextUrl.searchParams)
-      url.searchParams.set('returnTo', returnTo)
-      return NextResponse.redirect(url)
-    }
-
-    // Check if user is cleaner or admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'CLEANER' && profile?.role !== 'ADMIN') {
-      // Redirect to unauthorized page if not cleaner or admin
-      const url = request.nextUrl.clone()
-      url.pathname = '/unauthorized'
+      url.pathname = '/'
       return NextResponse.redirect(url)
     }
   }

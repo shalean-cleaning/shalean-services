@@ -1,20 +1,37 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json(); // { bookingId }
-    const sb = createSupabaseAdmin();
-
+    const payload = await req.json();
     const { bookingId } = payload;
     
     if (!bookingId) {
-      return NextResponse.json({ ok: false, error: "bookingId is required" }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: "VALIDATION_ERROR",
+        message: "bookingId is required" 
+      }, { status: 400 });
     }
 
-    const { data: b, error: e0 } = await sb
+    const supabaseAdmin = createSupabaseAdmin();
+    const supabaseServer = await createSupabaseServer();
+
+    // Get current user
+    const { data: { session }, error: sessionError } = await supabaseServer.auth.getSession();
+    if (sessionError || !session?.user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "AUTH_REQUIRED",
+        message: "Authentication required" 
+      }, { status: 401 });
+    }
+
+    // Fetch booking with all required fields for validation
+    const { data: booking, error: bookingError } = await supabaseAdmin
       .from("bookings")
       .select(`
         *,
@@ -22,56 +39,130 @@ export async function POST(req: Request) {
         suburbs (name)
       `)
       .eq("id", bookingId)
+      .eq("customer_id", session.user.id) // Ensure user owns the booking
       .single();
       
-    if (e0 || !b) {
-      console.error("Error fetching booking:", e0);
+    if (bookingError || !booking) {
+      logger.error("Error fetching booking:", bookingError);
       return NextResponse.json({ 
-        ok: false, 
-        error: e0?.message || "Booking not found" 
+        success: false, 
+        error: "NOT_FOUND",
+        message: "Booking not found or access denied" 
       }, { status: 404 });
     }
 
-    let assignedCleaner: string | null = b.cleaner_id;
+    // Validate booking is in correct state for confirmation
+    if (!['DRAFT', 'PENDING', 'READY_FOR_PAYMENT'].includes(booking.status)) {
+      return NextResponse.json({
+        success: false,
+        error: "INVALID_STATUS",
+        message: `Booking cannot be confirmed in ${booking.status} status`
+      }, { status: 422 });
+    }
 
-    if (!assignedCleaner && b.auto_assign === true) {
+    // Validate required fields for finalization
+    const missingFields: string[] = [];
+    
+    if (!booking.address) missingFields.push('address');
+    if (!booking.postcode) missingFields.push('postcode');
+    if (booking.bedrooms === null || booking.bedrooms === undefined) missingFields.push('bedrooms');
+    if (booking.bathrooms === null || booking.bathrooms === undefined) missingFields.push('bathrooms');
+    if (!booking.service_id) missingFields.push('service');
+    if (!booking.suburb_id) missingFields.push('location');
+    if (!booking.booking_date) missingFields.push('booking_date');
+    if (!booking.start_time) missingFields.push('start_time');
+    if (!booking.total_price || booking.total_price <= 0) missingFields.push('total_price');
+
+    if (missingFields.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "MISSING_REQUIRED_FIELDS",
+        message: "Booking cannot be confirmed - missing required information",
+        details: {
+          missingFields,
+          guidance: "Please complete all required fields before confirming your booking"
+        }
+      }, { status: 422 });
+    }
+
+    // Validate field values
+    const validationErrors: string[] = [];
+    
+    if (booking.bedrooms < 0) validationErrors.push('bedrooms must be non-negative');
+    if (booking.bathrooms < 0) validationErrors.push('bathrooms must be non-negative');
+    if (booking.address.trim().length === 0) validationErrors.push('address cannot be empty');
+    if (booking.postcode.trim().length === 0) validationErrors.push('postcode cannot be empty');
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "VALIDATION_ERROR",
+        message: "Invalid field values",
+        details: validationErrors
+      }, { status: 422 });
+    }
+
+    // Handle cleaner assignment
+    let assignedCleaner: string | null = booking.cleaner_id;
+    let finalStatus = 'READY_FOR_PAYMENT';
+
+    if (!assignedCleaner && booking.auto_assign === true) {
       // Try to auto-assign a cleaner
-      const { data: attempt, error: e1 } = await sb.rpc("try_auto_assign", { 
-        booking_id: b.id 
+      const { data: attempt, error: autoAssignError } = await supabaseAdmin.rpc("try_auto_assign", { 
+        booking_id: booking.id 
       });
       
-      if (e1) {
-        console.error("auto-assign RPC error", e1);
+      if (autoAssignError) {
+        logger.error("auto-assign RPC error", autoAssignError);
       }
       
       if (attempt && attempt.length) {
         const row = attempt[0];
         if (row.assigned) {
           assignedCleaner = row.cleaner_id;
+          finalStatus = 'CONFIRMED';
         }
       }
     } else if (assignedCleaner) {
       // If user manually picked a cleaner, mark as confirmed
-      const { error: updateError } = await sb
-        .from("bookings")
-        .update({ status: "CONFIRMED" })
-        .eq("id", b.id);
+      finalStatus = 'CONFIRMED';
+    }
+
+    // Update booking status
+    const { error: updateError } = await supabaseAdmin
+      .from("bookings")
+      .update({ 
+        status: finalStatus,
+        cleaner_id: assignedCleaner
+      })
+      .eq("id", booking.id);
         
-      if (updateError) {
-        console.error("Error updating booking status:", updateError);
-      }
+    if (updateError) {
+      logger.error("Error updating booking status:", updateError);
+      return NextResponse.json({
+        success: false,
+        error: "UPDATE_FAILED",
+        message: "Failed to update booking status"
+      }, { status: 500 });
     }
 
     return NextResponse.json({
-      ok: true,
-      status: assignedCleaner ? "CONFIRMED" : "PENDING",
-      cleanerId: assignedCleaner ?? null,
+      success: true,
+      message: "Booking confirmed successfully",
+      data: {
+        bookingId: booking.id,
+        status: finalStatus,
+        cleanerId: assignedCleaner,
+        isReadyForPayment: finalStatus === 'READY_FOR_PAYMENT'
+      }
     });
+
   } catch (error) {
-    console.error("Error in confirm booking API:", error);
+    logger.error("Error in confirm booking API:", error);
     return NextResponse.json({ 
-      ok: false, 
-      error: "Internal server error" 
+      success: false, 
+      error: "INTERNAL_ERROR",
+      message: "Internal server error" 
     }, { status: 500 });
   }
 }

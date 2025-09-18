@@ -31,11 +31,13 @@ export function UserAvatar({ profile }: UserAvatarProps) {
     router.refresh()
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  const getInitials = (firstName: string | null, lastName: string | null) => {
+    const first = firstName?.charAt(0) || ''
+    const last = lastName?.charAt(0) || ''
+    return `${first}${last}`.toUpperCase() || 'U'
   }
 
-  const fullName = `${profile.first_name} ${profile.last_name}`.trim()
+  const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User'
 
   return (
     <DropdownMenu>
@@ -63,9 +65,9 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard" className="cursor-pointer">
+          <Link href="/account" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+            <span>Account</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

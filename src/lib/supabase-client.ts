@@ -1,10 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-import { clientEnv } from '@/lib/env'
+import { envClient } from '@/env.client'
+import { Database } from './database.types'
 
 export function createClient() {
-  return createBrowserClient(
-    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
-    clientEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return createBrowserClient<Database>(
+    envClient.NEXT_PUBLIC_SUPABASE_URL,
+    envClient.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 }

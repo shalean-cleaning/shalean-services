@@ -1,6 +1,7 @@
+import 'server-only';
 import { cache } from "react";
 
-import { createClient } from "@/lib/supabase-server";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 export type HomePageData = {
   hero: { title: string; subtitle?: string | null; ctaLabel?: string | null };
@@ -15,72 +16,106 @@ export type HomePageData = {
 };
 
 export const getHomepageData = cache(async (): Promise<HomePageData> => {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServer();
 
-  // Replace the following with the real queries; example shown:
-  const { data: testimonialsRaw } = await supabase
-    .from("testimonials")
-    .select("id, author_name, author_image, quote, rating");
+  // Initialize with default values
+  let testimonials: Array<{
+    id: string;
+    author_name: string;
+    author_image?: string | null;
+    content: string;
+    rating?: number | null;
+  }> = [];
 
-  const testimonials =
-    (testimonialsRaw ?? []).map((r: {
-      id: string;
-      author_name: string;
-      author_image?: string | null;
-      quote: string;
-      rating?: number | null;
-    }) => ({
-      id: r.id,
-      author_name: r.author_name,
-      author_image: r.author_image ?? null,
-      content: r.quote,
-      rating: r.rating ?? null,
-    }));
-
-  const { data: heroRaw } = await supabase
-    .from("content_blocks")
-    .select("title, description")
-    .eq("section_key", "hero")
-    .single();
-
-  const hero = {
-    title: heroRaw?.title ?? "",
-    subtitle: heroRaw?.description ?? null,
-    ctaLabel: null,
+  let hero = {
+    title: "Welcome to Shalean Cleaning Services",
+    subtitle: "Professional cleaning services for your home and office",
+    ctaLabel: "Get Started",
   };
 
-  const { data: blocksRaw } = await supabase
-    .from("content_blocks")
-    .select("id, title, description")
-    .eq("section_key", "how-it-works");
+  let blocks: Array<{ id: string; title: string; body: string }> = [];
 
-  const blocks =
-    (blocksRaw ?? []).map((b: { id: string; title: string; description: string }) => ({
-      id: b.id,
-      title: b.title,
-      body: b.description,
-    }));
+  // Try to fetch testimonials
+  try {
+    const { data: testimonialsRaw, error: testimonialsError } = await supabase
+      .from("testimonials")
+      .select("id, author_name, author_image, quote, rating");
+
+    if (!testimonialsError && testimonialsRaw) {
+      testimonials = testimonialsRaw.map((r: any) => ({
+        id: r.id,
+        author_name: r.author_name,
+        author_image: r.author_image ?? null,
+        content: r.quote,
+        rating: r.rating ?? null,
+      }));
+    }
+  } catch (error) {
+    console.warn('Testimonials table not available:', error);
+  }
+
+  // Try to fetch hero content
+  try {
+    const { data: heroRaw, error: heroError } = await supabase
+      .from("content_blocks")
+      .select("title, description")
+      .eq("content_type", "hero")
+      .single();
+
+    if (!heroError && heroRaw) {
+      hero = {
+        title: heroRaw.title ?? "Welcome to Shalean Cleaning Services",
+        subtitle: heroRaw.description ?? "Professional cleaning services for your home and office",
+        ctaLabel: "Get Started",
+      };
+    }
+  } catch (error) {
+    console.warn('Content blocks table not available:', error);
+  }
+
+  // Try to fetch content blocks
+  try {
+    const { data: blocksRaw, error: blocksError } = await supabase
+      .from("content_blocks")
+      .select("id, title, description")
+      .eq("content_type", "how-it-works");
+
+    if (!blocksError && blocksRaw) {
+      blocks = blocksRaw.map((b: any) => ({
+        id: b.id,
+        title: b.title,
+        body: b.description,
+      }));
+    }
+  } catch (error) {
+    console.warn('Content blocks table not available:', error);
+  }
 
   return { hero, blocks, testimonials };
 });
 
 // Homepage data fetching utilities
 export async function getContentBlocks(sectionKey: string) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
-  const { data, error } = await supabase
-    .from('content_blocks')
-    .select('*')
-    .eq('section_key', sectionKey)
-    .eq('is_active', true)
-    .order('order_index', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('content_blocks')
+      .select('*')
+      .eq('content_type', sectionKey)
+      .eq('is_active', true)
+      .order('order_index', { ascending: true })
 
-  if (error) {
-    console.error('Error fetching content blocks:', error)
+    if (error) {
+      console.warn('Content blocks table not available:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.warn('Content blocks table not available:', error)
     return []
   }
-
-  return data || []
 }
 
 export async function getHeroContent() {
@@ -97,43 +132,53 @@ export async function getWhyChooseUsContent() {
 }
 
 export async function getRecentBlogPosts(limit: number = 3) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
-  const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*')
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-    .limit(limit)
+  try {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false })
+      .limit(limit)
 
-  if (error) {
-    console.error('Error fetching blog posts:', error)
+    if (error) {
+      console.warn('Blog posts table not available:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.warn('Blog posts table not available:', error)
     return []
   }
-
-  return data || []
 }
 
 export async function getFeaturedTestimonials(limit: number = 4) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
-  const { data, error } = await supabase
-    .from('testimonials')
-    .select('*')
-    .eq('is_featured', true)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+  try {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('*')
+      .eq('is_featured', true)
+      .order('created_at', { ascending: false })
+      .limit(limit)
 
-  if (error) {
-    console.error('Error fetching testimonials:', error)
+    if (error) {
+      console.warn('Testimonials table not available:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.warn('Testimonials table not available:', error)
     return []
   }
-
-  return data || []
 }
 
 export async function getTeamMembers() {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
   const { data, error } = await supabase
     .from('profiles')

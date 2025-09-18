@@ -1,7 +1,7 @@
 "use client";
 import SafeImage from "@/components/ui/safe-image";
 import { IMAGES } from "@/lib/images";
-import Link from "next/link";
+import LinkSafe from "@/components/LinkSafe";
 import { 
   Calendar,
   Shield,
@@ -237,18 +237,18 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
                 <MotionItem variants={popCard}>
                   <Button size="lg" asChild className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Link href="/booking" className="flex items-center">
+                    <LinkSafe href="/booking" className="flex items-center">
                       <Calendar className="w-5 h-5 mr-2" />
                       Book a Cleaning
-                    </Link>
+                    </LinkSafe>
                   </Button>
                 </MotionItem>
                 <MotionItem variants={popCard}>
                   <Button size="lg" asChild variant="outline" className="text-lg px-8 py-4 border-2 hover:bg-gray-50 transition-all duration-300">
-                    <Link href="/quote" className="flex items-center">
+                    <LinkSafe href="/quote" className="flex items-center">
                       <Users className="w-5 h-5 mr-2" />
                       Get a Free Quote
-                    </Link>
+                    </LinkSafe>
                   </Button>
                 </MotionItem>
               </div>
@@ -358,10 +358,10 @@ export default function Home() {
           <div className="text-center mt-12">
             <MotionItem variants={popCard}>
               <Button variant="outline" size="lg" asChild>
-                <Link href="#how-it-works">
+                <LinkSafe href="#how-it-works">
                   <Play className="w-5 h-5 mr-2" />
                   See How It Works
-                </Link>
+                </LinkSafe>
               </Button>
             </MotionItem>
           </div>
@@ -434,10 +434,10 @@ export default function Home() {
               
               <MotionItem variants={popCard}>
                 <Button size="lg" asChild className="group">
-                  <Link href="/account">
+                  <LinkSafe href="/account">
                     Explore the Hub
                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  </LinkSafe>
                 </Button>
               </MotionItem>
             </div>
@@ -558,10 +558,10 @@ export default function Home() {
               
               <MotionItem variants={popCard}>
                 <Button size="lg" asChild className="group">
-                  <Link href="/apply">
+                  <LinkSafe href="/apply">
                     Apply to Work
                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  </LinkSafe>
                 </Button>
               </MotionItem>
             </div>
@@ -617,7 +617,7 @@ export default function Home() {
           <StaggerList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogPosts.map((post, index) => (
               <MotionItem key={index} variants={fadeUp}>
-                <Link href={`/blog/${post.slug}`} className="block">
+                <LinkSafe href={`/blog/${post.slug}`} className="block">
                   <article className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
                     <div className="relative h-48 w-full overflow-hidden">
                       <SafeImage
@@ -640,7 +640,7 @@ export default function Home() {
                       </p>
                     </div>
                   </article>
-                </Link>
+                </LinkSafe>
               </MotionItem>
             ))}
           </StaggerList>

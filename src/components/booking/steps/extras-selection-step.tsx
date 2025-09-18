@@ -6,12 +6,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Extra } from '@/lib/database.types';
+import { ServiceItem } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { formatZAR } from '@/lib/format';
 
 interface ExtrasSelectionStepProps {
-  extras: Extra[];
+  extras: ServiceItem[];
   selectedExtras: Array<{
     id: string;
     name: string;
@@ -33,7 +33,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
     return extra?.quantity || 0;
   };
 
-  const handleExtraToggle = (extra: Extra) => {
+  const handleExtraToggle = (extra: ServiceItem) => {
     if (isExtraSelected(extra.id)) {
       removeExtra(extra.id);
     } else {
@@ -41,7 +41,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
     }
   };
 
-  const handleQuantityChange = (extra: Extra, quantity: number) => {
+  const handleQuantityChange = (extra: ServiceItem, quantity: number) => {
     if (quantity <= 0) {
       removeExtra(extra.id);
     } else {
@@ -105,9 +105,6 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="font-medium">Price: {formatZAR(extra.price * 100)}</span>
-                        {extra.duration_minutes > 0 && (
-                          <span>+{extra.duration_minutes} minutes</span>
-                        )}
                       </div>
                     </div>
                   </div>

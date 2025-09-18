@@ -1,14 +1,16 @@
+import 'server-only';
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-import { clientEnv } from '@/lib/env'
+import { env } from '@/env.server'
+import { Database } from './database.types'
 
 export async function createClient() {
   const cookieStore = await cookies()
 
-  return createServerClient(
-    clientEnv.NEXT_PUBLIC_SUPABASE_URL,
-    clientEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  return createServerClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
     {
       cookies: {
         getAll() {

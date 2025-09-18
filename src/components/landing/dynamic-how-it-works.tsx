@@ -1,17 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Calendar, Settings } from "lucide-react";
 
 import { useHowItWorksContent } from "@/hooks/useHomepageData";
-
-const iconMap = {
-  'check-circle': CheckCircle,
-  'calendar': Calendar,
-  'settings': Settings,
-} as const;
-
-type IconName = keyof typeof iconMap;
 
 export default function DynamicHowItWorks() {
   const { data: content, isLoading, isError, error } = useHowItWorksContent();
@@ -133,10 +124,6 @@ export default function DynamicHowItWorks() {
 
         <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
           {steps.map((step, i) => {
-            const IconComponent = step.icon_name && step.icon_name in iconMap 
-              ? iconMap[step.icon_name as IconName] 
-              : null;
-
             return (
               <motion.div
                 key={step.id}
@@ -149,11 +136,6 @@ export default function DynamicHowItWorks() {
                 <div className="text-sm uppercase tracking-wide text-primary/80">Step {i + 1}</div>
                 <h3 className="mt-2 text-lg font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
-                {IconComponent && (
-                  <div className="mt-4 flex justify-center">
-                    <IconComponent className="h-8 w-8 text-primary" />
-                  </div>
-                )}
               </motion.div>
             );
           })}

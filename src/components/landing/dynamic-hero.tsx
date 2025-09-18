@@ -11,7 +11,7 @@ import {
   Calendar,
   Shield
 } from 'lucide-react'
-import Link from 'next/link'
+import LinkSafe from '@/components/LinkSafe'
 
 import { Button } from '@/components/ui/button'
 import { useHeroContent } from '@/hooks/useHomepageData'
@@ -76,17 +76,11 @@ export default function DynamicHero() {
   const title = heroContent?.title || 'All the help your home needs.'
   const description = heroContent?.description || 'Professional cleaning services, trusted housekeepers, and reliable home care solutions. From one-time cleans to full-time help, we\'ve got you covered.'
   
-  const ctaData = heroContent?.metadata as { 
-    cta_primary?: string
-    cta_secondary?: string
-    cta_primary_link?: string
-    cta_secondary_link?: string
-  } || {}
-  
-  const primaryCta = ctaData.cta_primary || 'View Our Services'
-  const secondaryCta = ctaData.cta_secondary || 'Apply to Work'
-  const primaryLink = ctaData.cta_primary_link || '/services'
-  const secondaryLink = ctaData.cta_secondary_link || '/apply'
+  // Use default CTA values since metadata field doesn't exist in content_blocks
+  const primaryCta = 'View Our Services'
+  const secondaryCta = 'Apply to Work'
+  const primaryLink = '/services'
+  const secondaryLink = '/apply'
 
   return (
     <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 py-20 lg:py-32">
@@ -136,14 +130,14 @@ export default function DynamicHero() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Button size="lg" asChild className="text-lg px-8 py-3">
-              <Link href={primaryLink}>
+              <LinkSafe href={primaryLink}>
                 {primaryCta}
-              </Link>
+              </LinkSafe>
             </Button>
             <Button variant="outline" size="lg" asChild className="text-lg px-8 py-3">
-              <Link href={secondaryLink}>
+              <LinkSafe href={secondaryLink}>
                 {secondaryCta}
-              </Link>
+              </LinkSafe>
             </Button>
           </motion.div>
         </div>

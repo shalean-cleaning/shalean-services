@@ -4,16 +4,15 @@ import { Calendar, Clock, Home, Plus, MapPin } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Service, PricingRule } from '@/lib/database.types';
+import { Service } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { formatZAR } from '@/lib/format';
 
 interface BookingSummaryProps {
   service: Service;
-  pricingRules: PricingRule[];
 }
 
-export function BookingSummary({ service: _service, pricingRules: _pricingRules }: BookingSummaryProps) {
+export function BookingSummary({ service: _service }: BookingSummaryProps) {
   const {
     selectedService,
     bedroomCount,

@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import LinkSafe from "@/components/LinkSafe";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
-import { AuthModal } from '@/components/auth/AuthModal';
 import { UserAvatar } from '@/components/auth/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useAuth';
@@ -22,15 +21,12 @@ const NAV = [
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const { user, profile } = useUser();
 
   // Dev-only guard to detect accidental double mounts
   const mounted = useRef(false);
   useEffect(() => {
     if (mounted.current && process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
       console.warn("[SiteHeader] Duplicate header mounted!");
     }
     mounted.current = true;
@@ -47,10 +43,6 @@ export default function SiteHeader() {
 
   const filteredNav = NAV.filter(shouldShowLink);
 
-  const openAuthModal = (mode: 'login' | 'signup') => {
-    setAuthModalMode(mode);
-    setAuthModalOpen(true);
-  };
 
   return (
     <header
@@ -60,10 +52,10 @@ export default function SiteHeader() {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <LinkSafe href="/" className="flex items-center gap-2 shrink-0">
           <div className="h-8 w-8 rounded-xl bg-blue-600" />
           <span className="text-lg font-semibold tracking-tight">Shalean</span>
-        </Link>
+        </LinkSafe>
 
         {/* Nav (desktop) */}
         <nav className="hidden lg:block">
@@ -75,7 +67,7 @@ export default function SiteHeader() {
                   : pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <li key={item.href} className="whitespace-nowrap">
-                  <Link
+                  <LinkSafe
                     href={item.href}
                     className={[
                       "inline-flex items-center rounded-md px-1.5 py-1 text-sm font-medium transition-colors",
@@ -84,7 +76,7 @@ export default function SiteHeader() {
                     aria-current={active ? "page" : undefined}
                   >
                     {item.label}
-                  </Link>
+                  </LinkSafe>
                 </li>
               );
             })}
@@ -93,30 +85,32 @@ export default function SiteHeader() {
 
         {/* CTAs (desktop) */}
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
+          <LinkSafe
             href="/booking"
             className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
           >
             Book a Service
-          </Link>
+          </LinkSafe>
           {user && profile ? (
             <UserAvatar profile={profile} />
           ) : (
             <>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => openAuthModal('login')}
-                className="text-sm font-medium hover:text-blue-700"
-              >
-                Log In
-              </Button>
-              <Button
-                onClick={() => openAuthModal('signup')}
-                className="inline-flex items-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
-              >
-                Sign Up
-              </Button>
+              <LinkSafe href="/auth/login">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-sm font-medium hover:text-blue-700"
+                >
+                  Log In
+                </Button>
+              </LinkSafe>
+              <LinkSafe href="/auth/signup">
+                <Button
+                  className="inline-flex items-center rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                >
+                  Sign Up
+                </Button>
+              </LinkSafe>
             </>
           )}
         </div>
@@ -147,7 +141,7 @@ export default function SiteHeader() {
                       : pathname === item.href || pathname.startsWith(item.href + "/");
                   return (
                     <li key={item.href} className="whitespace-nowrap">
-                      <Link
+                      <LinkSafe
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={[
@@ -157,7 +151,7 @@ export default function SiteHeader() {
                         aria-current={active ? "page" : undefined}
                       >
                         {item.label}
-                      </Link>
+                      </LinkSafe>
                     </li>
                   );
                 })}
@@ -166,13 +160,13 @@ export default function SiteHeader() {
 
             {/* Mobile CTAs */}
             <div className="space-y-3">
-              <Link
+              <LinkSafe
                 href="/booking"
                 className="block w-full rounded-md border px-3 py-2 text-sm font-medium text-center hover:bg-gray-50"
                 onClick={() => setOpen(false)}
               >
                 Book a Service
-              </Link>
+              </LinkSafe>
               
               {user && profile ? (
                 <div className="space-y-3">
@@ -190,38 +184,29 @@ export default function SiteHeader() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      openAuthModal('login');
-                      setOpen(false);
-                    }}
-                  >
-                    Log In
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      openAuthModal('signup');
-                      setOpen(false);
-                    }}
-                  >
-                    Sign Up
-                  </Button>
+                  <LinkSafe href="/auth/login">
+                    <Button 
+                      className="w-full"
+                      onClick={() => setOpen(false)}
+                    >
+                      Log In
+                    </Button>
+                  </LinkSafe>
+                  <LinkSafe href="/auth/signup">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setOpen(false)}
+                    >
+                      Sign Up
+                    </Button>
+                  </LinkSafe>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-      
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        defaultMode={authModalMode}
-      />
     </header>
   );
 }
