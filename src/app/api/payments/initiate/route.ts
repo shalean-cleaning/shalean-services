@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { serverEnv } from "@/lib/env";
+import { env } from "@/env.server";
 
 export const runtime = "nodejs";
 
@@ -119,7 +119,7 @@ async function initializePaystackPayment(
   const response = await fetch(paystackUrl, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${serverEnv.PAYSTACK_SECRET_KEY}`,
+      'Authorization': `Bearer ${env.PAYSTACK_SECRET_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
@@ -267,7 +267,7 @@ export async function POST(req: Request) {
     const reference = generatePaymentReference(bookingId);
 
     // Prepare callback URL
-    const callbackUrl = `${serverEnv.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/booking/payment/callback`;
+    const callbackUrl = `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/booking/payment/callback`;
 
     // Prepare metadata
     const metadata = {

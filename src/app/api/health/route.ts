@@ -1,10 +1,12 @@
+import 'server-only';
 import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { env } from '@/env.server';
 
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_BASE_URL;
-  const url  = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url  = env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   let dbOk = false; let dbErr: string | null = null;
   try {

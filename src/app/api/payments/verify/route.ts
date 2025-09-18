@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { serverEnv } from "@/lib/env";
+import { env } from "@/env.server";
 
 export const runtime = "nodejs";
 
@@ -28,7 +28,7 @@ async function verifyPaystackPayment(reference: string): Promise<{
   const response = await fetch(paystackUrl, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${serverEnv.PAYSTACK_SECRET_KEY}`,
+      'Authorization': `Bearer ${env.PAYSTACK_SECRET_KEY}`,
       'Content-Type': 'application/json',
     },
   });
