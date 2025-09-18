@@ -12,7 +12,7 @@ export const POST = withApiSafe(async (request: Request) => {
   const { 
     email, 
     service_id, 
-    suburb_id, 
+    area_id, 
     bedrooms, 
     bathrooms, 
     frequency, 
@@ -20,9 +20,9 @@ export const POST = withApiSafe(async (request: Request) => {
     total_price 
   } = body
 
-  if (!email || !service_id || !suburb_id || !total_price) {
+  if (!email || !service_id || !area_id || !total_price) {
     return NextResponse.json({ 
-      error: 'Email, service_id, suburb_id, and total_price are required' 
+      error: 'Email, service_id, area_id, and total_price are required' 
     }, { status: 400 })
   }
 
@@ -32,13 +32,12 @@ export const POST = withApiSafe(async (request: Request) => {
     .insert({
       email,
       service_id,
-      suburb_id,
+      area_id,
       bedrooms: bedrooms || 0,
       bathrooms: bathrooms || 0,
       frequency: frequency || 'one-time',
       extras: extras || [],
-      total_price,
-      status: 'pending'
+      total_estimate: total_price
     })
     .select()
     .single()

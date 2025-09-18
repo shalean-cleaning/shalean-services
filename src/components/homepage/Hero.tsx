@@ -1,6 +1,5 @@
 import { getHeroContent } from '@/lib/homepage-data';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ServiceCard } from '@/components/ui/service-card';
 import { MotionSection, StaggerList, MotionItem } from '@/components/anim/MotionComponents';
 import { fadeUp, popCard, slideInRight } from '@/components/anim/motion';

@@ -46,10 +46,27 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
 
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize the booking store with service data
+  // Initialize the booking store with service data and quote state
   useEffect(() => {
     if (!isInitialized && service) {
       setSelectedService(service);
+      
+      // Check for quote state in session storage
+      const quoteState = sessionStorage.getItem('quoteState');
+      if (quoteState) {
+        try {
+          const parsedQuoteState = JSON.parse(quoteState);
+          // Use the new hydrateFromQuote method if available
+          if (typeof (useBookingStore.getState() as any).hydrateFromQuote === 'function') {
+            (useBookingStore.getState() as any).hydrateFromQuote(parsedQuoteState);
+          }
+          // Clear the quote state from session storage
+          sessionStorage.removeItem('quoteState');
+        } catch (error) {
+          console.error('Error parsing quote state:', error);
+        }
+      }
+      
       setIsInitialized(true);
     }
   }, [service, setSelectedService, isInitialized]);

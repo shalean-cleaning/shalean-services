@@ -109,6 +109,7 @@ export interface BookingState {
   // New actions for enhanced booking system
   hydrateFromServer: (booking: Booking & { booking_items?: BookingItem[] }) => void;
   savePartial: (data: Partial<BookingState>) => void;
+  hydrateFromQuote: (quoteState: any) => void;
 }
 
 const initialState = {
@@ -549,6 +550,38 @@ export const useBookingStore = create<BookingState>()(
           if (data.totalPrice !== undefined) newState.totalPrice = data.totalPrice;
           if (data.deliveryFee !== undefined) newState.deliveryFee = data.deliveryFee;
           if (data.currentStep !== undefined) newState.currentStep = data.currentStep;
+          
+          return newState;
+        });
+      },
+
+      hydrateFromQuote: (quoteState) => {
+        set((state) => {
+          // Map quote state to booking store state
+          const newState = { ...state };
+          
+          // Update core fields
+          newState.rooms = {
+            bedrooms: quoteState.bedrooms || 1,
+            bathrooms: quoteState.bathrooms || 1,
+          };
+          newState.extras = quoteState.selectedExtras || [];
+          newState.suburbId = quoteState.areaId;
+          
+          // Update legacy fields for backward compatibility
+          newState.bedroomCount = quoteState.bedrooms || 1;
+          newState.bathroomCount = quoteState.bathrooms || 1;
+          newState.selectedExtras = quoteState.selectedExtras || [];
+          newState.selectedSuburb = quoteState.areaId;
+          
+          // Reset other fields that need to be filled in booking flow
+          newState.selectedDate = null;
+          newState.selectedTime = null;
+          newState.address = '';
+          newState.postcode = '';
+          newState.selectedCleanerId = null;
+          newState.autoAssign = false;
+          newState.currentStep = 1;
           
           return newState;
         });

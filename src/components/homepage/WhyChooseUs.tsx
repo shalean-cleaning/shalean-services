@@ -1,6 +1,6 @@
 import { getWhyChooseUsContent } from '@/lib/homepage-data';
 import { MotionSection, StaggerList, MotionItem } from '@/components/anim/MotionComponents';
-import { fadeUp, popCard } from '@/components/anim/motion';
+import { popCard } from '@/components/anim/motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, FileText, UserCheck } from 'lucide-react';
 

@@ -100,7 +100,7 @@ async function runMigration() {
     console.log('📄 Running migration: 004_add_missing_tables.sql');
     
     // Execute the migration
-    const { data, error } = await supabase.rpc('exec_sql', { sql: migrationSQL });
+    const { error } = await supabase.rpc('exec_sql', { sql: migrationSQL });
     
     if (error) {
       console.error('❌ Migration failed:', error);
