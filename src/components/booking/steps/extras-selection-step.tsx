@@ -6,12 +6,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Extra } from '@/lib/database.types';
+import { ServiceItem } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { formatZAR } from '@/lib/format';
 
 interface ExtrasSelectionStepProps {
-  extras: Extra[];
+  extras: ServiceItem[];
   selectedExtras: Array<{
     id: string;
     name: string;

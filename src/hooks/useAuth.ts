@@ -48,13 +48,18 @@ export function useUser(): AuthUser {
       setUser(user)
 
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
         
-        setProfile(profile)
+        if (error) {
+          console.error('Error fetching profile:', error)
+          setProfile(null)
+        } else {
+          setProfile(profile)
+        }
       } else {
         setProfile(null)
       }
@@ -69,13 +74,18 @@ export function useUser(): AuthUser {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single()
           
-          setProfile(profile)
+          if (error) {
+            console.error('Error fetching profile:', error)
+            setProfile(null)
+          } else {
+            setProfile(profile)
+          }
         } else {
           setProfile(null)
         }

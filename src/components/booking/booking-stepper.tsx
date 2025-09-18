@@ -9,12 +9,12 @@ import { LocationSchedulingStep } from './steps/location-scheduling-step';
 import { RoomsSelectionStep } from './steps/rooms-selection-step';
 import { ServiceSelectionStep } from './steps/service-selection-step';
 import { Button } from '@/components/ui/button';
-import { Service, Extra, Region } from '@/lib/database.types';
+import { Service, ServiceItem, Region } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
 interface BookingStepperProps {
   service: Service;
-  extras: Extra[];
+  extras: ServiceItem[];
   regions: Region[];
 }
 

@@ -296,6 +296,50 @@ export type Database = {
         }
         Relationships: []
       }
+      service_items: {
+        Row: {
+          id: string
+          service_id: string
+          name: string
+          description: string | null
+          price: number
+          is_extra: boolean
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          service_id: string
+          name: string
+          description?: string | null
+          price: number
+          is_extra?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          service_id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          is_extra?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       regions: {
         Row: {
   id: string
@@ -363,6 +407,122 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      content_blocks: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          content_type: string
+          order_index: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          content_type: string
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          content_type?: string
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          excerpt: string | null
+          content: string
+          featured_image: string | null
+          author_id: string
+          published_at: string | null
+          is_published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          excerpt?: string | null
+          content: string
+          featured_image?: string | null
+          author_id: string
+          published_at?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          excerpt?: string | null
+          content?: string
+          featured_image?: string | null
+          author_id?: string
+          published_at?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      testimonials: {
+        Row: {
+          id: string
+          author_name: string
+          author_image: string | null
+          quote: string
+          rating: number | null
+          is_featured: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          author_name: string
+          author_image?: string | null
+          quote: string
+          rating?: number | null
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          author_name?: string
+          author_image?: string | null
+          quote?: string
+          rating?: number | null
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -503,8 +663,12 @@ export type Booking = Database['public']['Tables']['bookings']['Row']
 export type BookingItem = Database['public']['Tables']['booking_items']['Row']
 export type Cleaner = Database['public']['Tables']['cleaners']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
+export type ServiceItem = Database['public']['Tables']['service_items']['Row']
 export type Region = Database['public']['Tables']['regions']['Row']
 export type Suburb = Database['public']['Tables']['suburbs']['Row']
+export type ContentBlock = Database['public']['Tables']['content_blocks']['Row']
+export type BlogPost = Database['public']['Tables']['blog_posts']['Row']
+export type Testimonial = Database['public']['Tables']['testimonials']['Row']
 
 // View types
 export type BookingDetailsView = Database['public']['Views']['booking_details_view']['Row']
@@ -516,8 +680,12 @@ export type BookingInsert = Database['public']['Tables']['bookings']['Insert']
 export type BookingItemInsert = Database['public']['Tables']['booking_items']['Insert']
 export type CleanerInsert = Database['public']['Tables']['cleaners']['Insert']
 export type ServiceInsert = Database['public']['Tables']['services']['Insert']
+export type ServiceItemInsert = Database['public']['Tables']['service_items']['Insert']
 export type RegionInsert = Database['public']['Tables']['regions']['Insert']
 export type SuburbInsert = Database['public']['Tables']['suburbs']['Insert']
+export type ContentBlockInsert = Database['public']['Tables']['content_blocks']['Insert']
+export type BlogPostInsert = Database['public']['Tables']['blog_posts']['Insert']
+export type TestimonialInsert = Database['public']['Tables']['testimonials']['Insert']
 
 // Update types
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
@@ -525,8 +693,12 @@ export type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 export type BookingItemUpdate = Database['public']['Tables']['booking_items']['Update']
 export type CleanerUpdate = Database['public']['Tables']['cleaners']['Update']
 export type ServiceUpdate = Database['public']['Tables']['services']['Update']
+export type ServiceItemUpdate = Database['public']['Tables']['service_items']['Update']
 export type RegionUpdate = Database['public']['Tables']['regions']['Update']
 export type SuburbUpdate = Database['public']['Tables']['suburbs']['Update']
+export type ContentBlockUpdate = Database['public']['Tables']['content_blocks']['Update']
+export type BlogPostUpdate = Database['public']['Tables']['blog_posts']['Update']
+export type TestimonialUpdate = Database['public']['Tables']['testimonials']['Update']
 
 // Enum types
 export type UserRole = Database['public']['Enums']['user_role']
