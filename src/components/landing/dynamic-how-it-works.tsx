@@ -139,11 +139,6 @@ export default function DynamicHowItWorks() {
                 <div className="text-sm uppercase tracking-wide text-primary/80">Step {i + 1}</div>
                 <h3 className="mt-2 text-lg font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
-                {IconComponent && (
-                  <div className="mt-4 flex justify-center">
-                    <IconComponent className="h-8 w-8 text-primary" />
-                  </div>
-                )}
               </motion.div>
             );
           })}
