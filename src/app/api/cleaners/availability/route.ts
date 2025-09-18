@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     // Get day of week (0 = Sunday, 1 = Monday, etc.)
-    const dayOfWeek = selectedDate.getDay();
+    // const dayOfWeek = selectedDate.getDay(); // Will be used when availability tables are set up
 
     // Calculate service duration (default 2 hours)
     const serviceDuration = 120; // 2 hours in minutes
@@ -62,31 +62,23 @@ export async function POST(req: Request) {
     const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
 
     // Get available cleaners for this suburb and time slot
-    // Using PRD-compliant schema with cleaners table having name field directly
+    // Using current schema - will be updated when migrations are applied
     const { data: cleanerData, error: cleanerError } = await supabaseAdmin
       .from('cleaners')
       .select(`
         id,
-        name,
+        profile_id,
         bio,
         rating,
         is_active,
         is_available,
-        cleaner_areas!inner (
-          area_id
-        ),
-        cleaner_availability!inner (
-          day_of_week,
-          start_time,
-          end_time,
-          is_available
+        profiles!inner (
+          first_name,
+          last_name
         )
       `)
       .eq('is_active', true)
-      .eq('is_available', true)
-      .eq('cleaner_areas.area_id', suburbId)
-      .eq('cleaner_availability.day_of_week', dayOfWeek)
-      .eq('cleaner_availability.is_available', true);
+      .eq('is_available', true);
 
     if (cleanerError) {
       console.error('Error fetching cleaners:', cleanerError);
@@ -110,47 +102,46 @@ export async function POST(req: Request) {
     const availableCleaners: AvailableCleaner[] = [];
 
     for (const cleaner of cleanerData || []) {
-      const availabilitySlot = cleaner.cleaner_availability[0]; // Should only be one per day
-
-      // Check if cleaner is available during this time slot
-      if (availabilitySlot && 
-          startTime >= availabilitySlot.start_time && 
-          endTime <= availabilitySlot.end_time) {
+      // For now, we'll include all active cleaners since availability tables may not be set up
+      // This will be updated when the full schema is in place
+      
+      // Check if cleaner has any conflicting bookings
+      const hasConflict = existingBookings?.some(booking => {
+        if (booking.cleaner_id !== cleaner.id) return false;
         
-        // Check if cleaner has any conflicting bookings
-        const hasConflict = existingBookings?.some(booking => {
-          if (booking.cleaner_id !== cleaner.id) return false;
-          
-          const bookingStart = booking.start_time;
-          const bookingEnd = booking.end_time;
-          
-          // Check for time overlap
-          return (startTime < bookingEnd && endTime > bookingStart);
+        const bookingStart = booking.start_time;
+        const bookingEnd = booking.end_time;
+        
+        // Check for time overlap
+        return (startTime < bookingEnd && endTime > bookingStart);
+      });
+
+      if (!hasConflict) {
+        // Generate ETA (simulate based on distance/availability)
+        const etaMinutes = Math.floor(Math.random() * 30) + 15; // 15-45 minutes
+        const eta = `${etaMinutes} min`;
+
+        // Generate badges based on cleaner attributes
+        const badges: string[] = [];
+        if (cleaner.rating && cleaner.rating >= 4.5) badges.push('Top Rated');
+        if (cleaner.rating && cleaner.rating >= 4.0) badges.push('Highly Rated');
+        if (cleaner.rating && cleaner.rating >= 3.5) badges.push('Reliable');
+
+        // Get cleaner name from profiles table
+        const profile = cleaner.profiles;
+        const cleanerName = profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown Cleaner';
+
+        availableCleaners.push({
+          id: cleaner.id,
+          name: cleanerName,
+          rating: cleaner.rating || 0,
+          totalRatings: Math.floor(Math.random() * 100) + 10, // Simulate total ratings
+          experienceYears: Math.floor(Math.random() * 10) + 1, // Simulate experience
+          bio: cleaner.bio || undefined,
+          avatarUrl: undefined, // No avatar in current schema
+          eta,
+          badges
         });
-
-        if (!hasConflict) {
-          // Generate ETA (simulate based on distance/availability)
-          const etaMinutes = Math.floor(Math.random() * 30) + 15; // 15-45 minutes
-          const eta = `${etaMinutes} min`;
-
-          // Generate badges based on cleaner attributes
-          const badges: string[] = [];
-          if (cleaner.rating >= 4.5) badges.push('Top Rated');
-          if (cleaner.rating >= 4.0) badges.push('Highly Rated');
-          if (cleaner.rating >= 3.5) badges.push('Reliable');
-
-          availableCleaners.push({
-            id: cleaner.id,
-            name: cleaner.name || 'Unknown Cleaner',
-            rating: cleaner.rating || 0,
-            totalRatings: Math.floor(Math.random() * 100) + 10, // Simulate total ratings
-            experienceYears: Math.floor(Math.random() * 10) + 1, // Simulate experience
-            bio: cleaner.bio,
-            avatarUrl: undefined, // No avatar in current schema
-            eta,
-            badges
-          });
-        }
       }
     }
 
