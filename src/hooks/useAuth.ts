@@ -11,12 +11,12 @@ export type UserRole = 'CUSTOMER' | 'CLEANER' | 'ADMIN'
 export interface UserProfile {
   id: string
   email: string
-  first_name: string
-  last_name: string
+  first_name: string | null
+  last_name: string | null
   full_name: string
-  phone?: string
+  phone?: string | null
   role: UserRole
-  avatar_url?: string
+  avatar_url?: string | null
   is_active: boolean
   created_at: string
   updated_at: string
