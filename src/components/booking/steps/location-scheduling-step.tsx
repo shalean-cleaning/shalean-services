@@ -10,7 +10,7 @@ import { DateTimePicker } from '@/components/booking/date-time-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Region, Suburb, Area } from '@/lib/database.types';
+import { Region, Area } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useAvailability } from '@/hooks/useAvailability';
 
@@ -30,9 +30,8 @@ interface LocationSchedulingStepProps {
   regions: Region[];
 }
 
-export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps) {
+export function LocationSchedulingStep({ regions: _regions }: LocationSchedulingStepProps) {
   const {
-    selectedRegion,
     selectedSuburb,
     selectedArea,
     selectedDate,
@@ -41,8 +40,6 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     address2,
     postcode,
     specialInstructions,
-    setSelectedRegion,
-    setSelectedSuburb,
     setSelectedArea,
     setSelectedDate,
     setSelectedTime,
@@ -59,7 +56,6 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     control,
     formState: { errors, isValid, isSubmitting },

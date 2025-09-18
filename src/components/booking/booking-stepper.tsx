@@ -34,7 +34,6 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
     bedroomCount,
     bathroomCount,
     selectedExtras,
-    selectedRegion,
     selectedSuburb,
     selectedDate,
     selectedTime,
