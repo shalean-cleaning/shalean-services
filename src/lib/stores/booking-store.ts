@@ -332,7 +332,17 @@ export const useBookingStore = create<BookingState>()(
       },
       
       autoAssignCleaner: () => {
-        set({ autoAssign: true, selectedCleanerId: null });
+        const { availableCleaners } = get();
+        // PRD requirement: "picks the first available cleaner"
+        if (availableCleaners.length > 0) {
+          const firstCleaner = availableCleaners[0];
+          set({ 
+            autoAssign: true, 
+            selectedCleanerId: firstCleaner.id 
+          });
+        } else {
+          set({ autoAssign: true, selectedCleanerId: null });
+        }
       },
       
       calculateTotalPrice: () => {

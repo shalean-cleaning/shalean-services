@@ -73,7 +73,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       }
       return text ? JSON.parse(text) : { cleaners: [] };
     })
-    .then((data) => setAvailableCleaners(Array.isArray(data.cleaners) ? data.cleaners : data))
+    .then((data) => setAvailableCleaners(Array.isArray(data.cleaners) ? data.cleaners : []))
     .catch((err) => {
       if (err.name !== "AbortError") {
         setError("We couldn't load available cleaners. Please adjust date or time and try again.");
@@ -91,8 +91,8 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
   };
 
   const handleAutoAssign = () => {
-    setAutoAssign(true);
-    // setSelectedCleanerId is already handled in the store to clear selectedCleanerId when auto-assigning
+    const { autoAssignCleaner } = useBookingStore.getState();
+    autoAssignCleaner(); // This will pick the first available cleaner as per PRD
   };
 
   const canContinue = !!selectedCleanerId || autoAssign;
