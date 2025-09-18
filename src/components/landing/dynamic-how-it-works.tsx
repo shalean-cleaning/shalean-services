@@ -1,17 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Calendar, Settings } from "lucide-react";
 
 import { useHowItWorksContent } from "@/hooks/useHomepageData";
-
-const iconMap = {
-  'check-circle': CheckCircle,
-  'calendar': Calendar,
-  'settings': Settings,
-} as const;
-
-type IconName = keyof typeof iconMap;
 
 export default function DynamicHowItWorks() {
   const { data: content, isLoading, isError, error } = useHowItWorksContent();
