@@ -105,9 +105,6 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="font-medium">Price: {formatZAR(extra.price * 100)}</span>
-                        {extra.duration_minutes > 0 && (
-                          <span>+{extra.duration_minutes} minutes</span>
-                        )}
                       </div>
                     </div>
                   </div>
