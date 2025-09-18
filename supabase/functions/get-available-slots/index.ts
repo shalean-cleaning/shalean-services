@@ -71,25 +71,22 @@ serve(async (req) => {
     }
 
     // Get available cleaners for this suburb
-    const { data: cleanerLocations, error: locationError } = await supabaseClient
-      .from('cleaner_locations')
+    // Note: Using current schema with suburbs table and cleaner_availability table
+    const { data: cleanerData, error: locationError } = await supabaseClient
+      .from('cleaners')
       .select(`
-        cleaner_id,
-        cleaners!inner (
-          id,
-          is_available,
-          availability_slots!inner (
-            day_of_week,
-            start_time,
-            end_time,
-            is_active
-          )
+        id,
+        is_available,
+        cleaner_availability!inner (
+          day_of_week,
+          start_time,
+          end_time,
+          is_available
         )
       `)
-      .eq('suburb_id', suburb_id)
-      .eq('cleaners.is_available', true)
-      .eq('cleaners.availability_slots.day_of_week', dayOfWeek)
-      .eq('cleaners.availability_slots.is_active', true)
+      .eq('is_available', true)
+      .eq('cleaner_availability.day_of_week', dayOfWeek)
+      .eq('cleaner_availability.is_available', true)
 
     if (locationError) {
       console.error('Error fetching cleaner locations:', locationError)
@@ -131,9 +128,8 @@ serve(async (req) => {
       const availableCleaners = []
 
       // Check each cleaner's availability for this time slot
-      for (const location of cleanerLocations || []) {
-        const cleaner = location.cleaners
-        const availabilitySlot = cleaner.availability_slots[0] // Should only be one per day
+      for (const cleaner of cleanerData || []) {
+        const availabilitySlot = cleaner.cleaner_availability[0] // Should only be one per day
 
         // Check if cleaner is available during this time slot
         if (availabilitySlot && 

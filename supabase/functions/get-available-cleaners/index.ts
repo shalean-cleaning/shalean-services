@@ -94,36 +94,33 @@ serve(async (req) => {
     const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
 
     // Get available cleaners for this suburb and time slot
+    // Note: Using current schema with suburbs table and cleaner_availability table
     const { data: cleanerData, error: cleanerError } = await supabaseClient
-      .from('cleaner_locations')
+      .from('cleaners')
       .select(`
-        cleaner_id,
-        cleaners!inner (
-          id,
-          profile_id,
-          bio,
-          experience_years,
-          hourly_rate,
-          is_available,
-          rating,
-          total_ratings,
-          profiles!inner (
-            first_name,
-            last_name,
-            avatar_url
-          ),
-          availability_slots!inner (
-            day_of_week,
-            start_time,
-            end_time,
-            is_active
-          )
+        id,
+        profile_id,
+        bio,
+        experience_years,
+        hourly_rate,
+        is_available,
+        rating,
+        total_ratings,
+        profiles!inner (
+          first_name,
+          last_name,
+          avatar_url
+        ),
+        cleaner_availability!inner (
+          day_of_week,
+          start_time,
+          end_time,
+          is_available
         )
       `)
-      .eq('suburb_id', suburb_id)
-      .eq('cleaners.is_available', true)
-      .eq('cleaners.availability_slots.day_of_week', dayOfWeek)
-      .eq('cleaners.availability_slots.is_active', true)
+      .eq('is_available', true)
+      .eq('cleaner_availability.day_of_week', dayOfWeek)
+      .eq('cleaner_availability.is_available', true)
 
     if (cleanerError) {
       console.error('Error fetching cleaners:', cleanerError)
@@ -158,10 +155,9 @@ serve(async (req) => {
     // Filter available cleaners
     const availableCleaners: AvailableCleaner[] = []
 
-    for (const location of cleanerData || []) {
-      const cleaner = location.cleaners
+    for (const cleaner of cleanerData || []) {
       const profile = cleaner.profiles
-      const availabilitySlot = cleaner.availability_slots[0] // Should only be one per day
+      const availabilitySlot = cleaner.cleaner_availability[0] // Should only be one per day
 
       // Check if cleaner is available during this time slot
       if (availabilitySlot && 

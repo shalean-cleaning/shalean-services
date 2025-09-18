@@ -420,6 +420,95 @@ export type Database = {
           }
         ]
       }
+      areas: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          price_adjustment_pct: number
+          active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          price_adjustment_pct?: number
+          active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          price_adjustment_pct?: number
+          active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      cleaner_areas: {
+        Row: {
+          cleaner_id: string
+          area_id: string
+        }
+        Insert: {
+          cleaner_id: string
+          area_id: string
+        }
+        Update: {
+          cleaner_id?: string
+          area_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cleaner_areas_cleaner_id_fkey"
+            columns: ["cleaner_id"]
+            isOneToOne: false
+            referencedRelation: "cleaners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cleaner_areas_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      cleaner_availability: {
+        Row: {
+          cleaner_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available: boolean
+        }
+        Insert: {
+          cleaner_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available?: boolean
+        }
+        Update: {
+          cleaner_id?: string
+          day_of_week?: number
+          start_time?: string
+          end_time?: string
+          is_available?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cleaner_availability_cleaner_id_fkey"
+            columns: ["cleaner_id"]
+            isOneToOne: false
+            referencedRelation: "cleaners"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       content_blocks: {
         Row: {
           id: string
@@ -747,6 +836,9 @@ export type Service = Database['public']['Tables']['services']['Row']
 export type ServiceItem = Database['public']['Tables']['service_items']['Row']
 export type Region = Database['public']['Tables']['regions']['Row']
 export type Suburb = Database['public']['Tables']['suburbs']['Row']
+export type Area = Database['public']['Tables']['areas']['Row']
+export type CleanerArea = Database['public']['Tables']['cleaner_areas']['Row']
+export type CleanerAvailability = Database['public']['Tables']['cleaner_availability']['Row']
 export type ContentBlock = Database['public']['Tables']['content_blocks']['Row']
 export type BlogPost = Database['public']['Tables']['blog_posts']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']
@@ -765,6 +857,9 @@ export type ServiceInsert = Database['public']['Tables']['services']['Insert']
 export type ServiceItemInsert = Database['public']['Tables']['service_items']['Insert']
 export type RegionInsert = Database['public']['Tables']['regions']['Insert']
 export type SuburbInsert = Database['public']['Tables']['suburbs']['Insert']
+export type AreaInsert = Database['public']['Tables']['areas']['Insert']
+export type CleanerAreaInsert = Database['public']['Tables']['cleaner_areas']['Insert']
+export type CleanerAvailabilityInsert = Database['public']['Tables']['cleaner_availability']['Insert']
 export type ContentBlockInsert = Database['public']['Tables']['content_blocks']['Insert']
 export type BlogPostInsert = Database['public']['Tables']['blog_posts']['Insert']
 export type TestimonialInsert = Database['public']['Tables']['testimonials']['Insert']
@@ -779,6 +874,9 @@ export type ServiceUpdate = Database['public']['Tables']['services']['Update']
 export type ServiceItemUpdate = Database['public']['Tables']['service_items']['Update']
 export type RegionUpdate = Database['public']['Tables']['regions']['Update']
 export type SuburbUpdate = Database['public']['Tables']['suburbs']['Update']
+export type AreaUpdate = Database['public']['Tables']['areas']['Update']
+export type CleanerAreaUpdate = Database['public']['Tables']['cleaner_areas']['Update']
+export type CleanerAvailabilityUpdate = Database['public']['Tables']['cleaner_availability']['Update']
 export type ContentBlockUpdate = Database['public']['Tables']['content_blocks']['Update']
 export type BlogPostUpdate = Database['public']['Tables']['blog_posts']['Update']
 export type TestimonialUpdate = Database['public']['Tables']['testimonials']['Update']

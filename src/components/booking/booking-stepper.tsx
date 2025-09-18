@@ -92,7 +92,7 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 3:
         return true; // Extras are optional
       case 4:
-        return !!(selectedRegion && selectedSuburb && selectedDate && selectedTime && address && postcode);
+        return !!(selectedSuburb && selectedDate && selectedTime && address && postcode);
       case 5:
         return !!selectedCleanerId || autoAssign;
       default:

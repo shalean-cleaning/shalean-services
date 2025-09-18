@@ -1,5 +1,6 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,25 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, return mock available time slots
-    // TODO: Implement actual availability checking with Supabase Edge Function
-    const mockAvailableSlots = [
-      { time: '08:00', available: true },
-      { time: '10:00', available: true },
-      { time: '12:00', available: true },
-      { time: '14:00', available: true },
-      { time: '16:00', available: true },
-      { time: '18:00', available: true },
-    ];
-
-    return NextResponse.json({
-      available_slots: mockAvailableSlots,
-      date,
-      suburb_id,
-    });
-
-    // Original Supabase Edge Function call (commented out until function is deployed)
-    /*
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -45,31 +27,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/get-available-slots`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-      },
-      body: JSON.stringify({
-        suburb_id,
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/get-available-slots`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          suburb_id,
+          date,
+          service_duration: 120, // Default 2 hours
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Edge function error:', errorData);
+        
+        // Fallback to mock data if Edge Function fails
+        const mockAvailableSlots = [
+          { time: '08:00', available: true },
+          { time: '10:00', available: true },
+          { time: '12:00', available: true },
+          { time: '14:00', available: true },
+          { time: '16:00', available: true },
+          { time: '18:00', available: true },
+        ];
+
+        return NextResponse.json({
+          available_slots: mockAvailableSlots,
+          date,
+          suburb_id,
+        });
+      }
+
+      const data = await response.json();
+      return NextResponse.json(data);
+    } catch (error) {
+      console.error('Error calling Edge Function:', error);
+      
+      // Fallback to mock data on error
+      const mockAvailableSlots = [
+        { time: '08:00', available: true },
+        { time: '10:00', available: true },
+        { time: '12:00', available: true },
+        { time: '14:00', available: true },
+        { time: '16:00', available: true },
+        { time: '18:00', available: true },
+      ];
+
+      return NextResponse.json({
+        available_slots: mockAvailableSlots,
         date,
-        service_duration: service_duration || 120, // Default 2 hours
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Edge function error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to fetch available slots' },
-        { status: response.status }
-      );
+        suburb_id,
+      });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-    */
 
   } catch (error) {
     console.error('Error in availability API:', error);

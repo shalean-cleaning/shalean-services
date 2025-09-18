@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MapPin, Home } from 'lucide-react';
+import { MapPin, Home, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -10,12 +10,12 @@ import { DateTimePicker } from '@/components/booking/date-time-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Region, Suburb } from '@/lib/database.types';
+import { Region, Suburb, Area } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { useAvailability } from '@/hooks/useAvailability';
 
 const locationSchema = z.object({
-  region: z.string().min(1, 'Please select a region'),
-  suburb: z.string().min(1, 'Please select a suburb'),
+  area: z.string().min(1, 'Please select a service area'),
   address: z.string().min(5, 'Please enter a valid address'),
   address2: z.string().optional(),
   postcode: z.string().min(4, 'Please enter a valid postcode'),
@@ -34,6 +34,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
   const {
     selectedRegion,
     selectedSuburb,
+    selectedArea,
     selectedDate,
     selectedTime,
     address,
@@ -42,6 +43,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     specialInstructions,
     setSelectedRegion,
     setSelectedSuburb,
+    setSelectedArea,
     setSelectedDate,
     setSelectedTime,
     setAddress,
@@ -51,10 +53,8 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     setCurrentStep,
   } = useBookingStore();
 
-  const [suburbs, setSuburbs] = useState<Suburb[]>([]);
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
-  const [loadingSuburbs, setLoadingSuburbs] = useState(false);
-  const [loadingTimes, setLoadingTimes] = useState(false);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
 
   const {
     register,
@@ -67,8 +67,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     resolver: zodResolver(locationSchema),
     mode: "onChange",
     defaultValues: {
-      region: selectedRegion || '',
-      suburb: selectedSuburb || '',
+      area: selectedArea || selectedSuburb || '', // Use selectedArea first, fallback to selectedSuburb
       address: address || '',
       address2: address2 || '',
       postcode: postcode || '',
@@ -78,78 +77,34 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     },
   });
 
-  const watchedRegion = watch('region');
+  const watchedArea = watch('area');
   const watchedDate = watch('date');
-  const watchedSuburb = watch('suburb');
 
-  // Fetch suburbs when region changes
-  useEffect(() => {
-    if (watchedRegion) {
-      setLoadingSuburbs(true);
-      fetch(`/api/suburbs?region_id=${watchedRegion}`)
-        .then(res => res.json())
-        .then(data => {
-          setSuburbs(data);
-          setLoadingSuburbs(false);
-        })
-        .catch(err => {
-          console.error('Error fetching suburbs:', err);
-          setLoadingSuburbs(false);
-        });
-    } else {
-      setSuburbs([]);
-    }
-  }, [watchedRegion]);
+  // Use the custom availability hook
+  const { availableTimes, loading: loadingTimes, error: availabilityError } = useAvailability(
+    watchedArea,
+    watchedDate
+  );
 
-  // Fetch available times when date changes
+  // Fetch areas on component mount
   useEffect(() => {
-    if (watchedDate && watchedSuburb) {
-      setLoadingTimes(true);
-      
-      fetch('/api/availability', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          suburb_id: watchedSuburb,
-          date: watchedDate,
-          service_duration: 120, // 2 hours default
-        }),
+    setLoadingAreas(true);
+    fetch('/api/areas')
+      .then(res => res.json())
+      .then(data => {
+        setAreas(data);
+        setLoadingAreas(false);
       })
-        .then(res => {
-          if (res.ok) {
-            return res.json();
-          } else {
-            // If API fails, use default time slots
-            console.warn('Availability API failed, using default time slots');
-            return { available_slots: [] };
-          }
-        })
-        .then(data => {
-          if (data.available_slots && data.available_slots.length > 0) {
-            setAvailableTimes(data.available_slots.map((slot: { time: string }) => slot.time));
-          } else {
-            // Use default time slots if no specific availability
-            setAvailableTimes([]);
-          }
-          setLoadingTimes(false);
-        })
-        .catch(err => {
-          console.error('Error fetching available times:', err);
-          // Use default time slots on error
-          setAvailableTimes([]);
-          setLoadingTimes(false);
-        });
-    } else {
-      setAvailableTimes([]);
-    }
-  }, [watchedDate, watchedSuburb]);
+      .catch(err => {
+        console.error('Error fetching areas:', err);
+        setLoadingAreas(false);
+      });
+  }, []);
+
 
   const onSubmit = async (data: LocationFormData) => {
     // Persist all form data to the store
-    setSelectedRegion(data.region);
-    setSelectedSuburb(data.suburb);
+    setSelectedArea(data.area); // Use the new setSelectedArea function
     setSelectedDate(data.date);
     setSelectedTime(data.time);
     setAddress(data.address);
@@ -165,7 +120,7 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
     setCurrentStep(3);
   };
 
-  const ready = !loadingSuburbs && !loadingTimes;
+  const ready = !loadingAreas && !loadingTimes;
 
   return (
     <div className="space-y-6">
@@ -184,74 +139,38 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Region *
-                </label>
-                <Controller
-                  name="region"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setValue('suburb', '');
-                        setSelectedRegion(value);
-                      }}
-                    >
-                      <SelectTrigger className={errors.region ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="Select your region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {regions.map((region) => (
-                          <SelectItem key={region.id} value={region.id}>
-                            {region.name}, {region.state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.region && (
-                  <p className="text-red-500 text-sm mt-1">{errors.region.message}</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Area *
+              </label>
+              <Controller
+                name="area"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedArea(value); // Use the new setSelectedArea function
+                    }}
+                    disabled={loadingAreas}
+                  >
+                    <SelectTrigger className={errors.area ? 'border-red-500' : ''}>
+                      <SelectValue placeholder={loadingAreas ? "Loading..." : "Select your service area"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map((area) => (
+                        <SelectItem key={area.id} value={area.id}>
+                          {area.name} {area.postcode && `(${area.postcode})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Suburb *
-                </label>
-                <Controller
-                  name="suburb"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedSuburb(value);
-                      }}
-                      disabled={!watchedRegion || loadingSuburbs}
-                    >
-                      <SelectTrigger className={errors.suburb ? 'border-red-500' : ''}>
-                        <SelectValue placeholder={loadingSuburbs ? "Loading..." : "Select your suburb"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {suburbs.map((suburb) => (
-                          <SelectItem key={suburb.id} value={suburb.id}>
-                            {suburb.name} {suburb.postcode && `(${suburb.postcode})`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.suburb && (
-                  <p className="text-red-500 text-sm mt-1">{errors.suburb.message}</p>
-                )}
-              </div>
+              />
+              {errors.area && (
+                <p className="text-red-500 text-sm mt-1">{errors.area.message}</p>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -298,53 +217,68 @@ export function LocationSchedulingStep({ regions }: LocationSchedulingStepProps)
           </CardContent>
         </Card>
 
-        {/* Date & Time Selection */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date & Time *
-            </label>
-            <Controller
-              name="date"
-              control={control}
-              render={({ field }) => (
-                <Controller
-                  name="time"
-                  control={control}
-                  render={({ field: timeField }) => (
-                    <DateTimePicker
-                      selectedDate={field.value}
-                      selectedTime={timeField.value}
-                      onDateChange={(date) => {
-                        field.onChange(date);
-                        setSelectedDate(date);
-                        // Reset time when date changes
-                        timeField.onChange('');
-                        setSelectedTime(null);
-                      }}
-                      onTimeChange={(time) => {
-                        timeField.onChange(time);
-                        setSelectedTime(time);
-                      }}
-                      availableTimes={availableTimes}
-                      loadingTimes={loadingTimes}
-                    />
+            {/* Date & Time Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Date & Time Selection
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date & Time *
+              </label>
+              <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
+                  <Controller
+                    name="time"
+                    control={control}
+                    render={({ field: timeField }) => (
+                      <DateTimePicker
+                        selectedDate={field.value}
+                        selectedTime={timeField.value}
+                        onDateChange={(date) => {
+                          field.onChange(date);
+                          setSelectedDate(date);
+                          // Reset time when date changes
+                          timeField.onChange('');
+                          setSelectedTime(null);
+                        }}
+                        onTimeChange={(time) => {
+                          timeField.onChange(time);
+                          setSelectedTime(time);
+                        }}
+                        availableTimes={availableTimes}
+                        loadingTimes={loadingTimes}
+                      />
+                    )}
+                  />
+                )}
+              />
+              {(errors.date || errors.time) && (
+                <div className="mt-2">
+                  {errors.date && (
+                    <p className="text-red-500 text-sm">{errors.date.message}</p>
                   )}
-                />
+                  {errors.time && (
+                    <p className="text-red-500 text-sm">{errors.time.message}</p>
+                  )}
+                </div>
               )}
-            />
-            {(errors.date || errors.time) && (
-              <div className="mt-2">
-                {errors.date && (
-                  <p className="text-red-500 text-sm">{errors.date.message}</p>
-                )}
-                {errors.time && (
-                  <p className="text-red-500 text-sm">{errors.time.message}</p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+              {availabilityError && (
+                <div className="mt-2">
+                  <p className="text-amber-600 text-sm">
+                    ⚠️ Unable to load real-time availability. Showing default time slots.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Special Instructions */}
         <Card>

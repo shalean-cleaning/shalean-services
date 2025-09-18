@@ -48,6 +48,15 @@ export function DateTimePicker({
     return slots;
   };
 
+  // Format time for display
+  const formatTimeDisplay = (time: string) => {
+    const [hour, minute] = time.split(':');
+    const hourNum = parseInt(hour);
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
+    return `${displayHour}:${minute} ${period}`;
+  };
+
   const allTimeSlots = generateTimeSlots();
 
   // Handle date selection
@@ -211,7 +220,7 @@ export function DateTimePicker({
                                 : 'opacity-50 cursor-not-allowed'
                           }`}
                         >
-                          {time}
+                          {formatTimeDisplay(time)}
                         </Button>
                       );
                     })}

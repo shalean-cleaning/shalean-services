@@ -46,6 +46,7 @@ export interface BookingState {
   }>;
   selectedRegion: string | null;
   selectedSuburb: string | null;
+  selectedArea: string | null; // New field for PRD compliance
   selectedDate: string | null;
   selectedTime: string | null;
   address: string;
@@ -79,6 +80,7 @@ export interface BookingState {
   updateExtraQuantity: (extraId: string, quantity: number) => void;
   setSelectedRegion: (regionId: string | null) => void;
   setSelectedSuburb: (suburbId: string | null) => void;
+  setSelectedArea: (areaId: string | null) => void;
   setSelectedDate: (date: string | null) => void;
   setSelectedTime: (time: string | null) => void;
   setAddress: (address: string) => void;
@@ -145,6 +147,7 @@ const initialState = {
   selectedExtras: [],
   selectedRegion: null,
   selectedSuburb: null,
+  selectedArea: null,
   selectedDate: null,
   selectedTime: null,
   address: '',
@@ -272,6 +275,32 @@ export const useBookingStore = create<BookingState>()(
       
       setSelectedTime: (time) => {
         set({ selectedTime: time });
+      },
+      
+      setSelectedArea: (areaId) => {
+        set({ 
+          selectedArea: areaId,
+          selectedSuburb: areaId, // Map area to suburb for backward compatibility
+          suburbId: areaId, // Update core field too
+        });
+        // Fetch delivery fee for the selected area
+        if (areaId) {
+          fetch(`/api/areas`)
+            .then(res => res.json())
+            .then(areas => {
+              const area = areas.find((a: { id: string; delivery_fee: number }) => a.id === areaId);
+              if (area) {
+                set({ deliveryFee: area.delivery_fee || 0 });
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching area delivery fee:', err);
+              set({ deliveryFee: 0 });
+            });
+        } else {
+          set({ deliveryFee: 0 });
+        }
+        get().calculateTotalPrice();
       },
       
       setAddress: (address) => {
