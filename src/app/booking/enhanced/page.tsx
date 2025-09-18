@@ -62,7 +62,7 @@ export default function EnhancedBookingPage() {
     }
   }
 
-  const handleBookingCreated = (bookingId: string) => {
+  const handleBookingCreated = (_bookingId: string) => {
     // Refresh the bookings list
     handleLoadBookings()
   }
