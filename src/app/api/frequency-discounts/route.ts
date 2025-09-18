@@ -10,7 +10,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('frequency_discounts')
       .select('*')
-      .eq('active_from', '<=', new Date().toISOString())
+      .lte('active_from', new Date().toISOString())
       .or(`active_to.is.null,active_to.gte.${new Date().toISOString()}`)
       .order('frequency');
 
