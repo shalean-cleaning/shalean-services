@@ -124,9 +124,6 @@ export default function DynamicHowItWorks() {
 
         <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
           {steps.map((step, i) => {
-            // Use default icon since icon_name field doesn't exist in content_blocks
-            const IconComponent = null;
-
             return (
               <motion.div
                 key={step.id}
