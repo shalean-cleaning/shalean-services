@@ -35,7 +35,7 @@ async function testDatabaseSchema() {
   
   try {
     // Test cleaners table structure
-    const { data: cleaners, error: cleanersError } = await supabase
+    const { error: cleanersError } = await supabase
       .from('cleaners')
       .select('id, name, bio, rating, is_active, is_available')
       .limit(1);
@@ -48,7 +48,7 @@ async function testDatabaseSchema() {
     console.log('✅ Cleaners table accessible');
     
     // Test cleaner_areas table
-    const { data: cleanerAreas, error: areasError } = await supabase
+    const { error: areasError } = await supabase
       .from('cleaner_areas')
       .select('cleaner_id, area_id')
       .limit(1);
@@ -61,7 +61,7 @@ async function testDatabaseSchema() {
     console.log('✅ Cleaner areas table accessible');
     
     // Test cleaner_availability table
-    const { data: availability, error: availabilityError } = await supabase
+    const { error: availabilityError } = await supabase
       .from('cleaner_availability')
       .select('cleaner_id, day_of_week, start_time, end_time, is_available')
       .limit(1);
@@ -195,7 +195,7 @@ async function testAPIEndpoint() {
     const data = await response.json();
     
     // Validate response structure
-    if (!data.hasOwnProperty('cleaners') || !data.hasOwnProperty('totalCount')) {
+    if (!Object.prototype.hasOwnProperty.call(data, 'cleaners') || !Object.prototype.hasOwnProperty.call(data, 'totalCount')) {
       console.error('❌ Invalid API response structure');
       return false;
     }
@@ -212,7 +212,7 @@ async function testAPIEndpoint() {
     if (data.cleaners.length > 0) {
       const cleaner = data.cleaners[0];
       const requiredFields = ['id', 'name', 'rating', 'totalRatings', 'experienceYears'];
-      const missingFields = requiredFields.filter(field => !cleaner.hasOwnProperty(field));
+      const missingFields = requiredFields.filter(field => !Object.prototype.hasOwnProperty.call(cleaner, field));
       
       if (missingFields.length > 0) {
         console.error('❌ Missing required fields in cleaner data:', missingFields);
@@ -281,11 +281,6 @@ async function testBookingIntegration() {
   
   try {
     // Test that the cleaner selection integrates with the booking flow
-    const mockBookingState = {
-      selectedCleanerId: null,
-      autoAssign: false,
-      availableCleaners: [],
-    };
     
     // Test state transitions
     const testCases = [

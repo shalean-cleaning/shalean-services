@@ -25,7 +25,6 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     autoAssign,
     availableCleaners,
     setSelectedCleanerId,
-    setAutoAssign,
     setAvailableCleaners,
   } = useBookingStore();
 

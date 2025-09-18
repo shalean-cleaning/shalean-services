@@ -28,7 +28,7 @@ interface AvailableCleaner {
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { regionId, suburbId, date, timeSlot, bedrooms, bathrooms } = bodySchema.parse(json);
+    const { suburbId, date, timeSlot } = bodySchema.parse(json);
 
     if (!env.NEXT_PUBLIC_SUPABASE_URL) {
       return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 });

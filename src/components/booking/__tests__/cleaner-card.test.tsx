@@ -100,7 +100,6 @@ describe('CleanerCard', () => {
       render(<CleanerCard cleaner={mockCleaner} isSelected={false} onSelect={mockOnSelect} />);
       
       const selectButton = screen.getByText('Select');
-      const card = screen.getByRole('button', { name: /john doe/i });
       
       // Mock stopPropagation
       const stopPropagation = jest.fn();
