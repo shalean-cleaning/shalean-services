@@ -6,6 +6,7 @@ import { getUserBookings, getBookingDetails } from '@/lib/booking-utils'
 import { Booking, BookingDetailsView } from '@/lib/database.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function EnhancedBookingPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
