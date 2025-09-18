@@ -10,8 +10,8 @@ import { env } from '@/env.server'
  */
 export function createSupabaseAdmin() {
   return createClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.SUPABASE_SERVICE_ROLE_KEY,
+    env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key',
     { auth: { persistSession: false } }
   )
 }
@@ -25,8 +25,8 @@ export async function createSupabaseServer() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
     {
       cookies: {
         getAll() {

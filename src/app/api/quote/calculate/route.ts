@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 
 import { withApiSafe } from '@/lib/api-safe'
-import { createClient } from '@/lib/supabase-server'
+import { createSupabaseServer } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
 export const POST = withApiSafe(async (request: Request) => {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   const body = await request.json()
   
   const { service_id, suburb_id, extras = [] } = body

@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from "react";
 
-import { createClient } from "@/lib/supabase-server";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 export type HomePageData = {
   hero: { title: string; subtitle?: string | null; ctaLabel?: string | null };
@@ -16,7 +16,7 @@ export type HomePageData = {
 };
 
 export const getHomepageData = cache(async (): Promise<HomePageData> => {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServer();
 
   // Initialize with default values
   let testimonials: Array<{
@@ -42,13 +42,7 @@ export const getHomepageData = cache(async (): Promise<HomePageData> => {
       .select("id, author_name, author_image, quote, rating");
 
     if (!testimonialsError && testimonialsRaw) {
-      testimonials = testimonialsRaw.map((r: {
-        id: string;
-        author_name: string;
-        author_image?: string | null;
-        quote: string;
-        rating?: number | null;
-      }) => ({
+      testimonials = testimonialsRaw.map((r: any) => ({
         id: r.id,
         author_name: r.author_name,
         author_image: r.author_image ?? null,
@@ -87,7 +81,7 @@ export const getHomepageData = cache(async (): Promise<HomePageData> => {
       .eq("content_type", "how-it-works");
 
     if (!blocksError && blocksRaw) {
-      blocks = blocksRaw.map((b: { id: string; title: string; description: string }) => ({
+      blocks = blocksRaw.map((b: any) => ({
         id: b.id,
         title: b.title,
         body: b.description,
@@ -102,7 +96,7 @@ export const getHomepageData = cache(async (): Promise<HomePageData> => {
 
 // Homepage data fetching utilities
 export async function getContentBlocks(sectionKey: string) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
   try {
     const { data, error } = await supabase
@@ -138,7 +132,7 @@ export async function getWhyChooseUsContent() {
 }
 
 export async function getRecentBlogPosts(limit: number = 3) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
   try {
     const { data, error } = await supabase
@@ -161,7 +155,7 @@ export async function getRecentBlogPosts(limit: number = 3) {
 }
 
 export async function getFeaturedTestimonials(limit: number = 4) {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
   try {
     const { data, error } = await supabase
@@ -184,7 +178,7 @@ export async function getFeaturedTestimonials(limit: number = 4) {
 }
 
 export async function getTeamMembers() {
-  const supabase = await createClient()
+  const supabase = await createSupabaseServer()
   
   const { data, error } = await supabase
     .from('profiles')

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server'
+import { createSupabaseServer } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseServer()
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -34,7 +34,7 @@ export async function GET(
           subtotal
         )
       `)
-      .eq('id', bookingId)
+      .eq('id', bookingId as string)
       .single()
 
     if (fetchError) {
@@ -86,7 +86,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseServer()
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -105,7 +105,7 @@ export async function PUT(
     const { data: existingBooking, error: fetchError } = await supabase
       .from('bookings')
       .select('customer_id, status')
-      .eq('id', bookingId)
+      .eq('id', bookingId as string)
       .single()
 
     if (fetchError) {
@@ -152,7 +152,7 @@ export async function PUT(
         ...updates,
         updated_at: new Date().toISOString()
       })
-      .eq('id', bookingId)
+      .eq('id', bookingId as string)
       .select(`
         *,
         booking_items (

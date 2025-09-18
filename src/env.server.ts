@@ -3,14 +3,14 @@ import { z } from 'zod';
 
 const ServerEnv = z.object({
   // server-only secrets
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
 
   // needed on both sides but validated here, too
-  NEXT_PUBLIC_APP_URL: z.string().min(1),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  NEXT_PUBLIC_APP_URL: z.string().min(1).default('http://localhost:3000'),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
 });
 
 // Lazy validation to prevent client-side evaluation
@@ -24,7 +24,7 @@ export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
         PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
 
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       });
