@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -18,7 +18,7 @@ export async function GET(
       )
     }
 
-    const bookingId = params.id
+    const { id: bookingId } = await params
 
     // Fetch the booking with items - RLS will ensure user can only access their own bookings
     const { data: booking, error: fetchError } = await supabase
@@ -83,7 +83,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -98,7 +98,7 @@ export async function PUT(
       )
     }
 
-    const bookingId = params.id
+    const { id: bookingId } = await params
     const updates = await request.json()
 
     // First, check if the booking exists and user has access
