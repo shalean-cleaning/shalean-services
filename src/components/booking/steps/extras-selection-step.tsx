@@ -33,7 +33,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
     return extra?.quantity || 0;
   };
 
-  const handleExtraToggle = (extra: Extra) => {
+  const handleExtraToggle = (extra: ServiceItem) => {
     if (isExtraSelected(extra.id)) {
       removeExtra(extra.id);
     } else {
@@ -41,7 +41,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
     }
   };
 
-  const handleQuantityChange = (extra: Extra, quantity: number) => {
+  const handleQuantityChange = (extra: ServiceItem, quantity: number) => {
     if (quantity <= 0) {
       removeExtra(extra.id);
     } else {
