@@ -12,31 +12,30 @@ export async function GET() {
       name,
       slug,
       description,
-      base_price,
-      is_active
+      base_fee,
+      active
     `)
-    .eq('is_active', true)
+    .eq('active', true)
     .order('name');
   if (svcsErr) return NextResponse.json({ error: svcsErr.message }, { status: 500 });
 
   // Get extras
   const { data: ex, error: exErr } = await supabase
-    .from('service_items')
-    .select('id,name,description,price,is_active')
-    .eq('is_extra', true)
-    .eq('is_active', true)
+    .from('extras')
+    .select('id,name,description,price,active')
+    .eq('active', true)
     .order('name');
   if (exErr) return NextResponse.json({ error: exErr.message }, { status: 500 });
 
   // Normalize services data
   const servicesNormalized = (svcs ?? []).map(s => {
-    const price = s.base_price != null ? Number(s.base_price) : 0;
+    const price = s.base_fee != null ? Number(s.base_fee) : 0;
     const cents = Math.round(price * 100);
     return { 
       ...s, 
       base_price_cents: cents, 
-      base_price: price,
-      base_fee: price, // For backward compatibility
+      base_price: price, // For backward compatibility
+      base_fee: price,
       // Default pricing values (these should come from a pricing rules table in the future)
       per_bedroom: 20, // $20 per additional bedroom
       per_bathroom: 15, // $15 per additional bathroom
