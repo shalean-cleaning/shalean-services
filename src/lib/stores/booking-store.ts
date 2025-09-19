@@ -171,7 +171,7 @@ export const useBookingStore = create<BookingState>()(
       setSelectedService: (service) => {
         set({ 
           selectedService: service,
-          basePrice: service?.base_price || 0 
+          basePrice: service?.base_fee || 0 
         });
         get().calculateTotalPrice();
       },

@@ -1,4 +1,4 @@
-import { Clock, DollarSign, Home } from 'lucide-react';
+import { DollarSign, Home } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -38,13 +38,9 @@ export default async function ServicesPage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{service.duration_minutes} minutes</span>
-                  </div>
-                  <div className="flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
                     <span className="text-lg font-semibold text-green-600">
-                      {formatZAR(service.base_price * 100)}
+                      {formatZAR(service.base_fee * 100)}
                     </span>
                   </div>
                 </div>

@@ -47,13 +47,9 @@ export function ServiceSelectionStep({ service }: ServiceSelectionStepProps) {
 
               <div className="flex items-center gap-6 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
-                  <span className="font-medium">Duration:</span>
-                  <span>{service.duration_minutes} minutes</span>
-                </div>
-                <div className="flex items-center gap-1">
                   <span className="font-medium">Base Price:</span>
                   <span className="text-lg font-semibold text-green-600">
-                    {formatZAR(service.base_price * 100)}
+                    {formatZAR(service.base_fee * 100)}
                   </span>
                 </div>
               </div>

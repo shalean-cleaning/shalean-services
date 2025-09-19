@@ -19,9 +19,9 @@ export async function GET() {
     .order('name');
   if (svcsErr) return NextResponse.json({ error: svcsErr.message }, { status: 500 });
 
-  // Get extras
+  // Get service items
   const { data: ex, error: exErr } = await supabase
-    .from('extras')
+    .from('service_items')
     .select('id,name,description,price,active')
     .eq('active', true)
     .order('name');
@@ -44,7 +44,7 @@ export async function GET() {
     };
   });
 
-  // Return services and extras in a flat structure (no categories in PRD)
+  // Return services and service items in a flat structure (no categories in PRD)
   return NextResponse.json({ 
     services: servicesNormalized, 
     extras: ex ?? [] 

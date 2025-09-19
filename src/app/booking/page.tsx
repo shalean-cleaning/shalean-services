@@ -48,7 +48,7 @@ export default async function BookingPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Starting from</span>
                       <span className="text-2xl font-bold text-blue-600">
-                        ${service.base_price}
+                        ${service.base_fee}
                       </span>
                     </div>
                     <Button asChild className="w-full">

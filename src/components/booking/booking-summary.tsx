@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Clock, Home, Plus, MapPin } from 'lucide-react';
+import { Calendar, Home, Plus, MapPin } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -34,7 +34,7 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
     );
   }
 
-  const basePrice = selectedService.base_price;
+  const basePrice = selectedService.base_fee;
 
   return (
     <Card className="p-6 sticky top-8">
@@ -48,11 +48,6 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
             <h4 className="font-medium text-gray-900">{selectedService.name}</h4>
             <p className="text-sm text-gray-500">{selectedService.description}</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
-          <span>{selectedService.duration_minutes} minutes</span>
         </div>
 
         <div className="flex items-center gap-3 text-sm text-gray-600">

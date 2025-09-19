@@ -7,6 +7,13 @@ import { generateShortId } from "@/lib/utils/short-id";
 
 export const runtime = "nodejs";
 
+type UpdateResult = {
+  success: boolean;
+  bookingId?: string;
+  shortId?: string;
+  error?: string;
+};
+
 const VerifyPaymentSchema = z.object({
   reference: z.string().min(1, "Reference is required"),
 });
@@ -62,7 +69,7 @@ async function updatePaymentAndBooking(
   supabaseAdmin: ReturnType<typeof createSupabaseAdmin>,
   reference: string,
   paystackData: any
-): Promise<{ success: boolean; bookingId?: string; error?: string }> {
+): Promise<UpdateResult> {
   try {
     // Get the payment record
     const { data: payment, error: paymentError } = await supabaseAdmin
