@@ -31,7 +31,7 @@ async function applyDatabaseFix() {
   try {
     // Test connection first
     console.log('1. Testing database connection...')
-    const { data: testData, error: testError } = await supabase
+    const { data: _testData, error: testError } = await supabase
       .from('profiles')
       .select('count')
       .limit(1)
@@ -45,7 +45,7 @@ async function applyDatabaseFix() {
 
     // Check if profiles table exists
     console.log('\n2. Checking if profiles table exists...')
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: _profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .limit(1)
