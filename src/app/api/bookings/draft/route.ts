@@ -2,7 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServer()
     
@@ -13,6 +13,25 @@ export async function POST() {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // Parse request body
+    let requestData;
+    try {
+      requestData = await request.json()
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
+
+    // Validate required fields
+    if (!requestData.serviceId || !requestData.suburbId) {
+      return NextResponse.json(
+        { error: 'Service and suburb selection are required' },
+        { status: 422 }
       )
     }
 
@@ -42,11 +61,53 @@ export async function POST() {
       )
     }
 
-    // If draft exists, return it
+    // If draft exists, update it with new data
     if (existingDraft) {
+      const updateData: any = {
+        service_id: requestData.serviceId,
+        suburb_id: requestData.suburbId,
+        total_price: requestData.totalPrice || 0,
+        updated_at: new Date().toISOString()
+      }
+
+      // Add optional fields if provided
+      if (requestData.bookingDate) updateData.booking_date = requestData.bookingDate
+      if (requestData.startTime) updateData.start_time = requestData.startTime
+      if (requestData.address) updateData.address = requestData.address
+      if (requestData.postcode) updateData.postcode = requestData.postcode
+      if (requestData.bedrooms !== undefined) updateData.bedrooms = requestData.bedrooms
+      if (requestData.bathrooms !== undefined) updateData.bathrooms = requestData.bathrooms
+      if (requestData.specialInstructions) updateData.special_instructions = requestData.specialInstructions
+      if (requestData.autoAssign !== undefined) updateData.auto_assign = requestData.autoAssign
+
+      const { data: updatedBooking, error: updateError } = await supabase
+        .from('bookings')
+        .update(updateData)
+        .eq('id', existingDraft.id)
+        .select(`
+          *,
+          booking_items (
+            id,
+            service_item_id,
+            item_type,
+            qty,
+            unit_price,
+            subtotal
+          )
+        `)
+        .single()
+
+      if (updateError) {
+        console.error('Error updating draft booking:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to update draft booking' },
+          { status: 500 }
+        )
+      }
+
       // Save booking ID to httpOnly cookie
       const cookieStore = await cookies()
-      cookieStore.set('booking-draft-id', existingDraft.id, {
+      cookieStore.set('booking-draft-id', updatedBooking.id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -55,25 +116,34 @@ export async function POST() {
       })
 
       return NextResponse.json({
-        booking: existingDraft,
+        booking: updatedBooking,
         isNew: false
       })
     }
 
-    // Create new DRAFT booking
+    // Create new DRAFT booking with provided data
+    const insertData: any = {
+      customer_id: user.id,
+      service_id: requestData.serviceId,
+      suburb_id: requestData.suburbId,
+      booking_date: requestData.bookingDate || new Date().toISOString().split('T')[0],
+      start_time: requestData.startTime || '09:00',
+      end_time: requestData.endTime || '11:00',
+      status: 'DRAFT',
+      total_price: requestData.totalPrice || 0,
+      auto_assign: requestData.autoAssign !== undefined ? requestData.autoAssign : true
+    }
+
+    // Add optional fields if provided
+    if (requestData.address) insertData.address = requestData.address
+    if (requestData.postcode) insertData.postcode = requestData.postcode
+    if (requestData.bedrooms !== undefined) insertData.bedrooms = requestData.bedrooms
+    if (requestData.bathrooms !== undefined) insertData.bathrooms = requestData.bathrooms
+    if (requestData.specialInstructions) insertData.special_instructions = requestData.specialInstructions
+
     const { data: newBooking, error: createError } = await supabase
       .from('bookings')
-      .insert({
-        customer_id: user.id,
-        suburb_id: '00000000-0000-0000-0000-000000000000', // Placeholder - will be updated
-        service_id: '00000000-0000-0000-0000-000000000000', // Placeholder - will be updated
-        booking_date: new Date().toISOString().split('T')[0],
-        start_time: '09:00',
-        end_time: '11:00',
-        status: 'DRAFT',
-        total_price: 0,
-        auto_assign: true
-      })
+      .insert(insertData)
       .select(`
         *,
         booking_items (
