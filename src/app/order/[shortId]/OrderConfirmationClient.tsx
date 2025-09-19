@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation';
 import { 
   CheckCircle, 
   Calendar, 
-  Clock, 
-  MapPin, 
   User, 
-  Phone, 
-  Mail, 
   Home, 
   Star,
   Download,

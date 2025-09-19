@@ -63,7 +63,7 @@ export function BookingReviewStep() {
     
     if (!contactInfo.phone.trim()) {
       errors.phone = 'Phone number is required';
-    } else if (!/^[\+]?[0-9\s\-\(\)]{10,}$/.test(contactInfo.phone.replace(/\s/g, ''))) {
+    } else if (!/^[+]?[0-9\s\-()]{10,}$/.test(contactInfo.phone.replace(/\s/g, ''))) {
       errors.phone = 'Please enter a valid phone number';
     }
     
