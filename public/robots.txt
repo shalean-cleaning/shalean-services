@@ -1,0 +1,21 @@
+User-agent: *
+Disallow: /book/
+Disallow: /q/
+Disallow: /order/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /cleaner/
+
+# Allow public pages
+Allow: /
+Allow: /services/
+Allow: /blog/
+Allow: /how-it-works/
+Allow: /contact/
+Allow: /about/
+Allow: /our-team/
+Allow: /why-choose-shalean/
+Allow: /quote/
+
+Sitemap: https://your-domain.com/sitemap.xml

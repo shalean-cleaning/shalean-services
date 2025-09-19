@@ -52,6 +52,8 @@ export const POST = withApiSafe(async (request: Request) => {
   return NextResponse.json({ 
     success: true, 
     quote_id: data.id,
+    short_id: data.short_id,
+    quote_url: `/q/${data.short_id}`,
     message: 'Quote saved successfully' 
   }, { status: 201 })
 }, { routeName: '/api/quotes' })
