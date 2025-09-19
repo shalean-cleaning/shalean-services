@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { env } from "@/env.server";
+import { generateShortId } from "@/lib/utils/short-id";
 
 export const runtime = "nodejs";
 
@@ -113,11 +114,15 @@ async function updatePaymentAndBooking(
       return { success: false, error: 'Failed to update payment record' };
     }
 
-    // Update booking status to PAID
+    // Generate short ID for the booking
+    const shortId = generateShortId();
+
+    // Update booking status to PAID and add short_id
     const { error: updateBookingError } = await supabaseAdmin
       .from('bookings')
       .update({
         status: 'PAID',
+        short_id: shortId,
         updated_at: new Date().toISOString()
       })
       .eq('id', payment.booking_id);
@@ -127,9 +132,9 @@ async function updatePaymentAndBooking(
       // Don't fail the whole operation, just log the error
     }
 
-    logger.info(`Payment verified and updated for booking ${payment.booking_id} with reference ${reference}`);
+    logger.info(`Payment verified and updated for booking ${payment.booking_id} with reference ${reference} and short_id ${shortId}`);
 
-    return { success: true, bookingId: payment.booking_id };
+    return { success: true, bookingId: payment.booking_id, shortId };
 
   } catch (error) {
     logger.error('Error updating payment and booking:', error);
@@ -196,6 +201,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       bookingId: updateResult.bookingId,
+      shortId: updateResult.shortId,
       message: "Payment verified successfully"
     });
 

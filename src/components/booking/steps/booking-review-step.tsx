@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, CreditCard, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, CreditCard, CheckCircle, AlertCircle, Loader2, User, MapPin, Home, Star } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { initiatePaymentAction } from '@/lib/actions/payments';
 
 export function BookingReviewStep() {
   const router = useRouter();
@@ -32,10 +35,41 @@ export function BookingReviewStep() {
   const [error, setError] = useState<string | null>(null);
   const [draftCreated, setDraftCreated] = useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
   const [bookingStatus, setBookingStatus] = useState<'DRAFT' | 'PENDING' | 'READY_FOR_PAYMENT' | 'PAID' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'>('DRAFT');
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const [missingFields, setMissingFields] = useState<string[]>([]);
+  
+  // Contact information form state
+  const [contactInfo, setContactInfo] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Form validation
+  useEffect(() => {
+    const errors: Record<string, string> = {};
+    
+    if (!contactInfo.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!contactInfo.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInfo.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!contactInfo.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!/^[\+]?[0-9\s\-\(\)]{10,}$/.test(contactInfo.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+    
+    setFormErrors(errors);
+    setIsFormValid(Object.keys(errors).length === 0);
+  }, [contactInfo]);
 
   // Check if we need to redirect back to booking flow
   useEffect(() => {
@@ -145,59 +179,16 @@ export function BookingReviewStep() {
     handleDraft();
   }, [composeDraftPayload, selectedCleanerId, autoAssign, draftCreated, router]);
 
-  const handleConfirmBooking = async () => {
-    if (!bookingId) {
-      setError('We\'re preparing your booking. Please wait a moment and try again.');
-      return;
-    }
-
-    setIsConfirming(true);
-    setError(null);
-
-    try {
-      // Confirm the booking (validate required fields and set status)
-      const confirmResponse = await fetch('/api/bookings/confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId: bookingId
-        }),
-      });
-
-      const confirmData = await confirmResponse.json();
-
-      if (!confirmData.success) {
-        if (confirmData.error === 'MISSING_REQUIRED_FIELDS' && confirmData.details?.missingFields) {
-          setMissingFields(confirmData.details.missingFields);
-          setError(`Please complete the following information: ${confirmData.details.missingFields.join(', ')}. Use the back button to return to the previous steps.`);
-        } else {
-          throw new Error(confirmData.message || confirmData.error || 'Failed to confirm booking');
-        }
-        return;
-      }
-
-      // Update booking status
-      setBookingStatus(confirmData.data.status);
-      
-      // If ready for payment, proceed to payment
-      if (confirmData.data.isReadyForPayment) {
-        await handleCompleteBooking();
-      }
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking";
-      setError(errorMessage);
-      console.error('Booking confirmation error:', err);
-    } finally {
-      setIsConfirming(false);
-    }
-  };
 
   const handleCompleteBooking = async () => {
     if (bookingStatus === 'PAID') {
       return; // Already paid, button should be disabled
+    }
+
+    // Validate form before proceeding
+    if (!isFormValid) {
+      setError('Please fill in all required contact information correctly.');
+      return;
     }
 
     // Ensure we have a valid bookingId before proceeding
@@ -210,25 +201,20 @@ export function BookingReviewStep() {
     setError(null);
 
     try {
-      // Initiate payment with the stored bookingId
-      const paymentResponse = await fetch('/api/payments/initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId: bookingId
-        }),
+      // Use server action to initiate payment
+      const result = await initiatePaymentAction({
+        bookingId: bookingId,
+        customerName: contactInfo.name,
+        customerEmail: contactInfo.email,
+        customerPhone: contactInfo.phone,
       });
 
-      const paymentData = await paymentResponse.json();
-
-      if (!paymentData.success) {
-        throw new Error(paymentData.error || 'Failed to initiate payment');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to initiate payment');
       }
 
       // Redirect to Paystack
-      window.location.href = paymentData.authorization_url;
+      window.location.href = result.authorization_url!;
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
@@ -243,25 +229,6 @@ export function BookingReviewStep() {
     router.back();
   };
 
-  const navigateToStep = (step: number) => {
-    const serviceSlug = selectedService?.slug || 'standard-cleaning';
-    router.push(`/booking/service/${serviceSlug}?step=${step}`);
-  };
-
-  const getStepForField = (field: string): number => {
-    const fieldStepMap: Record<string, number> = {
-      'service': 1,
-      'bedrooms': 2,
-      'bathrooms': 2,
-      'address': 3,
-      'postcode': 3,
-      'booking_date': 3,
-      'start_time': 3,
-      'location': 3,
-      'total_price': 1
-    };
-    return fieldStepMap[field] || 1;
-  };
 
   const selectedCleaner = selectedCleanerId 
     ? availableCleaners.find(c => c.id === selectedCleanerId)
@@ -286,42 +253,24 @@ export function BookingReviewStep() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Creating your booking draft...</p>
+          <p className="mt-2 text-gray-600">Preparing your booking...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !bookingId) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <Card className="p-6 border-red-200 bg-red-50">
           <div className="flex items-center">
             <AlertCircle className="w-8 h-8 text-red-500 mr-3" />
             <div>
-              <h3 className="text-lg font-semibold text-red-800">Booking Incomplete</h3>
+              <h3 className="text-lg font-semibold text-red-800">Booking Error</h3>
               <p className="text-red-700">{error}</p>
-              {missingFields.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-red-800 mb-2">Missing information:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {missingFields.map((field) => (
-                      <Button
-                        key={field}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigateToStep(getStepForField(field))}
-                        className="text-red-700 border-red-300 hover:bg-red-100"
-                      >
-                        Complete {field}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           <div className="mt-4 flex gap-2">
@@ -338,23 +287,57 @@ export function BookingReviewStep() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Review & Payment
         </h1>
         <p className="text-gray-600">
-          Please review your booking details before completing payment
+          Please review your booking details and provide contact information before completing payment
         </p>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-700 font-medium mb-2">Payment Error</p>
+              <p className="text-red-600 text-sm">{error}</p>
+              <div className="mt-3 flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setError(null)}
+                  className="text-red-700 border-red-300 hover:bg-red-100"
+                >
+                  Dismiss
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                  className="text-red-700 border-red-300 hover:bg-red-100"
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Booking Summary */}
+        {/* Left Column - Booking Summary & Contact Form */}
         <div className="lg:col-span-2 space-y-6">
           {/* Service Details */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Service Details</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Home className="w-5 h-5 mr-2 text-blue-600" />
+              Service Details
+            </h2>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Service:</span>
@@ -385,7 +368,10 @@ export function BookingReviewStep() {
 
           {/* Location & Time */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Location & Time</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <MapPin className="w-5 h-5 mr-2 text-green-600" />
+              Location & Time
+            </h2>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Date:</span>
@@ -413,7 +399,10 @@ export function BookingReviewStep() {
 
           {/* Cleaner Selection */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Cleaner Assignment</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Star className="w-5 h-5 mr-2 text-yellow-600" />
+              Cleaner Assignment
+            </h2>
             <div className="space-y-3">
               {autoAssign ? (
                 <div className="flex items-center">
@@ -441,17 +430,74 @@ export function BookingReviewStep() {
               )}
             </div>
           </Card>
+
+          {/* Contact Information Form */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <User className="w-5 h-5 mr-2 text-purple-600" />
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={contactInfo.name}
+                  onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className={formErrors.name ? 'border-red-500' : ''}
+                  placeholder="Enter your full name"
+                />
+                {formErrors.name && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={contactInfo.email}
+                  onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
+                  className={formErrors.email ? 'border-red-500' : ''}
+                  placeholder="Enter your email address"
+                />
+                {formErrors.email && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={contactInfo.phone}
+                  onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  className={formErrors.phone ? 'border-red-500' : ''}
+                  placeholder="Enter your phone number"
+                />
+                {formErrors.phone && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.phone}</p>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Payment Summary */}
+        {/* Right Column - Payment Summary */}
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Summary</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+              Payment Summary
+            </h2>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Service:</span>
-                <span>${selectedService?.base_price || 0}</span>
+                <span>R{selectedService?.base_fee || 0}</span>
               </div>
               
               {selectedExtras.length > 0 && (
@@ -460,7 +506,7 @@ export function BookingReviewStep() {
                   {selectedExtras.map((extra) => (
                     <div key={extra.id} className="flex justify-between text-sm">
                       <span className="text-gray-600">{extra.name} × {extra.quantity}:</span>
-                      <span>${(extra.price * extra.quantity).toFixed(2)}</span>
+                      <span>R{(extra.price * extra.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </>
@@ -469,7 +515,7 @@ export function BookingReviewStep() {
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total:</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>R{totalPrice.toFixed(2)}</span>
               </div>
             </div>
 
@@ -484,10 +530,10 @@ export function BookingReviewStep() {
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Already Paid
                 </Button>
-              ) : bookingStatus === 'READY_FOR_PAYMENT' ? (
+              ) : (
                 <Button 
                   onClick={handleCompleteBooking}
-                  disabled={isPaymentLoading || !bookingId}
+                  disabled={isPaymentLoading || !bookingId || !isFormValid}
                   className="w-full"
                   size="lg"
                 >
@@ -500,30 +546,6 @@ export function BookingReviewStep() {
                     <>
                       <CreditCard className="w-4 h-4 mr-2" />
                       Complete Payment
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleConfirmBooking}
-                  disabled={isConfirming || !bookingId}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isConfirming ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Confirming...
-                    </>
-                  ) : !bookingId ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Preparing Booking...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Confirm & Proceed to Payment
                     </>
                   )}
                 </Button>
@@ -541,7 +563,7 @@ export function BookingReviewStep() {
 
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Secure Payment:</strong> Your payment information is encrypted and secure.
+                <strong>Secure Payment:</strong> Your payment information is encrypted and secure. We use Paystack for secure payment processing.
               </p>
             </div>
           </Card>

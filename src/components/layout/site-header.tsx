@@ -8,7 +8,6 @@ import { Menu, X, Calculator } from "lucide-react";
 import { UserAvatar } from '@/components/auth/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useAuth';
-import { QuoteModal } from '@/components/quote/quote-modal';
 
 const NAV = [
   { label: "Home", href: "/" },
@@ -22,7 +21,6 @@ const NAV = [
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const { user, profile } = useUser();
 
   // Dev-only guard to detect accidental double mounts
@@ -87,15 +85,16 @@ export default function SiteHeader() {
 
         {/* CTAs (desktop) */}
         <div className="hidden items-center gap-3 lg:flex">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setQuoteModalOpen(true)}
-            className="inline-flex items-center gap-2"
-          >
-            <Calculator className="h-4 w-4" />
-            Get Quote
-          </Button>
+          <LinkSafe href="/quote">
+            <Button
+              variant="outline"
+              size="sm"
+              className="inline-flex items-center gap-2"
+            >
+              <Calculator className="h-4 w-4" />
+              Get Quote
+            </Button>
+          </LinkSafe>
           <LinkSafe
             href="/booking"
             className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
@@ -171,17 +170,16 @@ export default function SiteHeader() {
 
             {/* Mobile CTAs */}
             <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setQuoteModalOpen(true);
-                  setOpen(false);
-                }}
-              >
-                <Calculator className="h-4 w-4 mr-2" />
-                Get Quote
-              </Button>
+              <LinkSafe href="/quote">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setOpen(false)}
+                >
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Get Quote
+                </Button>
+              </LinkSafe>
               <LinkSafe
                 href="/booking"
                 className="block w-full rounded-md border px-3 py-2 text-sm font-medium text-center hover:bg-gray-50"
@@ -229,9 +227,6 @@ export default function SiteHeader() {
           </div>
         </div>
       )}
-
-      {/* Quote Modal */}
-      <QuoteModal open={quoteModalOpen} onOpenChange={setQuoteModalOpen} />
     </header>
   );
 }

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 interface PaymentVerificationResult {
   success: boolean;
   bookingId?: string;
+  shortId?: string;
   error?: string;
   details?: string;
 }
@@ -53,7 +54,9 @@ export default function CallbackClient({ reference }: CallbackClientProps) {
   }, [reference]);
 
   const handleViewBooking = () => {
-    if (verificationResult?.bookingId) {
+    if (verificationResult?.shortId) {
+      router.push(`/order/${verificationResult.shortId}`);
+    } else if (verificationResult?.bookingId) {
       router.push(`/booking/${verificationResult.bookingId}`);
     } else {
       router.push('/booking');
@@ -162,6 +165,11 @@ export default function CallbackClient({ reference }: CallbackClientProps) {
             <Button variant="outline" onClick={handleGoHome} className="w-full">
               Go Home
             </Button>
+          </div>
+          <div className="mt-6 p-3 bg-red-100 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">
+              <strong>Need help?</strong> Contact our support team if you continue to experience issues.
+            </p>
           </div>
         </div>
       </Card>

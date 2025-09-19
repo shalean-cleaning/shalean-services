@@ -18,17 +18,25 @@ export async function GET() {
 
   try {
     const { data, error } = await supabaseAdmin()
-      .from('service_items')
-      .select('*')
-      .eq('is_extra', true)
-      .eq('is_active', true)
+      .from('extras')
+      .select('id, name, slug, description, price')
       .order('name', { ascending: true });
 
     if (error) {
       console.error('[api/extras] Supabase error:', error);
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
-    return NextResponse.json(data ?? [], { status: 200 });
+    
+    // Transform data to match component expectations
+    const transformedData = (data ?? []).map(extra => ({
+      id: extra.id,
+      name: extra.name,
+      slug: extra.slug,
+      description: extra.description,
+      price: extra.price,
+    }));
+    
+    return NextResponse.json(transformedData, { status: 200 });
   } catch (err: unknown) {
     console.error('[api/extras] Handler error:', err);
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });

@@ -16,15 +16,9 @@ export async function GET(
     const { data: service, error: serviceError } = await supabaseAdmin()
       .from('services')
       .select(`
-        *,
-        service_categories (
-          id,
-          name,
-          description,
-          icon
-        )
+        *
       `)
-      .eq('is_active', true)
+      .eq('active', true)
       .eq('slug', slug)
       .single();
 
@@ -35,12 +29,11 @@ export async function GET(
       );
     }
 
-    // Fetch available extras (service items with is_extra = true)
+    // Fetch available extras
     const { data: extras, error: extrasError } = await supabaseAdmin()
-      .from('service_items')
+      .from('extras')
       .select('*')
-      .eq('is_active', true)
-      .eq('is_extra', true)
+      .eq('active', true)
       .order('name', { ascending: true });
 
     if (extrasError) {
@@ -49,9 +42,9 @@ export async function GET(
 
     // Fetch pricing rules for this service
     const { data: pricingRules, error: pricingError } = await supabaseAdmin()
-      .from('pricing_rules')
+      .from('service_pricing')
       .select('*')
-      .eq('is_active', true);
+      .eq('service_id', service.id);
 
     if (pricingError) {
       console.error('Error fetching pricing rules:', pricingError);

@@ -278,33 +278,27 @@ export type Database = {
           name: string
           description: string | null
           slug: string
-          duration_minutes: number
-          base_price: number
-          is_active: boolean
+          base_fee: number
+          active: boolean
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           name: string
           description?: string | null
           slug: string
-          duration_minutes: number
-          base_price: number
-          is_active?: boolean
+          base_fee: number
+          active?: boolean
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
           description?: string | null
           slug?: string
-          duration_minutes?: number
-          base_price?: number
-          is_active?: boolean
+          base_fee?: number
+          active?: boolean
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -833,7 +827,7 @@ export type Booking = Database['public']['Tables']['bookings']['Row']
 export type BookingItem = Database['public']['Tables']['booking_items']['Row']
 export type Cleaner = Database['public']['Tables']['cleaners']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
-export type ServiceItem = Database['public']['Tables']['service_items']['Row']
+export type ServiceItem = Database['public']['Tables']['extras']['Row']
 export type Region = Database['public']['Tables']['regions']['Row']
 export type Suburb = Database['public']['Tables']['suburbs']['Row']
 export type Area = Database['public']['Tables']['areas']['Row']
@@ -854,7 +848,7 @@ export type BookingInsert = Database['public']['Tables']['bookings']['Insert']
 export type BookingItemInsert = Database['public']['Tables']['booking_items']['Insert']
 export type CleanerInsert = Database['public']['Tables']['cleaners']['Insert']
 export type ServiceInsert = Database['public']['Tables']['services']['Insert']
-export type ServiceItemInsert = Database['public']['Tables']['service_items']['Insert']
+export type ServiceItemInsert = Database['public']['Tables']['extras']['Insert']
 export type RegionInsert = Database['public']['Tables']['regions']['Insert']
 export type SuburbInsert = Database['public']['Tables']['suburbs']['Insert']
 export type AreaInsert = Database['public']['Tables']['areas']['Insert']
@@ -871,7 +865,7 @@ export type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 export type BookingItemUpdate = Database['public']['Tables']['booking_items']['Update']
 export type CleanerUpdate = Database['public']['Tables']['cleaners']['Update']
 export type ServiceUpdate = Database['public']['Tables']['services']['Update']
-export type ServiceItemUpdate = Database['public']['Tables']['service_items']['Update']
+export type ServiceItemUpdate = Database['public']['Tables']['extras']['Update']
 export type RegionUpdate = Database['public']['Tables']['regions']['Update']
 export type SuburbUpdate = Database['public']['Tables']['suburbs']['Update']
 export type AreaUpdate = Database['public']['Tables']['areas']['Update']
