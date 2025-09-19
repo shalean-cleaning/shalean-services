@@ -63,7 +63,7 @@ export async function POST() {
     // Create new DRAFT booking
     const { data: newBooking, error: createError } = await supabase
       .from('bookings')
-        .insert({
+      .insert({
         customer_id: user.id,
         suburb_id: '00000000-0000-0000-0000-000000000000', // Placeholder - will be updated
         service_id: '00000000-0000-0000-0000-000000000000', // Placeholder - will be updated
@@ -87,7 +87,7 @@ export async function POST() {
       `)
       .single()
 
-      if (createError) {
+    if (createError) {
       console.error('Error creating draft booking:', createError)
       return NextResponse.json(
         { error: 'Failed to create draft booking' },
@@ -104,8 +104,8 @@ export async function POST() {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'
     })
-      
-      return NextResponse.json({
+    
+    return NextResponse.json({
       booking: newBooking,
       isNew: true
     })
