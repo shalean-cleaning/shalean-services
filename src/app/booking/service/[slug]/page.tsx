@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { BookingStepper } from '@/components/booking/booking-stepper';
 import { BookingSummary } from '@/components/booking/booking-summary';
-import { Service, ServiceItem, Region } from '@/lib/database.types';
+import { Region } from '@/lib/database.types';
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 interface BookingPageProps {
