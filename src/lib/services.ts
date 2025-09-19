@@ -3,7 +3,17 @@ import { Service } from "@/lib/database.types";
 import { logger } from "@/lib/logger";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-export async function getServices(): Promise<Service[]> {
+// Extended service type with additional computed fields
+export type ServiceWithPricing = Service & {
+  base_price_cents: number;
+  base_price: number;
+  per_bedroom: number;
+  per_bathroom: number;
+  service_fee_flat: number;
+  service_fee_pct: number;
+};
+
+export async function getServices(): Promise<ServiceWithPricing[]> {
   try {
     const supabase = await createSupabaseServer();
     
@@ -16,7 +26,8 @@ export async function getServices(): Promise<Service[]> {
         slug,
         description,
         base_fee,
-        active
+        active,
+        created_at
       `)
       .eq('active', true)
       .order('name');
