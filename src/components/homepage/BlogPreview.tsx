@@ -4,7 +4,7 @@ import { fadeUp } from '@/components/anim/motion';
 import { ChevronRight } from 'lucide-react';
 import LinkSafe from '@/components/LinkSafe';
 import SafeImage from '@/components/ui/safe-image';
-import { IMAGES } from '@/lib/images';
+import { IMAGES, getSafeBlogImage } from '@/lib/images';
 
 export default async function BlogPreview() {
   const blogPosts = await getRecentBlogPosts(3);
@@ -52,7 +52,7 @@ export default async function BlogPreview() {
                 <article className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 group">
                   <div className="relative h-48 w-full overflow-hidden">
                     <SafeImage
-                      src={post.featured_image_url || IMAGES.blog1}
+                      src={getSafeBlogImage(post.featured_image_url)}
                       alt={`${post.title} - cleaning tips article`}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"

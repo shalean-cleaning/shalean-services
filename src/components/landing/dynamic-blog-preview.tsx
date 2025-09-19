@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight } from "lucide-react";
 import SafeImage from "@/components/ui/safe-image";
-import { IMAGES } from "@/lib/images";
+import { IMAGES, getSafeBlogImage } from "@/lib/images";
 import Link from "next/link";
 
 import { useRecentBlogPosts } from "@/hooks/useHomepageData";
@@ -134,7 +134,7 @@ export default function DynamicBlogPreview() {
               {/* Featured Image */}
               <div className="relative h-48 w-full">
                 <SafeImage
-                  src={post.featured_image || IMAGES.blog1}
+                  src={getSafeBlogImage(post.featured_image)}
                   alt={post.title}
                   fill
                   className="object-cover"
