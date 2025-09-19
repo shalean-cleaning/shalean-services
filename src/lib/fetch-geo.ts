@@ -1,12 +1,41 @@
+import { createSupabaseServer } from "@/lib/supabase/server";
+
 export async function getRegions() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
-  const res = await fetch(`${base}/api/regions`, { next: { revalidate: 3600 } });
-  const json = await res.json();
-  return json.value ?? [];
+  try {
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase
+      .from('regions')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching regions:', error);
+      return [];
+    }
+    
+    return data ?? [];
+  } catch (error) {
+    console.error('Error in getRegions:', error);
+    return [];
+  }
 }
+
 export async function getSuburbs() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
-  const res = await fetch(`${base}/api/suburbs`, { next: { revalidate: 3600 } });
-  const json = await res.json();
-  return json.value ?? [];
+  try {
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase
+      .from('suburbs')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching suburbs:', error);
+      return [];
+    }
+    
+    return data ?? [];
+  } catch (error) {
+    console.error('Error in getSuburbs:', error);
+    return [];
+  }
 }

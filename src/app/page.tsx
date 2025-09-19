@@ -232,7 +232,7 @@ export default function Home() {
             <MotionItem variants={slideInRight}>
               <div className="relative">
                 <SafeImage
-                  src="https://images.unsplash.com/photo-1596464716121-8b45399f0f0e?w=1200&q=80&auto=format&fit=crop"
+                  src={IMAGES.cleaner}
                   alt="Professional cleaner smiling with cleaning tools"
                   width={600}
                   height={400}

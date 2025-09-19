@@ -59,8 +59,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     setIsLoading(true);
     setError(null);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-    fetch(`${baseUrl}/api/cleaners/availability`, {
+    fetch('/api/cleaners/availability', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -49,7 +49,7 @@ export default function DynamicBlogPreview() {
       slug: 'maintaining-clean-home-tips',
       excerpt: 'Keep your home spotless between professional cleaning visits with these expert tips and tricks.',
       content: 'Professional cleaning services are wonderful, but maintaining a clean home between visits is equally important...',
-      featured_image: IMAGES.blog1,
+      featured_image: IMAGES.blogCleanHomeTips,
       is_published: true,
       published_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: '',

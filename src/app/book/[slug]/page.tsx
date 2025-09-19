@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { BookingStepper } from '@/components/booking/booking-stepper';
 import { BookingSummary } from '@/components/booking/booking-summary';
 import { Service, ServiceItem, Region } from '@/lib/database.types';
+import { createSupabaseServer } from '@/lib/supabase/server';
 
 interface BookingPageProps {
   params: Promise<{
@@ -12,20 +13,45 @@ interface BookingPageProps {
 
 async function getServiceData(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-    const response = await fetch(`${baseUrl}/api/services/${slug}`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
+    const supabase = await createSupabaseServer();
+    
+    // Fetch service by slug
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .select('*')
+      .eq('active', true)
+      .eq('slug', slug)
+      .single();
 
-    if (!response.ok) {
+    if (serviceError || !service) {
       return null;
     }
 
-    const data = await response.json();
-    return data as {
-      service: Service;
-      extras: ServiceItem[];
-      pricingRules: any[];
+    // Fetch available extras
+    const { data: extras, error: extrasError } = await supabase
+      .from('extras')
+      .select('*')
+      .eq('active', true)
+      .order('name', { ascending: true });
+
+    if (extrasError) {
+      console.error('Error fetching extras:', extrasError);
+    }
+
+    // Fetch pricing rules for this service
+    const { data: pricingRules, error: pricingError } = await supabase
+      .from('service_pricing')
+      .select('*')
+      .eq('service_id', service.id);
+
+    if (pricingError) {
+      console.error('Error fetching pricing rules:', pricingError);
+    }
+
+    return {
+      service,
+      extras: extras || [],
+      pricingRules: pricingRules || [],
     };
   } catch (error) {
     console.error('Error fetching service data:', error);
@@ -35,16 +61,17 @@ async function getServiceData(slug: string) {
 
 async function getRegionsData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-    const response = await fetch(`${baseUrl}/api/regions`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-
-    if (!response.ok) {
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase
+      .from('regions')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching regions:', error);
       return [];
     }
-
-    const data = await response.json();
+    
     return data as Region[];
   } catch (error) {
     console.error('Error fetching regions data:', error);
