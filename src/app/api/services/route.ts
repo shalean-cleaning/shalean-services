@@ -19,13 +19,18 @@ export async function GET() {
     .order('name');
   if (svcsErr) return NextResponse.json({ error: svcsErr.message }, { status: 500 });
 
-  // Get service items
+  // Get service items (extras)
   const { data: ex, error: exErr } = await supabase
     .from('service_items')
     .select('id,name,description,price,active')
     .eq('active', true)
     .order('name');
-  if (exErr) return NextResponse.json({ error: exErr.message }, { status: 500 });
+  
+  // Handle case where service_items table doesn't exist yet
+  if (exErr) {
+    console.warn('service_items table not found, using empty array:', exErr.message);
+    // Return empty array instead of error
+  }
 
   // Normalize services data
   const servicesNormalized = (svcs ?? []).map(s => {

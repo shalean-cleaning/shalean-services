@@ -14,7 +14,7 @@ async function getServiceData(slug: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
     const response = await fetch(`${baseUrl}/api/services/${slug}`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 } // Cache for 1 hour
     });
 
     if (!response.ok) {
@@ -37,7 +37,7 @@ async function getRegionsData() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
     const response = await fetch(`${baseUrl}/api/regions`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 } // Cache for 1 hour
     });
 
     if (!response.ok) {

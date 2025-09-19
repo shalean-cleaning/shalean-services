@@ -104,8 +104,8 @@ export default function QuickQuote({ isModal = false, onContinueToBooking }: Qui
     ;(async () => {
       try {
         const [servicesRes, regionsRes] = await Promise.all([
-          fetch('/api/services', { cache: 'no-store' }),
-          fetch('/api/regions', { cache: 'no-store' })
+          fetch('/api/services', { next: { revalidate: 3600 } }), // Cache for 1 hour
+          fetch('/api/regions', { next: { revalidate: 3600 } }) // Cache for 1 hour
         ])
 
         if (!servicesRes.ok) {

@@ -62,7 +62,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         bathrooms: bathroomCount ?? 1,
       }),
       signal: ac.signal,
-      cache: "no-store",
+      next: { revalidate: 60 }, // Cache for 1 minute (availability changes frequently)
     })
     .then(async (res) => {
       const text = await res.text().catch(() => "");
