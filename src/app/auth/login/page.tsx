@@ -8,18 +8,52 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/lib/supabase-client'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
   
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') || '/'
   
   const { signIn } = useAuth()
+  const supabase = createClient()
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setResendMessage('Please enter your email address first.')
+      return
+    }
+
+    setResendLoading(true)
+    setResendMessage('')
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`
+        }
+      })
+
+      if (error) {
+        setResendMessage('Failed to resend confirmation email. Please try again.')
+      } else {
+        setResendMessage('Confirmation email sent! Please check your inbox.')
+      }
+    } catch {
+      setResendMessage('An unexpected error occurred. Please try again.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,12 +64,21 @@ function LoginForm() {
       const { error } = await signIn(email, password, returnTo)
 
       if (error) {
-        setError(error.message)
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in. If you didn\'t receive the email, please check your spam folder or sign up again.')
+        } else if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.')
+        } else {
+          setError(error.message)
+        }
       } else {
+        // Login successful - redirect will be handled by the signIn function
         router.refresh()
+        router.push(returnTo)
       }
     } catch {
-      setError('An unexpected error occurred')
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -82,6 +125,29 @@ function LoginForm() {
             {error && (
               <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
                 {error}
+                {error.includes('confirmation') && (
+                  <div className="mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResendConfirmation}
+                      disabled={resendLoading}
+                      className="w-full"
+                    >
+                      {resendLoading ? 'Sending...' : 'Resend Confirmation Email'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            {resendMessage && (
+              <div className={`text-sm p-3 rounded-md ${
+                resendMessage.includes('sent') 
+                  ? 'text-green-600 bg-green-50' 
+                  : 'text-red-600 bg-red-50'
+              }`}>
+                {resendMessage}
               </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
