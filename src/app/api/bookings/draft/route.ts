@@ -20,11 +20,29 @@ export async function POST(request: Request) {
       )
     }
     
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Check for Authorization header (Bearer token)
+    const authHeader = request.headers.get('authorization')
+    let user = null
     
-    if (authError || !user) {
-      console.error('Authentication error:', authError)
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Handle Bearer token authentication
+      const token = authHeader.substring(7)
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+      }
+    } else {
+      // Handle cookie-based authentication (existing flow)
+      const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser()
+      
+      if (!authError && cookieUser) {
+        user = cookieUser
+      }
+    }
+    
+    if (!user) {
+      console.error('Authentication error: No user found')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -215,14 +233,32 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createSupabaseServer()
     
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Check for Authorization header (Bearer token)
+    const authHeader = request.headers.get('authorization')
+    let user = null
     
-    if (authError || !user) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Handle Bearer token authentication
+      const token = authHeader.substring(7)
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+      }
+    } else {
+      // Handle cookie-based authentication (existing flow)
+      const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser()
+      
+      if (!authError && cookieUser) {
+        user = cookieUser
+      }
+    }
+    
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
