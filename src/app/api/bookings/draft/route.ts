@@ -1,15 +1,30 @@
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { env } from '@/env.server'
 
 export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServer()
     
+    // Check if Supabase is properly configured
+    if (env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder') || 
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.includes('placeholder')) {
+      console.error('Supabase not configured - using placeholder values')
+      return NextResponse.json(
+        { 
+          error: 'Database not configured',
+          details: 'Supabase environment variables are not set correctly'
+        },
+        { status: 503 }
+      )
+    }
+    
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      console.error('Authentication error:', authError)
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -54,9 +69,20 @@ export async function POST(request: Request) {
       .single()
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching existing draft:', fetchError)
+      console.error('Error fetching existing draft:', {
+        error: fetchError,
+        errorCode: fetchError.code,
+        errorMessage: fetchError.message,
+        userId: user.id,
+        supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        isPlaceholderUrl: env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')
+      })
       return NextResponse.json(
-        { error: 'Failed to check for existing draft' },
+        { 
+          error: 'Failed to check for existing draft',
+          details: process.env.NODE_ENV === 'development' ? fetchError.message : undefined
+        },
         { status: 500 }
       )
     }
