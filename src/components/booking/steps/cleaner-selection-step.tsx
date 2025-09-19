@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { useRequireAuth } from '@/hooks/useAuth';
 
 interface CleanerSelectionStepProps {
   onNext?: () => void;
@@ -17,6 +18,8 @@ interface CleanerSelectionStepProps {
 }
 
 export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = true }: CleanerSelectionStepProps) {
+  const router = useRouter();
+  const { loading: authLoading, isAuthenticated } = useRequireAuth();
   const {
     selectedSuburb,
     selectedDate,
@@ -28,12 +31,19 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     setAvailableCleaners,
   } = useBookingStore();
 
-  const router = useRouter();
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // Redirect to login with return URL
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/auth/login?returnTo=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
@@ -204,6 +214,30 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       </div>
     </Card>
   );
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

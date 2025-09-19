@@ -8,6 +8,9 @@
  * variables (warnings only for local development).
  */
 
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
+
 // Required client-side environment variables
 const REQUIRED_CLIENT_VARS = [
   'NEXT_PUBLIC_SUPABASE_URL',

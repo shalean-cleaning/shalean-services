@@ -10,10 +10,12 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBookingStore } from '@/lib/stores/booking-store';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { initiatePaymentAction } from '@/lib/actions/payments';
 
 export function BookingReviewStep() {
   const router = useRouter();
+  const { loading: authLoading, isAuthenticated } = useRequireAuth();
   const {
     selectedService,
     bedroomCount,
@@ -46,6 +48,15 @@ export function BookingReviewStep() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // Redirect to login with return URL
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/auth/login?returnTo=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Form validation
   useEffect(() => {
@@ -250,6 +261,30 @@ export function BookingReviewStep() {
       hour12: true
     });
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

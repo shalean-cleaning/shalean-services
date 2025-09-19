@@ -17,7 +17,9 @@
     "validate:env": "node scripts/validate-env.js",
     "test:booking": "echo 'TODO: implement e2e booking test' && exit 0",
     "health:local": "curl -s http://localhost:3000/api/health | node -e \"process.stdin.on('data',d=>console.log(JSON.stringify(JSON.parse(d),null,2)))\"",
-    "health:vercel": "curl -s https://shalean-services.vercel.app/api/health | node -e \"process.stdin.on('data',d=>console.log(JSON.stringify(JSON.parse(d),null,2)))\""
+    "health:vercel": "curl -s https://shalean-services.vercel.app/api/health | node -e \"process.stdin.on('data',d=>console.log(JSON.stringify(JSON.parse(d),null,2)))\"",
+    "clear-cache": "node scripts/clear-next-cache.js",
+    "fix-local-env": "node scripts/fix-local-env.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

@@ -29,6 +29,9 @@ function SignupForm() {
     setError('')
 
     try {
+      // Use the current origin for local development, or fallback to environment variable
+      const redirectUrl = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -37,7 +40,7 @@ function SignupForm() {
             first_name: firstName,
             last_name: lastName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
+          emailRedirectTo: redirectUrl,
         },
       })
 

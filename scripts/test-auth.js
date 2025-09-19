@@ -14,10 +14,14 @@ import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
 
 // Load environment variables
-config()
+config({ path: '.env' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+console.log('Environment variables loaded:')
+console.log('SUPABASE_URL:', supabaseUrl ? 'Found' : 'Missing')
+console.log('SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Found' : 'Missing')
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase environment variables')
@@ -31,7 +35,7 @@ async function testAuthentication() {
 
   // Test 1: User Signup
   console.log('1️⃣ Testing user signup...')
-  const testEmail = `test-${Date.now()}@example.com`
+  const testEmail = `testuser${Date.now()}@gmail.com`
   const testPassword = 'testpassword123'
   
   const { data: signupData, error: signupError } = await supabase.auth.signUp({
@@ -58,22 +62,27 @@ async function testAuthentication() {
   console.log('\n2️⃣ Testing profile creation...')
   
   // Wait a moment for the trigger to execute
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await new Promise(resolve => setTimeout(resolve, 3000))
   
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', signupData.user?.id)
-    .single()
 
   if (profileError) {
     console.error('❌ Profile creation failed:', profileError.message)
     return
   }
 
+  if (!profile || profile.length === 0) {
+    console.error('❌ No profile found for user')
+    return
+  }
+
+  const userProfile = profile[0]
   console.log('✅ Profile created successfully')
-  console.log('   Role:', profile.role)
-  console.log('   Name:', profile.first_name, profile.last_name)
+  console.log('   Role:', userProfile.role)
+  console.log('   Name:', userProfile.first_name, userProfile.last_name)
 
   // Test 3: User Login
   console.log('\n3️⃣ Testing user login...')
