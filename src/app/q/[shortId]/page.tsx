@@ -64,7 +64,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
 }
 
 export async function generateMetadata({ params }: QuoteDetailPageProps) {
-  const { shortId } = await params;
+  const { shortId: _shortId } = await params;
   
   return {
     title: `Quote Details - Shalean Cleaning Services`,
