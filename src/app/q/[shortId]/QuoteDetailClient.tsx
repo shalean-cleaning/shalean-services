@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface Quote {
@@ -89,9 +88,9 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
         <p className="mt-2 text-gray-600">
           Generated on {formatDate(quote.created_at)}
         </p>
-        <Badge variant="outline" className="mt-2">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 mt-2">
           Quote #{quote.short_id}
-        </Badge>
+        </span>
       </div>
 
       {/* Service Details */}

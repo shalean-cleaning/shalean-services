@@ -58,11 +58,27 @@ async function testAuthentication() {
   console.log('   User ID:', signupData.user?.id)
   console.log('   Email:', signupData.user?.email)
 
-  // Test 2: Check Profile Creation
-  console.log('\n2️⃣ Testing profile creation...')
+  // Test 2: User Login
+  console.log('\n2️⃣ Testing user login...')
+  
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+    email: testEmail,
+    password: testPassword,
+  })
+
+  if (loginError) {
+    console.error('❌ Login failed:', loginError.message)
+    return
+  }
+
+  console.log('✅ Login successful')
+  console.log('   User ID:', loginData.user?.id)
+
+  // Test 3: Check Profile Creation (after authentication)
+  console.log('\n3️⃣ Testing profile creation...')
   
   // Wait a moment for the trigger to execute
-  await new Promise(resolve => setTimeout(resolve, 3000))
+  await new Promise(resolve => setTimeout(resolve, 1000))
   
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -83,22 +99,6 @@ async function testAuthentication() {
   console.log('✅ Profile created successfully')
   console.log('   Role:', userProfile.role)
   console.log('   Name:', userProfile.first_name, userProfile.last_name)
-
-  // Test 3: User Login
-  console.log('\n3️⃣ Testing user login...')
-  
-  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-    email: testEmail,
-    password: testPassword,
-  })
-
-  if (loginError) {
-    console.error('❌ Login failed:', loginError.message)
-    return
-  }
-
-  console.log('✅ Login successful')
-  console.log('   User ID:', loginData.user?.id)
 
   // Test 4: Test RLS Policies
   console.log('\n4️⃣ Testing RLS policies...')
