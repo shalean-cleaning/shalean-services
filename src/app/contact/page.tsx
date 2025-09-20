@@ -4,6 +4,9 @@ import Link from 'next/link'
 export const metadata = {
   title: 'Contact Us',
   description: 'Get in touch with Shalean Cleaning Services. We\'re here to help with all your home care needs.',
+  alternates: {
+    canonical: '/contact',
+  },
 }
 
 export default function ContactPage() {

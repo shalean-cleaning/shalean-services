@@ -4,6 +4,9 @@ import Link from 'next/link'
 export const metadata = {
   title: 'How It Works',
   description: 'Learn how easy it is to get the home care services you need with Shalean Cleaning Services.',
+  alternates: {
+    canonical: '/how-it-works',
+  },
 }
 
 export default function HowItWorksPage() {

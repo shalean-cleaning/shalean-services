@@ -26,3 +26,13 @@ export function validateReturnTo(returnTo: string | null): string {
 
   return '/'
 }
+
+/**
+ * Formats a number as currency
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(amount)
+}

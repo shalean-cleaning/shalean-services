@@ -57,6 +57,31 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protect cleaner routes
+  if (request.nextUrl.pathname.startsWith('/dashboard/cleaner')) {
+    if (!user) {
+      // Redirect to login if not authenticated
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      url.searchParams.set('returnTo', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+
+    // Check if user is cleaner or admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'CLEANER' && profile?.role !== 'ADMIN') {
+      // Redirect to home if not cleaner or admin
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:

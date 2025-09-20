@@ -134,5 +134,9 @@ export async function generateMetadata({ params }: BookingPageProps) {
   return {
     title: `Book ${serviceData.service.name} - Shalean Services`,
     description: serviceData.service.description || `Book ${serviceData.service.name} cleaning service`,
+    robots: 'noindex, nofollow', // PRD requirement: transactional routes are noindex
+    alternates: {
+      canonical: `/booking/service/${slug}`,
+    },
   };
 }

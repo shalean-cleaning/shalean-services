@@ -18,4 +18,4 @@ Allow: /our-team/
 Allow: /why-choose-shalean/
 Allow: /quote/
 
-Sitemap: https://your-domain.com/sitemap.xml
+Sitemap: https://shalean-services.vercel.app/sitemap.xml

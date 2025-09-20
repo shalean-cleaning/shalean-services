@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { sendBookingConfirmation } from "@/app/actions/send-booking-confirmation";
 
 export const runtime = "nodejs";
 
@@ -30,13 +31,24 @@ export async function POST(req: Request) {
       }, { status: 401 });
     }
 
-    // Fetch booking with all required fields for validation
+    // Fetch booking with all required fields for validation and related data
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from("bookings")
       .select(`
         *,
         services (name),
-        suburbs (name)
+        suburbs (name),
+        profiles!bookings_customer_id_fkey (
+          email,
+          first_name,
+          last_name,
+          full_name
+        ),
+        cleaners:profiles!bookings_cleaner_id_fkey (
+          first_name,
+          last_name,
+          full_name
+        )
       `)
       .eq("id", bookingId)
       .eq("customer_id", session.user.id) // Ensure user owns the booking
@@ -144,6 +156,40 @@ export async function POST(req: Request) {
         error: "UPDATE_FAILED",
         message: "Failed to update booking status"
       }, { status: 500 });
+    }
+
+    // Send booking confirmation email
+    try {
+      const customerProfile = booking.profiles;
+      const cleanerProfile = booking.cleaners;
+      
+      if (customerProfile?.email) {
+        const emailData = {
+          customerName: customerProfile.full_name || `${customerProfile.first_name || ''} ${customerProfile.last_name || ''}`.trim(),
+          customerEmail: customerProfile.email,
+          bookingId: booking.id,
+          serviceName: booking.services?.name || 'Cleaning Service',
+          bookingDate: booking.booking_date,
+          bookingTime: booking.start_time,
+          address: booking.address || '',
+          postcode: booking.postcode || '',
+          bedrooms: booking.bedrooms || 0,
+          bathrooms: booking.bathrooms || 0,
+          totalPrice: booking.total_price,
+          cleanerName: cleanerProfile ? 
+            (cleanerProfile.full_name || `${cleanerProfile.first_name || ''} ${cleanerProfile.last_name || ''}`.trim()) : 
+            undefined,
+          specialInstructions: booking.special_instructions || undefined,
+        };
+
+        await sendBookingConfirmation(emailData);
+        logger.info(`Booking confirmation email sent for booking ${booking.id}`);
+      } else {
+        logger.warn(`No customer email found for booking ${booking.id}, skipping email notification`);
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the booking confirmation
+      logger.error("Failed to send booking confirmation email:", emailError);
     }
 
     return NextResponse.json({

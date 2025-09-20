@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 export const metadata: Metadata = {
   title: "Apply to Work",
   description: "Join the Shalean Cleaning Services team. Apply for cleaning positions with competitive pay, flexible hours, and professional development opportunities.",
+  alternates: {
+    canonical: '/apply',
+  },
 };
 
 export default function Apply() {

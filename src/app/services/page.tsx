@@ -1,10 +1,19 @@
 import { DollarSign, Home } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatZAR } from '@/lib/format';
 import { getServices } from '@/lib/services';
+
+export const metadata: Metadata = {
+  title: 'Our Cleaning Services',
+  description: 'Professional cleaning services tailored to your needs. Choose from our range of services and book online.',
+  alternates: {
+    canonical: '/services',
+  },
+};
 
 export default async function ServicesPage() {
   const services = await getServices();

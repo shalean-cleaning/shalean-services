@@ -103,5 +103,8 @@ export async function generateMetadata({ params }: OrderConfirmationPageProps) {
     title: `Booking Confirmation - Order ${shortId} | Shalean Services`,
     description: 'Your booking has been confirmed. Thank you for choosing Shalean Services.',
     robots: 'noindex, nofollow', // Don't index confirmation pages
+    alternates: {
+      canonical: `/order/${shortId}`,
+    },
   };
 }

@@ -4,6 +4,9 @@ import Link from 'next/link'
 export const metadata = {
   title: 'Blog',
   description: 'Tips, guides, and insights for maintaining a clean, comfortable home from the Shalean Cleaning Services team.',
+  alternates: {
+    canonical: '/blog',
+  },
 }
 
 export default function BlogPage() {

@@ -1,4 +1,13 @@
 import { QuickQuote } from '@/components/quote/quick-quote';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Get Your Free Quote',
+  description: 'Get an instant price estimate for your cleaning service. No commitment required.',
+  alternates: {
+    canonical: '/quote',
+  },
+};
 
 export default function QuotePage() {
   return (

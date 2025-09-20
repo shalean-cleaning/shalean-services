@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us - Shalean Services",
   description: "Learn about Shalean Services, South Africa's premier cleaning and home management company. Our story, mission, and commitment to excellence.",
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 export default function AboutPage() {

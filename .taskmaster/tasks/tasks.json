@@ -754,15 +754,15 @@
           3,
           10
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Set Up Cleaner Dashboard Route and Authentication",
             "description": "Create the Next.js route group `/dashboard/cleaner` and implement middleware to protect it, ensuring only users with the 'cleaner' role can access the pages within.",
             "dependencies": [],
-            "details": "Using the project's middleware configuration (likely with `@supabase/auth-helpers-nextjs`), add a rule that checks the user's session and their role from the `profiles` table for any request to `/dashboard/cleaner/**`. Unauthenticated users or users without the 'cleaner' role should be redirected to the login page or an 'unauthorized' page.",
-            "status": "pending",
+            "details": "Using the project's middleware configuration (likely with `@supabase/auth-helpers-nextjs`), add a rule that checks the user's session and their role from the `profiles` table for any request to `/dashboard/cleaner/**`. Unauthenticated users or users without the 'cleaner' role should be redirected to the login page or an 'unauthorized' page.\n<info added on 2025-09-20T16:23:37.765Z>\nThe route group `(cleaner)` has been created at `src/app/(cleaner)`, which includes a new `layout.tsx`. This layout file establishes the main structure for the cleaner portal, complete with a sidebar for navigation and a user profile display.\n\nThe core route protection was implemented by updating `middleware.ts`. The middleware now intercepts requests to `/dashboard/cleaner/**`, validates the user's session, and performs a role check. Access is granted only to users with the role of 'CLEANER' or 'ADMIN' in the `profiles` table. Users who are unauthenticated or have an invalid role are redirected to the login page.\n</info added on 2025-09-20T16:23:37.765Z>",
+            "status": "done",
             "testStrategy": "Log in as a 'customer' and attempt to navigate to `/dashboard/cleaner`; verify redirection. Log out and attempt to access the URL; verify redirection. Log in as a 'cleaner' and verify successful access."
           },
           {
@@ -773,7 +773,7 @@
               "12.1"
             ],
             "details": "In the main server component for the cleaner dashboard, get the logged-in user's ID from the Supabase session. Create a database query that selects all records from the `bookings` table where the `cleaner_id` column matches the user's ID. The query should also join with related tables (e.g., `services`, `profiles` for customer info) to get all necessary details for display. Order the results by date.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create test bookings in Supabase assigned to a specific test cleaner. Log in as that cleaner and verify that the page component's data fetching function returns only the assigned bookings. Log in as a different cleaner and verify they see their own jobs or an empty list."
           },
           {
@@ -784,7 +784,7 @@
               "12.2"
             ],
             "details": "Create a main dashboard layout component. Develop a 'JobCard' component that accepts a booking object as a prop and displays key information like customer name, address, service details, and scheduled time. In the main dashboard, process the fetched jobs to create two lists: 'Today's Jobs' and 'Upcoming Jobs', and render them accordingly using the 'JobCard' component.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Render the dashboard page with mock data representing various jobs (today, future, different statuses). Verify that the UI correctly separates the jobs and that each 'JobCard' displays all required information accurately and is responsive on different screen sizes."
           },
           {
@@ -793,7 +793,7 @@
             "description": "Implement the backend server actions required to securely update the `status` field of a booking in the Supabase database.",
             "dependencies": [],
             "details": "Create a new file for cleaner-related server actions. Define functions like `updateBookingStatus(bookingId, newStatus)`. Inside each action, first, get the current user's ID. Before updating, perform a security check to ensure the booking `bookingId` is actually assigned to the current cleaner. If authorized, update the `status` field in the `bookings` table for the given `bookingId`. Implement revalidation (`revalidatePath`) to refresh the dashboard data.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually invoke the server actions with valid parameters (correct cleaner and booking ID) and verify the status is updated in Supabase. Test failure cases by invoking the action for a booking not assigned to the current user and confirm no update occurs and an error is returned."
           },
           {
@@ -805,7 +805,7 @@
               "12.4"
             ],
             "details": "Modify the 'JobCard' component to be a client component. Add buttons for status changes like 'On My Way', 'Arrived', and 'Completed'. Wrap these buttons in a `<form>` and use the `formAction` attribute to call the appropriate server action from subtask 12.4. Conditionally render or disable buttons based on the current job status (e.g., 'Arrived' button is only active if status is 'On My Way').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "As a logged-in cleaner, navigate the dashboard. Click the 'On My Way' button for a job. Verify the page refreshes and the job's status and available actions are updated. Check the `bookings` table in Supabase to confirm the `status` field was changed correctly. Repeat for all status transitions."
           }
         ]
@@ -886,7 +886,7 @@
         "dependencies": [
           10
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -894,7 +894,7 @@
             "description": "Configure the project to use Resend for sending emails and React Email for templating. This includes signing up for the service, obtaining API keys, and installing the required libraries.",
             "dependencies": [],
             "details": "Sign up for a Resend account and generate an API key. Install the `resend` and `react-email` npm packages. Add the Resend API key to the project's environment variables (`.env.local`) as `RESEND_API_KEY`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the environment variables are loaded correctly by the application and that the installed packages do not cause build errors."
           },
           {
@@ -905,7 +905,7 @@
               "14.1"
             ],
             "details": "Create a new file, e.g., `/emails/BookingConfirmation.tsx`. Design the email layout to include placeholders for customer name, booking ID, service details, date, time, and total price. Style the email for a professional appearance using React Email components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use the React Email development server to preview the email template. Pass mock data as props to the component to ensure it renders correctly and is visually appealing."
           },
           {
@@ -917,7 +917,7 @@
               "14.2"
             ],
             "details": "Create a new server action file (e.g., `app/actions/send-booking-confirmation.ts`). This action will accept an object containing booking and customer details. It will import the `BookingConfirmation` template, render it to an HTML string using React Email's `render` function, and then call `resend.emails.send()` with the recipient's email, subject line, and the rendered HTML.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a temporary test script or a simple API route to trigger this action with mock data and verify that an email is sent successfully to a test address like Mailtrap."
           },
           {
@@ -928,7 +928,7 @@
               "14.3"
             ],
             "details": "In the server action or API route that handles the final step of a booking (related to Task 10), locate the point after the database insertion is confirmed successful. At this point, call the `sendBookingConfirmation` server action created in the previous subtask. Pass the relevant data from the newly created booking record and associated user.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Add logging before and after the email action is called within the booking finalization logic. Run a test booking and check the server logs to confirm the action was triggered with the correct data payload."
           },
           {
@@ -939,7 +939,7 @@
               "14.4"
             ],
             "details": "Using a test user account, complete the entire booking flow in the application. The test should trigger the database write and the subsequent email notification.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Check the recipient's inbox (or a service like Mailtrap) to verify the confirmation email was received promptly. Scrutinize the email's subject, sender, and body content. Confirm that all dynamic fields (customer name, booking details, price) match the data from the test booking."
           }
         ]
@@ -947,7 +947,7 @@
     ],
     "metadata": {
       "created": "2025-09-12T12:57:51.800Z",
-      "updated": "2025-09-20T14:51:34.027Z",
+      "updated": "2025-09-20T16:59:58.417Z",
       "description": "Tasks for master context"
     }
   }

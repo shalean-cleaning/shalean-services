@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Our Team - Shalean Services",
   description: "Meet the dedicated professionals behind Shalean Services. Our experienced team of cleaners, housekeepers, and support staff is committed to delivering exceptional service.",
+  alternates: {
+    canonical: '/our-team',
+  },
 };
 
 export default function OurTeamPage() {

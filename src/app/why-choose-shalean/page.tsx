@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: 'Why Choose Shalean Cleaning Services',
   description: 'Discover why Shalean Cleaning Services is the trusted choice for professional home cleaning in South Africa. Quality, reliability, and satisfaction guaranteed.',
   keywords: ['cleaning services', 'professional cleaners', 'home cleaning', 'reliable service', 'quality cleaning'],
+  alternates: {
+    canonical: '/why-choose-shalean',
+  },
 };
 
 const features = [

@@ -69,6 +69,9 @@ export async function generateMetadata({ params }: QuoteDetailPageProps) {
   return {
     title: `Quote Details - Shalean Cleaning Services`,
     description: 'View your personalized cleaning service quote',
-    robots: 'noindex, nofollow' // PRD requirement: transactional routes are noindex
+    robots: 'noindex, nofollow', // PRD requirement: transactional routes are noindex
+    alternates: {
+      canonical: `/q/${_shortId}`,
+    },
   };
 }
