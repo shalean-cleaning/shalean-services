@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { createSupabaseAdmin, createSupabaseServer } from '@/lib/supabase/server';
+import { createSupabaseAdmin } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { env } from '@/env.server';
 
@@ -100,43 +100,17 @@ async function upsertPaymentRecord(
   }
 }
 
-// Helper function to validate booking ownership and status
+// Helper function to validate booking status (no authentication required for guest bookings)
 async function validateBooking(
   supabaseAdmin: ReturnType<typeof createSupabaseAdmin>,
-  bookingId: string,
-  customerId: string
+  bookingId: string
 ): Promise<{ isValid: boolean; booking?: any; error?: string; errorCode?: string }> {
   try {
-    // First, check if booking exists at all
-    const { data: bookingExists, error: existsError } = await supabaseAdmin
-      .from('bookings')
-      .select('id, customer_id')
-      .eq('id', bookingId)
-      .single();
-
-    if (existsError) {
-      if (existsError.code === 'PGRST116') {
-        return { isValid: false, error: 'Booking not found', errorCode: 'booking_not_found' };
-      }
-      logger.error('Booking existence check error:', existsError);
-      return { isValid: false, error: 'Failed to validate booking', errorCode: 'validation_failed' };
-    }
-
-    if (!bookingExists) {
-      return { isValid: false, error: 'Booking not found', errorCode: 'booking_not_found' };
-    }
-
-    // Check ownership
-    if (bookingExists.customer_id !== customerId) {
-      return { isValid: false, error: 'Access denied - booking does not belong to you', errorCode: 'not_owner' };
-    }
-
-    // Now get full booking details with payments
+    // Check if booking exists and get details (no authentication required for guest bookings)
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
       .select(`
         id,
-        customer_id,
         total_price,
         status,
         payments (
@@ -146,12 +120,18 @@ async function validateBooking(
         )
       `)
       .eq('id', bookingId)
-      .eq('customer_id', customerId)
       .single();
 
-    if (error || !booking) {
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { isValid: false, error: 'Booking not found', errorCode: 'booking_not_found' };
+      }
       logger.error('Booking fetch error:', error);
       return { isValid: false, error: 'Failed to fetch booking details', errorCode: 'fetch_failed' };
+    }
+
+    if (!booking) {
+      return { isValid: false, error: 'Booking not found', errorCode: 'booking_not_found' };
     }
 
     // Check if booking is already paid
@@ -161,12 +141,8 @@ async function validateBooking(
     }
 
     // Check if booking status allows payment
-    if (booking.status === 'CANCELLED') {
-      return { isValid: false, error: 'Cannot pay for a cancelled booking', errorCode: 'invalid_status' };
-    }
-
-    if (booking.status === 'COMPLETED') {
-      return { isValid: false, error: 'Cannot pay for a completed booking', errorCode: 'invalid_status' };
+    if (!['DRAFT', 'PENDING', 'READY_FOR_PAYMENT'].includes(booking.status)) {
+      return { isValid: false, error: 'Booking is not in a valid state for payment', errorCode: 'invalid_status' };
     }
 
     return { isValid: true, booking };
@@ -196,22 +172,9 @@ export async function initiatePaymentAction(input: InitiatePaymentInput) {
 
     const { bookingId, customerName, customerEmail, customerPhone } = validationResult.data;
     const supabaseAdmin = createSupabaseAdmin();
-    const supabaseServer = await createSupabaseServer();
 
-    // Get customer from session
-    const { data: { session }, error: sessionError } = await supabaseServer.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return {
-        success: false,
-        error: "Authentication required"
-      };
-    }
-
-    const customerId = session.user.id;
-
-    // Validate booking ownership and status
-    const bookingValidation = await validateBooking(supabaseAdmin, bookingId, customerId);
+    // Validate booking status (no authentication required for guest bookings)
+    const bookingValidation = await validateBooking(supabaseAdmin, bookingId);
     if (!bookingValidation.isValid) {
       return {
         success: false,
@@ -249,10 +212,9 @@ export async function initiatePaymentAction(input: InitiatePaymentInput) {
     // Prepare callback URL
     const callbackUrl = `${env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/booking/payment/callback`;
 
-    // Prepare metadata
+    // Prepare metadata (no customer_id for guest bookings)
     const metadata = {
       booking_id: bookingId,
-      customer_id: customerId,
       customer_email: customerEmail,
       customer_name: customerName,
       customer_phone: customerPhone

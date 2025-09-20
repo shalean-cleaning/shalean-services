@@ -20,9 +20,10 @@ export async function POST(request: Request) {
       )
     }
     
-    // Check for Authorization header (Bearer token)
+    // Check for Authorization header (Bearer token) - optional for guest bookings
     const authHeader = request.headers.get('authorization')
     let user = null
+    let customerId = null
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Handle Bearer token authentication
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
       
       if (!tokenError && tokenUser) {
         user = tokenUser
+        customerId = user.id
       }
     } else {
       // Handle cookie-based authentication (existing flow)
@@ -38,16 +40,11 @@ export async function POST(request: Request) {
       
       if (!authError && cookieUser) {
         user = cookieUser
+        customerId = user.id
       }
     }
     
-    if (!user) {
-      console.error('Authentication error: No user found')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    // For guest bookings, customerId will be null - this is allowed per PRD
 
     // Parse request body
     let requestData;
@@ -68,20 +65,43 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user already has a DRAFT booking
-    const { data: existingDraft, error: fetchError } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('customer_id', user.id)
-      .eq('status', 'DRAFT')
-      .single()
+    // Check if user already has a DRAFT booking (or get from cookie for guest users)
+    let existingDraft = null
+    let fetchError = null
+    
+    if (customerId) {
+      // Authenticated user - check by customer_id
+      const result = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('customer_id', customerId)
+        .eq('status', 'DRAFT')
+        .single()
+      existingDraft = result.data
+      fetchError = result.error
+    } else {
+      // Guest user - check by cookie
+      const cookieStore = await cookies()
+      const bookingDraftId = cookieStore.get('booking-draft-id')?.value
+      
+      if (bookingDraftId) {
+        const result = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', bookingDraftId)
+          .eq('status', 'DRAFT')
+          .single()
+        existingDraft = result.data
+        fetchError = result.error
+      }
+    }
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       console.error('Error fetching existing draft:', {
         error: fetchError,
         errorCode: fetchError.code,
         errorMessage: fetchError.message,
-        userId: user.id,
+        userId: customerId,
         supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
         hasAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         isPlaceholderUrl: env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')
@@ -147,7 +167,7 @@ export async function POST(request: Request) {
 
     // Create new DRAFT booking with provided data
     const insertData: any = {
-      customer_id: user.id,
+      customer_id: customerId, // null for guest bookings
       service_id: requestData.serviceId,
       suburb_id: requestData.suburbId,
       booking_date: requestData.bookingDate || new Date().toISOString().split('T')[0],

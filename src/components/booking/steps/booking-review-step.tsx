@@ -10,14 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBookingStore } from '@/lib/stores/booking-store';
-import { useRequireAuth } from '@/hooks/useAuth';
 import { initiatePaymentAction } from '@/lib/actions/payments';
-import { createClient } from '@/lib/supabase-client';
 
 export function BookingReviewStep() {
   const router = useRouter();
-  const { loading: authLoading, isAuthenticated } = useRequireAuth();
-  const supabase = createClient();
   const {
     selectedService,
     bedroomCount,
@@ -51,14 +47,7 @@ export function BookingReviewStep() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // Handle authentication redirect
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      // Redirect to login with return URL
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/auth/login?returnTo=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [authLoading, isAuthenticated, router]);
+  // No authentication required for guest bookings
 
   // Form validation
   useEffect(() => {
@@ -102,15 +91,10 @@ export function BookingReviewStep() {
       setError(null);
       
       try {
-        // Get the current session token for authentication
-        const { data: { session } } = await supabase.auth.getSession();
+        // No authentication required for guest bookings
         const authHeaders: Record<string, string> = {
           'Content-Type': 'application/json',
         };
-        
-        if (session?.access_token) {
-          authHeaders['Authorization'] = `Bearer ${session.access_token}`;
-        }
         
         // First, try to get existing draft
         const getResponse = await fetch('/api/bookings/draft', {
@@ -276,28 +260,7 @@ export function BookingReviewStep() {
   };
 
   // Show loading state while checking authentication
-  if (authLoading) {
-    return (
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return (
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
+  // No authentication loading state needed for guest bookings
 
   if (isLoading) {
     return (
