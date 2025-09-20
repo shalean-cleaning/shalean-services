@@ -38,14 +38,8 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
   const [isSaving, setIsSaving] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
-  // Handle authentication redirect
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      // Redirect to login with return URL
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/auth/login?returnTo=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [authLoading, isAuthenticated, router]);
+  // Note: Authentication is only required when clicking "Continue to Booking"
+  // This allows users to browse cleaners without being forced to log in
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
@@ -114,6 +108,14 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     
     if (!canContinue) {
       setInlineError('Please select a cleaner or enable auto-assign to continue');
+      return;
+    }
+    
+    // Check authentication before proceeding - this is the authentication gate per PRD
+    if (!isAuthenticated) {
+      // Redirect to login with return URL to booking review
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/auth/login?returnTo=${encodeURIComponent('/booking/review')}`);
       return;
     }
     
