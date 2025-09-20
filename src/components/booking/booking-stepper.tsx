@@ -130,10 +130,6 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 5:
         return (
           <CleanerSelectionStep 
-            onNext={() => {
-              // Navigate to review page instead of step 6
-              window.location.href = '/booking/review';
-            }}
             onPrevious={handlePrevious}
             canGoBack={currentStep > 1}
           />

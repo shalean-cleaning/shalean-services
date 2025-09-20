@@ -122,7 +122,7 @@ describe('CleanerSelectionStep', () => {
   });
 
   it('renders the cleaner selection step', () => {
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     expect(screen.getByText('Choose Your Cleaner')).toBeInTheDocument();
     expect(screen.getByText('Select a cleaner or let us assign the best match for you')).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe('CleanerSelectionStep', () => {
   });
 
   it('fetches available cleaners on mount', async () => {
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/cleaners/availability'), {
@@ -146,7 +146,7 @@ describe('CleanerSelectionStep', () => {
   it('calls setAutoAssign when auto-assign button is clicked', () => {
     mockBookingStore.availableCleaners = [mockCleaner];
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     const autoAssignButton = screen.getByText('Auto-assign');
     fireEvent.click(autoAssignButton);
@@ -157,7 +157,7 @@ describe('CleanerSelectionStep', () => {
   it('shows loading state while fetching cleaners', () => {
     (global.fetch as jest.MockedFunction<typeof fetch>).mockImplementation(() => new Promise(() => {})); // Never resolves
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     // Should show skeleton cards
     expect(screen.getAllByTestId('skeleton-card')).toHaveLength(3);
@@ -166,7 +166,7 @@ describe('CleanerSelectionStep', () => {
   it('shows error state when fetch fails', async () => {
     (global.fetch as jest.MockedFunction<typeof fetch>).mockRejectedValue(new Error('Network error'));
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     await waitFor(() => {
       expect(screen.getByText(/We couldn't load available cleaners/)).toBeInTheDocument();
@@ -181,7 +181,7 @@ describe('CleanerSelectionStep', () => {
       }),
     });
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     await waitFor(() => {
       expect(screen.getByText('No Cleaners Available')).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('CleanerSelectionStep', () => {
   });
 
   it('shows disabled primary button when no selection is made', () => {
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     const continueButton = screen.getByText('Select a cleaner to continue');
     expect(continueButton).toBeDisabled();
@@ -200,7 +200,7 @@ describe('CleanerSelectionStep', () => {
   it('shows enabled primary button when cleaner is selected', () => {
     mockBookingStore.selectedCleanerId = 'cleaner-1';
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     const continueButton = screen.getByText('Continue to Booking');
     expect(continueButton).not.toBeDisabled();
@@ -210,7 +210,7 @@ describe('CleanerSelectionStep', () => {
   it('shows enabled primary button when auto-assign is enabled', () => {
     mockBookingStore.autoAssign = true;
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     const continueButton = screen.getByText('Continue to Booking');
     expect(continueButton).not.toBeDisabled();
@@ -218,7 +218,7 @@ describe('CleanerSelectionStep', () => {
   });
 
   it('shows inline error when trying to continue without selection', async () => {
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep  onPrevious={mockOnPrevious} />);
 
     const continueButton = screen.getByText('Select a cleaner to continue');
     fireEvent.click(continueButton);
@@ -228,25 +228,25 @@ describe('CleanerSelectionStep', () => {
     });
   });
 
-  it('calls onNext when continue is clicked with valid selection', async () => {
+  it('navigates to review page when continue is clicked with valid selection', async () => {
     mockBookingStore.selectedCleanerId = 'cleaner-1';
     (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ id: 'booking-123' }),
+      json: () => Promise.resolve({ bookingId: 'booking-123' }),
     });
     
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep onPrevious={mockOnPrevious} />);
 
     const continueButton = screen.getByText('Continue to Booking');
     fireEvent.click(continueButton);
 
     await waitFor(() => {
-      expect(mockOnNext).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith('/booking/review?bookingId=booking-123');
     });
   });
 
   it('calls onPrevious when previous button is clicked', () => {
-    render(<CleanerSelectionStep onNext={mockOnNext} onPrevious={mockOnPrevious} />);
+    render(<CleanerSelectionStep onPrevious={mockOnPrevious} />);
 
     const previousButton = screen.getByText('Previous');
     fireEvent.click(previousButton);
