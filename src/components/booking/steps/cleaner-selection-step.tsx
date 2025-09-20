@@ -114,7 +114,6 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     // Check authentication before proceeding - this is the authentication gate per PRD
     if (!isAuthenticated) {
       // Redirect to login with return URL to booking review
-      const currentUrl = window.location.pathname + window.location.search;
       router.push(`/auth/login?returnTo=${encodeURIComponent('/booking/review')}`);
       return;
     }
