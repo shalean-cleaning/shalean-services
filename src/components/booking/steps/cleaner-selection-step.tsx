@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { createClient } from '@/lib/supabase-client';
 
 interface CleanerSelectionStepProps {
   onNext?: () => void;
@@ -20,6 +21,7 @@ interface CleanerSelectionStepProps {
 export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = true }: CleanerSelectionStepProps) {
   const router = useRouter();
   const { loading: authLoading, isAuthenticated } = useRequireAuth();
+  const supabase = createClient();
   const {
     selectedSuburb,
     selectedDate,
@@ -139,12 +141,20 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         autoAssign: autoAssign
       };
       
+      // Get the current session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (session?.access_token) {
+        authHeaders['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
       // POST /api/bookings/draft
       const response = await fetch('/api/bookings/draft', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
         body: JSON.stringify(payloadWithCleaner),
       });
       
@@ -163,9 +173,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         try {
           const existingResponse = await fetch('/api/bookings/draft', {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: authHeaders,
           });
           
           if (existingResponse.ok) {

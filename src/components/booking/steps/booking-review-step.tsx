@@ -12,10 +12,12 @@ import { Label } from '@/components/ui/label';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { initiatePaymentAction } from '@/lib/actions/payments';
+import { createClient } from '@/lib/supabase-client';
 
 export function BookingReviewStep() {
   const router = useRouter();
   const { loading: authLoading, isAuthenticated } = useRequireAuth();
+  const supabase = createClient();
   const {
     selectedService,
     bedroomCount,
@@ -100,12 +102,20 @@ export function BookingReviewStep() {
       setError(null);
       
       try {
+        // Get the current session token for authentication
+        const { data: { session } } = await supabase.auth.getSession();
+        const authHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (session?.access_token) {
+          authHeaders['Authorization'] = `Bearer ${session.access_token}`;
+        }
+        
         // First, try to get existing draft
         const getResponse = await fetch('/api/bookings/draft', {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders,
         });
         
         if (getResponse.ok) {
@@ -116,7 +126,9 @@ export function BookingReviewStep() {
             setBookingStatus('DRAFT'); // Default status for existing draft
             
             // Check if booking is already paid
-            const statusResponse = await fetch(`/api/bookings/${getResult.bookingId}`);
+            const statusResponse = await fetch(`/api/bookings/${getResult.bookingId}`, {
+              headers: authHeaders,
+            });
             if (statusResponse.ok) {
               const statusData = await statusResponse.json();
               setBookingStatus(statusData.booking?.status || 'PENDING');
@@ -136,11 +148,10 @@ export function BookingReviewStep() {
             autoAssign: autoAssign
           };
           
+          
           const response = await fetch('/api/bookings/draft', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: authHeaders,
             body: JSON.stringify(payloadWithCleaner),
           });
           
@@ -153,7 +164,9 @@ export function BookingReviewStep() {
             
             // Check if booking is already paid
             if (result.bookingId) {
-              const statusResponse = await fetch(`/api/bookings/${result.bookingId}`);
+              const statusResponse = await fetch(`/api/bookings/${result.bookingId}`, {
+                headers: authHeaders,
+              });
               if (statusResponse.ok) {
                 const statusData = await statusResponse.json();
                 setBookingStatus(statusData.booking?.status || 'PENDING');
