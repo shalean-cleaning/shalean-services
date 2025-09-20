@@ -617,15 +617,15 @@
         "dependencies": [
           9
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Build 'Review & Pay' UI Component",
             "description": "Create the user interface for the final booking step. This component will render a complete summary of the booking details (service, extras, date, time, cleaner, total price) from the stepper state and include a form to collect guest contact information (name, email, phone number).",
             "dependencies": [],
-            "details": "The component should be divided into two main sections: a read-only booking summary and a contact information form. The form must have client-side validation for required fields. The final submission button should be disabled until the form is valid. This component will serve as the container for the entire payment process.",
-            "status": "pending",
+            "details": "The component should be divided into two main sections: a read-only booking summary and a contact information form. The form must have client-side validation for required fields. The final submission button should be disabled until the form is valid. This component will serve as the container for the entire payment process.\n<info added on 2025-09-20T13:37:25.808Z>\n**Implementation Notes:**\n\n*   This server action, `initiatePaymentAction`, will be implemented within the `src/lib/actions/payments.ts` file.\n*   It is triggered by the `BookingReviewStep` component (`src/components/booking/steps/booking-review-step.tsx`) upon form submission.\n*   The action will receive the booking state (from `useBookingStore`) and customer contact details as arguments.\n\n**Action Logic:**\n1.  **Server-Side Price Calculation:** Re-calculate the total booking cost on the server by fetching service and extra prices from the database. This is a critical security step to prevent client-side price manipulation.\n2.  **Prepare Paystack Payload:** Construct the payload for the Paystack \"Initialize Transaction\" API endpoint. It must include:\n    *   `email`: The customer's email from the form.\n    *   `amount`: The server-calculated total price, converted to kobo (i.e., `totalPrice * 100`).\n    *   `reference`: A unique ID for this transaction (e.g., the ID of the draft booking).\n    *   `metadata`: Include the draft booking ID and other relevant details for webhook processing.\n3.  **API Call:** Make a POST request to the Paystack initialization endpoint (`https://api.paystack.co/transaction/initialize`) using the secret key.\n4.  **Handle Response:**\n    *   On success, extract the `authorization_url` from the Paystack response. Return this URL to the client, which will then redirect the user to the Paystack payment page.\n    *   On failure, catch any errors from the API call and return a structured error object to the client for display.\n</info added on 2025-09-20T13:37:25.808Z>",
+            "status": "done",
             "testStrategy": "Visually inspect the component to ensure all data from the stepper state is displayed correctly in the summary. Test the contact form's validation by submitting empty or invalid data and verifying that appropriate error messages are shown and the submit button remains disabled."
           },
           {
@@ -636,7 +636,7 @@
               "10.1"
             ],
             "details": "The server action must assemble the payload for the Paystack API, including the total amount, currency, customer email, and a `metadata` object containing all booking details for later verification. Upon a successful API call, the action should return the `authorization_url` provided by Paystack to the client.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Using Paystack's test keys, invoke the server action with mock data. Verify that it successfully communicates with the Paystack API and returns a valid `authorization_url`. Test error handling for cases like an invalid API key or a malformed request."
           },
           {
@@ -647,7 +647,7 @@
               "10.2"
             ],
             "details": "The form's submission handler will receive the `authorization_url` from the server action and use `window.location.href` to redirect the user. Create a new page component at `/order/[short-id]` which will serve as the booking confirmation page. This page will initially be a placeholder until the data-saving logic is complete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Trigger the payment process from the UI. Confirm that the browser correctly redirects to the Paystack URL. After completing the test payment on Paystack's side, ensure the browser is redirected back to the specified callback URL in your application."
           },
           {
@@ -658,7 +658,7 @@
               "10.2"
             ],
             "details": "The route will receive a `reference` from Paystack. It must use this reference to call Paystack's 'Verify Transaction' endpoint. If the payment status is 'success', extract the booking details from the transaction's metadata, generate a unique `short-id`, and insert the new record into the `bookings` table with a 'confirmed' status. The route should then redirect the user to the confirmation page: `/order/{short-id}`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use a test transaction reference to hit the callback route. Verify that it correctly calls the Paystack verification API. For a successful reference, check the `bookings` table to confirm that a new record was created with all the correct data. Test with a failed reference to ensure no record is created."
           },
           {
@@ -670,7 +670,7 @@
               "10.4"
             ],
             "details": "The confirmation page should use the `short-id` from the URL to query the `bookings` table and display a summary of the confirmed booking. For error handling, if the payment verification fails or the user cancels, they should be redirected back to the 'Review & Pay' step with a clear error message explaining what happened.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Perform a full end-to-end test of a successful payment, ensuring the user lands on the confirmation page and sees the correct booking details. Perform another test where the payment is cancelled or fails on the Paystack page, and verify the user is returned to the payment form with an appropriate error message."
           }
         ]
@@ -947,7 +947,7 @@
     ],
     "metadata": {
       "created": "2025-09-12T12:57:51.800Z",
-      "updated": "2025-09-13T21:20:00.305Z",
+      "updated": "2025-09-20T14:51:34.027Z",
       "description": "Tasks for master context"
     }
   }
