@@ -94,7 +94,6 @@ describe('CleanerCard', () => {
 });
 
 describe('CleanerSelectionStep', () => {
-  const mockOnNext = vi.fn();
   const mockOnPrevious = vi.fn();
   
   const mockBookingStore = {
