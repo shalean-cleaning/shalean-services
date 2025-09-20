@@ -71,17 +71,7 @@ export async function POST(request: Request) {
     // Check if user already has a DRAFT booking
     const { data: existingDraft, error: fetchError } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        booking_items (
-          id,
-          service_item_id,
-          item_type,
-          qty,
-          unit_price,
-          subtotal
-        )
-      `)
+      .select('*')
       .eq('customer_id', user.id)
       .eq('status', 'DRAFT')
       .single()
@@ -128,17 +118,7 @@ export async function POST(request: Request) {
         .from('bookings')
         .update(updateData)
         .eq('id', existingDraft.id)
-        .select(`
-          *,
-          booking_items (
-            id,
-            service_item_id,
-            item_type,
-            qty,
-            unit_price,
-            subtotal
-          )
-        `)
+        .select('*')
         .single()
 
       if (updateError) {
@@ -188,17 +168,7 @@ export async function POST(request: Request) {
     const { data: newBooking, error: createError } = await supabase
       .from('bookings')
       .insert(insertData)
-      .select(`
-        *,
-        booking_items (
-          id,
-          service_item_id,
-          item_type,
-          qty,
-          unit_price,
-          subtotal
-        )
-      `)
+      .select('*')
       .single()
 
     if (createError) {
@@ -276,20 +246,10 @@ export async function GET(request: Request) {
       )
     }
 
-    // Fetch the booking with items
+    // Fetch the booking
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        booking_items (
-          id,
-          service_item_id,
-          item_type,
-          qty,
-          unit_price,
-          subtotal
-        )
-      `)
+      .select('*')
       .eq('id', bookingId)
       .eq('customer_id', user.id)
       .eq('status', 'DRAFT')
