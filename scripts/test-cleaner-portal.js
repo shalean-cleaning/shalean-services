@@ -126,7 +126,7 @@ async function testCleanerPortal() {
     console.log('\n3. Verifying database schema...')
     
     // Check if bookings table has required columns
-    const { data: tableInfo, error: tableError } = await supabase
+    const { data: _tableInfo, error: tableError } = await supabase
       .rpc('get_table_columns', { table_name: 'bookings' })
       .single()
 

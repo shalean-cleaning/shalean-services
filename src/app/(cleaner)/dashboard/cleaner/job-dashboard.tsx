@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar, Clock, MapPin, User, Phone, Home, Bath, DollarSign } from "lucide-react"
+// import { useState } from "react"
+import { Calendar, Clock, DollarSign } from "lucide-react"
 import { JobCard } from "./job-card"
 
 interface Job {
@@ -43,7 +43,7 @@ export function JobDashboard({ jobs }: JobDashboardProps) {
   const upcomingJobs = jobs.filter(job => job.booking_date > today)
   const completedJobs = jobs.filter(job => job.status === "COMPLETED")
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
       case "CONFIRMED":
         return "bg-blue-100 text-blue-800"

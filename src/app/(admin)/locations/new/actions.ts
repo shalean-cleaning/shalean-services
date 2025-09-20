@@ -67,7 +67,7 @@ export async function createLocation(data: CreateLocationData) {
     .single()
 
   if (error) {
-    console.error("Error creating location:", error)
+    // console.error("Error creating location:", error)
     return { success: false, error: error.message }
   }
 

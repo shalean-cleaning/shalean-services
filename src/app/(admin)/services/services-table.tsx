@@ -22,7 +22,7 @@ interface ServicesTableProps {
 }
 
 export function ServicesTable({ services }: ServicesTableProps) {
-  const [selectedServices, setSelectedServices] = useState<Service[]>([])
+  const [_selectedServices, _setSelectedServices] = useState<Service[]>([])
 
   const columns: ColumnDef<Service>[] = [
     {

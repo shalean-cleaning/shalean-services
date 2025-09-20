@@ -33,7 +33,7 @@ async function checkSchema() {
       } else {
         existingColumns.push(col);
       }
-    } catch (err) {
+    } catch {
       missingColumns.push(col);
     }
   }

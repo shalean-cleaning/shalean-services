@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal, Edit, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+// import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DataTable } from "@/components/ui/data-table"
 import { formatCurrency } from "@/lib/utils"
-import { Service } from "@/lib/database.types"
+// import { Service } from "@/lib/database.types"
 
 interface ServicePricing {
   service_id: string
@@ -29,7 +29,7 @@ interface ServicePricing {
 }
 
 export function ServicePricingTable() {
-  const [pricing, setPricing] = useState<ServicePricing[]>([])
+  const [pricing, _setPricing] = useState<ServicePricing[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

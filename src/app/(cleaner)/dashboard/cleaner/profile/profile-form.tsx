@@ -38,7 +38,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     try {
       await updateCleanerProfile(profile.id, formData)
       setMessage({ type: 'success', text: 'Profile updated successfully!' })
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' })
     } finally {
       setIsSubmitting(false)

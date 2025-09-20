@@ -27,7 +27,7 @@ interface Extra {
 }
 
 export function ExtrasTable() {
-  const [extras, setExtras] = useState<Extra[]>([])
+  const [extras, _setExtras] = useState<Extra[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

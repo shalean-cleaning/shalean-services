@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Clock, MapPin, User, Phone, Home, Bath, CheckCircle, Car, MapPinIcon } from "lucide-react"
+import { Calendar, Clock, MapPin, User, Phone, Home, Bath, CheckCircle, Car } from "lucide-react"
 import { updateBookingStatus } from "./actions"
 
 interface Job {

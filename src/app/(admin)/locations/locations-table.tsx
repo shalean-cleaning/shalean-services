@@ -21,7 +21,7 @@ interface LocationsTableProps {
 }
 
 export function LocationsTable({ locations }: LocationsTableProps) {
-  const [selectedLocations, setSelectedLocations] = useState<Area[]>([])
+  const [_selectedLocations, _setSelectedLocations] = useState<Area[]>([])
 
   const columns: ColumnDef<Area>[] = [
     {
@@ -44,7 +44,7 @@ export function LocationsTable({ locations }: LocationsTableProps) {
         const adjustment = row.getValue("price_adjustment_pct") as number
         const isPositive = adjustment > 0
         const isNegative = adjustment < 0
-        const isNeutral = adjustment === 0
+        const _isNeutral = adjustment === 0
         
         return (
           <div className={`font-medium ${

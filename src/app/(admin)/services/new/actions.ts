@@ -69,7 +69,7 @@ export async function createService(data: CreateServiceData) {
     .single()
 
   if (error) {
-    console.error("Error creating service:", error)
+    // console.error("Error creating service:", error)
     return { success: false, error: error.message }
   }
 

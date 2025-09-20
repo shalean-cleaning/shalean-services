@@ -33,7 +33,7 @@ async function createAdminUser() {
     console.log('Auth user created:', authData.user.id)
 
     // Create profile with ADMIN role
-    const { data: profileData, error: profileError } = await supabase
+    const { data: _profileData, error: profileError } = await supabase
       .from('profiles')
       .insert({
         id: authData.user.id,
