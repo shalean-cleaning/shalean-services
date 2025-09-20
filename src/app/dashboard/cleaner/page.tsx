@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { ProfileForm } from "./profile-form"
+import { JobDashboard } from "./job-dashboard"
 
-async function getCleanerProfile(userId: string) {
-  const cookieStore = cookies()
+async function getCleanerJobs(userId: string) {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,22 +23,50 @@ async function getCleanerProfile(userId: string) {
     }
   )
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single()
+  // Get all bookings assigned to this cleaner
+  const { data: bookings, error } = await supabase
+    .from("bookings")
+    .select(`
+      id,
+      booking_date,
+      start_time,
+      end_time,
+      status,
+      total_price,
+      address,
+      notes,
+      special_instructions,
+      bedrooms,
+      bathrooms,
+      services!inner (
+        name,
+        description
+      ),
+      profiles!bookings_customer_id_fkey (
+        first_name,
+        last_name,
+        phone
+      ),
+      suburbs (
+        name,
+        postcode
+      )
+    `)
+    .eq("cleaner_id", userId)
+    .in("status", ["CONFIRMED", "IN_PROGRESS", "COMPLETED"])
+    .order("booking_date", { ascending: true })
+    .order("start_time", { ascending: true })
 
   if (error) {
-    console.error("Error fetching cleaner profile:", error)
-    return null
+    console.error("Error fetching cleaner jobs:", error)
+    return []
   }
 
-  return profile
+  return bookings || []
 }
 
-export default async function CleanerProfilePage() {
-  const cookieStore = cookies()
+export default async function CleanerDashboardPage() {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,7 +88,7 @@ export default async function CleanerProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect("/auth/login?returnTo=/dashboard/cleaner/profile")
+    redirect("/auth/login?returnTo=/dashboard/cleaner")
   }
 
   const { data: profile } = await supabase
@@ -73,26 +101,20 @@ export default async function CleanerProfilePage() {
     redirect("/")
   }
 
-  const cleanerProfile = await getCleanerProfile(user.id)
-
-  if (!cleanerProfile) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Error loading profile</p>
-      </div>
-    )
-  }
+  const jobs = await getCleanerJobs(user.id)
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Welcome back, {profile.first_name}!
+        </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your personal information and contact details
+          Manage your assigned cleaning jobs and update their status.
         </p>
       </div>
 
-      <ProfileForm profile={cleanerProfile} />
+      <JobDashboard jobs={jobs} />
     </div>
   )
 }

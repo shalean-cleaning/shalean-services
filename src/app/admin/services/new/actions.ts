@@ -5,14 +5,15 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
-interface CreateLocationData {
+interface CreateServiceData {
   name: string
-  price_adjustment_pct: number
+  description: string
+  base_fee: number
   active: boolean
 }
 
-export async function createLocation(data: CreateLocationData) {
-  const cookieStore = cookies()
+export async function createService(data: CreateServiceData) {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,26 +55,27 @@ export async function createLocation(data: CreateLocationData) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-  // Create the location
-  const { data: location, error } = await supabase
-    .from("areas")
+  // Create the service
+  const { data: service, error } = await supabase
+    .from("services")
     .insert({
       name: data.name,
+      description: data.description,
       slug: slug,
-      price_adjustment_pct: data.price_adjustment_pct,
+      base_fee: data.base_fee,
       active: data.active,
     })
     .select()
     .single()
 
   if (error) {
-    // console.error("Error creating location:", error)
+    // console.error("Error creating service:", error)
     return { success: false, error: error.message }
   }
 
-  // Revalidate the locations page
-  revalidatePath("/admin/locations")
+  // Revalidate the services page
+  revalidatePath("/admin/services")
 
-  return { success: true, location }
+  return { success: true, service }
 }
 

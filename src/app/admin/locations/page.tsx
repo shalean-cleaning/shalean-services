@@ -7,7 +7,7 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 
 async function getLocations() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

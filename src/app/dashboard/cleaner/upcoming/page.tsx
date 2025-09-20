@@ -3,8 +3,8 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { JobDashboard } from "../job-dashboard"
 
-async function getTodaysJobs(userId: string) {
-  const cookieStore = cookies()
+async function getUpcomingJobs(userId: string) {
+  const cookieStore = await cookies()
   const today = new Date().toISOString().split('T')[0]
   
   const supabase = createServerClient(
@@ -24,7 +24,7 @@ async function getTodaysJobs(userId: string) {
     }
   )
 
-  // Get today's bookings assigned to this cleaner
+  // Get upcoming bookings assigned to this cleaner
   const { data: bookings, error } = await supabase
     .from("bookings")
     .select(`
@@ -39,7 +39,7 @@ async function getTodaysJobs(userId: string) {
       special_instructions,
       bedrooms,
       bathrooms,
-      services (
+      services!inner (
         name,
         description
       ),
@@ -54,20 +54,21 @@ async function getTodaysJobs(userId: string) {
       )
     `)
     .eq("cleaner_id", userId)
-    .eq("booking_date", today)
+    .gt("booking_date", today)
     .in("status", ["CONFIRMED", "IN_PROGRESS", "COMPLETED"])
+    .order("booking_date", { ascending: true })
     .order("start_time", { ascending: true })
 
   if (error) {
-    console.error("Error fetching today's jobs:", error)
+    console.error("Error fetching upcoming jobs:", error)
     return []
   }
 
   return bookings || []
 }
 
-export default async function TodaysJobsPage() {
-  const cookieStore = cookies()
+export default async function UpcomingJobsPage() {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -89,7 +90,7 @@ export default async function TodaysJobsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect("/auth/login?returnTo=/dashboard/cleaner/today")
+    redirect("/auth/login?returnTo=/dashboard/cleaner/upcoming")
   }
 
   const { data: profile } = await supabase
@@ -102,19 +103,14 @@ export default async function TodaysJobsPage() {
     redirect("/")
   }
 
-  const jobs = await getTodaysJobs(user.id)
+  const jobs = await getUpcomingJobs(user.id)
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Today's Jobs</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Upcoming Jobs</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Your scheduled jobs for {new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
+          Your scheduled jobs for the coming days and weeks
         </p>
       </div>
 

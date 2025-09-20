@@ -1,11 +1,10 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { JobDashboard } from "../job-dashboard"
+import { ProfileForm } from "./profile-form"
 
-async function getUpcomingJobs(userId: string) {
-  const cookieStore = cookies()
-  const today = new Date().toISOString().split('T')[0]
+async function getCleanerProfile(userId: string) {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,51 +23,22 @@ async function getUpcomingJobs(userId: string) {
     }
   )
 
-  // Get upcoming bookings assigned to this cleaner
-  const { data: bookings, error } = await supabase
-    .from("bookings")
-    .select(`
-      id,
-      booking_date,
-      start_time,
-      end_time,
-      status,
-      total_price,
-      address,
-      notes,
-      special_instructions,
-      bedrooms,
-      bathrooms,
-      services (
-        name,
-        description
-      ),
-      profiles!bookings_customer_id_fkey (
-        first_name,
-        last_name,
-        phone
-      ),
-      suburbs (
-        name,
-        postcode
-      )
-    `)
-    .eq("cleaner_id", userId)
-    .gt("booking_date", today)
-    .in("status", ["CONFIRMED", "IN_PROGRESS", "COMPLETED"])
-    .order("booking_date", { ascending: true })
-    .order("start_time", { ascending: true })
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single()
 
   if (error) {
-    console.error("Error fetching upcoming jobs:", error)
-    return []
+    console.error("Error fetching cleaner profile:", error)
+    return null
   }
 
-  return bookings || []
+  return profile
 }
 
-export default async function UpcomingJobsPage() {
-  const cookieStore = cookies()
+export default async function CleanerProfilePage() {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,7 +60,7 @@ export default async function UpcomingJobsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect("/auth/login?returnTo=/dashboard/cleaner/upcoming")
+    redirect("/auth/login?returnTo=/dashboard/cleaner/profile")
   }
 
   const { data: profile } = await supabase
@@ -103,18 +73,26 @@ export default async function UpcomingJobsPage() {
     redirect("/")
   }
 
-  const jobs = await getUpcomingJobs(user.id)
+  const cleanerProfile = await getCleanerProfile(user.id)
+
+  if (!cleanerProfile) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Error loading profile</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Upcoming Jobs</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Your scheduled jobs for the coming days and weeks
+          Manage your personal information and contact details
         </p>
       </div>
 
-      <JobDashboard jobs={jobs} />
+      <ProfileForm profile={cleanerProfile} />
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { JobDashboard } from "../job-dashboard"
 
 async function getCompletedJobs(userId: string) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,7 +38,7 @@ async function getCompletedJobs(userId: string) {
       special_instructions,
       bedrooms,
       bathrooms,
-      services (
+      services!inner (
         name,
         description
       ),
@@ -67,7 +67,7 @@ async function getCompletedJobs(userId: string) {
 }
 
 export default async function CompletedJobsPage() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

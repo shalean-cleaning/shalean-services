@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
 export async function updateBookingStatus(bookingId: string, newStatus: string) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,7 +90,7 @@ export async function updateBookingStatus(bookingId: string, newStatus: string) 
 }
 
 export async function getCleanerProfile(userId: string) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -127,7 +127,7 @@ export async function updateCleanerProfile(userId: string, updates: {
   last_name?: string
   phone?: string
 }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

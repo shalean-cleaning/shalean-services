@@ -19,16 +19,16 @@ interface Job {
   services: {
     name: string
     description: string
-  } | null
+  }[] | null
   profiles: {
     first_name: string
     last_name: string
     phone: string | null
-  } | null
+  }[] | null
   suburbs: {
     name: string
     postcode: string
-  } | null
+  }[] | null
 }
 
 interface JobCardProps {
@@ -121,7 +121,7 @@ export function JobCard({ job }: JobCardProps) {
           {/* Header */}
           <div className="flex items-center gap-3 mb-3">
             <h3 className="text-lg font-semibold text-gray-900">
-              {job.services?.name || "Cleaning Service"}
+              {job.services?.[0]?.name || "Cleaning Service"}
             </h3>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
               {getStatusText(job.status)}
@@ -132,13 +132,13 @@ export function JobCard({ job }: JobCardProps) {
           <div className="flex items-center gap-2 mb-3">
             <User className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-600">
-              {job.profiles?.first_name} {job.profiles?.last_name}
+              {job.profiles?.[0]?.first_name} {job.profiles?.[0]?.last_name}
             </span>
-            {job.profiles?.phone && (
+            {job.profiles?.[0]?.phone && (
               <>
                 <span className="text-gray-300">•</span>
                 <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{job.profiles.phone}</span>
+                <span className="text-sm text-gray-600">{job.profiles[0].phone}</span>
               </>
             )}
           </div>
@@ -159,7 +159,7 @@ export function JobCard({ job }: JobCardProps) {
             <MapPin className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-600">
               {job.address && `${job.address}, `}
-              {job.suburbs?.name} {job.suburbs?.postcode}
+              {job.suburbs?.[0]?.name} {job.suburbs?.[0]?.postcode}
             </span>
           </div>
 

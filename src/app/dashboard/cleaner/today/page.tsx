@@ -1,10 +1,11 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { JobDashboard } from "./job-dashboard"
+import { JobDashboard } from "../job-dashboard"
 
-async function getCleanerJobs(userId: string) {
-  const cookieStore = cookies()
+async function getTodaysJobs(userId: string) {
+  const cookieStore = await cookies()
+  const today = new Date().toISOString().split('T')[0]
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +24,7 @@ async function getCleanerJobs(userId: string) {
     }
   )
 
-  // Get all bookings assigned to this cleaner
+  // Get today's bookings assigned to this cleaner
   const { data: bookings, error } = await supabase
     .from("bookings")
     .select(`
@@ -38,7 +39,7 @@ async function getCleanerJobs(userId: string) {
       special_instructions,
       bedrooms,
       bathrooms,
-      services (
+      services!inner (
         name,
         description
       ),
@@ -53,20 +54,20 @@ async function getCleanerJobs(userId: string) {
       )
     `)
     .eq("cleaner_id", userId)
+    .eq("booking_date", today)
     .in("status", ["CONFIRMED", "IN_PROGRESS", "COMPLETED"])
-    .order("booking_date", { ascending: true })
     .order("start_time", { ascending: true })
 
   if (error) {
-    console.error("Error fetching cleaner jobs:", error)
+    console.error("Error fetching today's jobs:", error)
     return []
   }
 
   return bookings || []
 }
 
-export default async function CleanerDashboardPage() {
-  const cookieStore = cookies()
+export default async function TodaysJobsPage() {
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,7 +89,7 @@ export default async function CleanerDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect("/auth/login?returnTo=/dashboard/cleaner")
+    redirect("/auth/login?returnTo=/dashboard/cleaner/today")
   }
 
   const { data: profile } = await supabase
@@ -101,16 +102,19 @@ export default async function CleanerDashboardPage() {
     redirect("/")
   }
 
-  const jobs = await getCleanerJobs(user.id)
+  const jobs = await getTodaysJobs(user.id)
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {profile.first_name}!
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Today's Jobs</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your assigned cleaning jobs and update their status.
+          Your scheduled jobs for {new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
         </p>
       </div>
 

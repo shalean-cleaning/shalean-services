@@ -5,7 +5,7 @@ import { render } from '@react-email/render';
 import { BookingConfirmation } from '@/emails/BookingConfirmation';
 import { env } from '@/env.server';
 
-const resend = new Resend(env.RESEND_API_KEY);
+const resend = new Resend(env.RESEND_API_KEY || 'dummy-key');
 
 export interface BookingConfirmationData {
   customerName: string;
@@ -30,7 +30,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData) {
   }
 
   // Render the email template to HTML
-  const emailHtml = render(BookingConfirmation({
+  const emailHtml = await render(BookingConfirmation({
     customerName: data.customerName,
     bookingId: data.bookingId,
     serviceName: data.serviceName,

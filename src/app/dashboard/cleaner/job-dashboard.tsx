@@ -19,16 +19,16 @@ interface Job {
   services: {
     name: string
     description: string
-  } | null
+  }[] | null
   profiles: {
     first_name: string
     last_name: string
     phone: string | null
-  } | null
+  }[] | null
   suburbs: {
     name: string
     postcode: string
-  } | null
+  }[] | null
 }
 
 interface JobDashboardProps {
@@ -43,20 +43,6 @@ export function JobDashboard({ jobs }: JobDashboardProps) {
   const upcomingJobs = jobs.filter(job => job.booking_date > today)
   const completedJobs = jobs.filter(job => job.status === "COMPLETED")
 
-  const _getStatusColor = (status: string) => {
-    switch (status) {
-      case "CONFIRMED":
-        return "bg-blue-100 text-blue-800"
-      case "IN_PROGRESS":
-        return "bg-yellow-100 text-yellow-800"
-      case "COMPLETED":
-        return "bg-green-100 text-green-800"
-      case "CANCELLED":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
 
   return (
     <div className="space-y-8">

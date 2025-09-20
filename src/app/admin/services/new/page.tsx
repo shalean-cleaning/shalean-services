@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { PricingTabs } from "./pricing-tabs"
+import { ServiceForm } from "./service-form"
 
 async function checkAdminAccess() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +26,7 @@ async function checkAdminAccess() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect("/auth/login?returnTo=/admin/pricing")
+    redirect("/auth/login?returnTo=/admin/services/new")
   }
 
   const { data: profile } = await supabase
@@ -40,19 +40,19 @@ async function checkAdminAccess() {
   }
 }
 
-export default async function PricingPage() {
+export default async function NewServicePage() {
   await checkAdminAccess()
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Pricing Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Add New Service</h1>
         <p className="mt-2 text-gray-600">
-          Configure pricing rules, extras, and service fees.
+          Create a new cleaning service with pricing and details.
         </p>
       </div>
 
-      <PricingTabs />
+      <ServiceForm />
     </div>
   )
 }
