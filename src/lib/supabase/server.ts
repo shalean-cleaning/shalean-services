@@ -9,9 +9,14 @@ import { env } from '@/env.server'
  * Use this for server-side operations that need full database access
  */
 export function createSupabaseAdmin() {
+  // Environment variables are validated at startup, so these should be available
+  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase environment variables are not properly configured');
+  }
+  
   return createClient(
-    env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key',
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY,
     { auth: { persistSession: false } }
   )
 }
@@ -22,11 +27,16 @@ export function createSupabaseAdmin() {
  * This version properly reads cookies from the incoming request
  */
 export async function createSupabaseServer() {
+  // Environment variables are validated at startup, so these should be available
+  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Supabase environment variables are not properly configured');
+  }
+  
   const cookieStore = await cookies()
 
   return createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
