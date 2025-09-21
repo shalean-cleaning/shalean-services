@@ -8,12 +8,19 @@
 import { NextResponse } from 'next/server';
 import { logger } from './logger';
 
-export interface ApiError {
-  message: string;
-  code?: string;
-  statusCode: number;
-  details?: any;
-  stack?: string;
+export class ApiError extends Error {
+  public statusCode: number;
+  public code?: string;
+  public details?: any;
+
+  constructor(message: string, statusCode: number = 500, code?: string, details?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
 }
 
 export interface ApiErrorResponse {
@@ -103,20 +110,20 @@ export class ApiErrorHandler {
         code = 'DATABASE_ERROR';
       }
 
-      apiError = {
-        message: error.message,
-        code,
+      apiError = new ApiError(
+        error.message,
         statusCode,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      };
+        code,
+        process.env.NODE_ENV === 'development' ? error.stack : undefined
+      );
     } else {
       // Unknown error type
-      apiError = {
-        message: 'An unexpected error occurred',
-        code: 'UNKNOWN_ERROR',
-        statusCode: 500,
-        details: process.env.NODE_ENV === 'development' ? error : undefined,
-      };
+      apiError = new ApiError(
+        'An unexpected error occurred',
+        500,
+        'UNKNOWN_ERROR',
+        process.env.NODE_ENV === 'development' ? error : undefined
+      );
     }
 
     // Log the error with context
@@ -138,63 +145,31 @@ export class ApiErrorHandler {
 
   // Convenience methods for common error types
   static validationError(message: string, details?: any): ApiError {
-    return {
-      message,
-      code: 'VALIDATION_ERROR',
-      statusCode: 400,
-      details,
-    };
+    return new ApiError(message, 400, 'VALIDATION_ERROR', details);
   }
 
   static unauthorizedError(message: string = 'Authentication required'): ApiError {
-    return {
-      message,
-      code: 'UNAUTHORIZED',
-      statusCode: 401,
-    };
+    return new ApiError(message, 401, 'UNAUTHORIZED');
   }
 
   static forbiddenError(message: string = 'Access denied'): ApiError {
-    return {
-      message,
-      code: 'FORBIDDEN',
-      statusCode: 403,
-    };
+    return new ApiError(message, 403, 'FORBIDDEN');
   }
 
   static notFoundError(message: string = 'Resource not found'): ApiError {
-    return {
-      message,
-      code: 'NOT_FOUND',
-      statusCode: 404,
-    };
+    return new ApiError(message, 404, 'NOT_FOUND');
   }
 
   static conflictError(message: string, details?: any): ApiError {
-    return {
-      message,
-      code: 'CONFLICT',
-      statusCode: 409,
-      details,
-    };
+    return new ApiError(message, 409, 'CONFLICT', details);
   }
 
   static databaseError(message: string = 'Database operation failed', details?: any): ApiError {
-    return {
-      message,
-      code: 'DATABASE_ERROR',
-      statusCode: 503,
-      details,
-    };
+    return new ApiError(message, 503, 'DATABASE_ERROR', details);
   }
 
   static internalError(message: string = 'Internal server error', details?: any): ApiError {
-    return {
-      message,
-      code: 'INTERNAL_ERROR',
-      statusCode: 500,
-      details,
-    };
+    return new ApiError(message, 500, 'INTERNAL_ERROR', details);
   }
 }
 

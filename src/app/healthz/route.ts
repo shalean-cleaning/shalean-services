@@ -18,7 +18,7 @@ export async function GET() {
     };
 
     // Test Supabase admin client
-    let adminClientTest = { success: false, error: null };
+    let adminClientTest: { success: boolean; error: string | null } = { success: false, error: null };
     try {
       const adminClient = createSupabaseAdmin();
       const { error } = await adminClient.from('regions').select('count').limit(1);
@@ -28,7 +28,7 @@ export async function GET() {
     }
 
     // Test Supabase server client
-    let serverClientTest = { success: false, error: null };
+    let serverClientTest: { success: boolean; error: string | null } = { success: false, error: null };
     try {
       const serverClient = await createSupabaseServer();
       const { error } = await serverClient.from('regions').select('count').limit(1);

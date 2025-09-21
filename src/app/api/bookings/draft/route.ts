@@ -39,6 +39,10 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
   
   logger.apiRequest(endpoint, 'POST', requestId);
 
+  let customerId = null;
+  let sessionId = null;
+  let requestData: any;
+
   try {
     const supabase = await createSupabaseServer()
     
@@ -51,8 +55,6 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     // Check for Authorization header (Bearer token) - optional for guest bookings
     const authHeader = request.headers.get('authorization')
     let user = null
-    let customerId = null
-    let sessionId = null
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Handle Bearer token authentication
@@ -77,7 +79,6 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     }
 
     // Parse request body
-    let requestData;
     try {
       requestData = await request.json()
     } catch {
@@ -300,14 +301,15 @@ async function handleDraftGet(request: Request): Promise<NextResponse> {
   
   logger.apiRequest(endpoint, 'GET', requestId);
 
+  let customerId = null;
+  let sessionId = null;
+
   try {
     const supabase = await createSupabaseServer()
     
     // Check for Authorization header (Bearer token)
     const authHeader = request.headers.get('authorization')
     let user = null
-    let customerId = null
-    let sessionId = null
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Handle Bearer token authentication
