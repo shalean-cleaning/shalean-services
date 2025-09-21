@@ -19,7 +19,8 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin()
       .from('extras')
-      .select('id, name, slug, description, price')
+      .select('id, name, slug, description, price_cents')
+      .eq('active', true)
       .order('name', { ascending: true });
 
     if (error) {
@@ -33,7 +34,8 @@ export async function GET() {
       name: extra.name,
       slug: extra.slug,
       description: extra.description,
-      price: extra.price,
+      price: extra.price_cents ? Number(extra.price_cents) / 100 : 0, // Convert cents to dollars
+      price_cents: extra.price_cents,
     }));
     
     return NextResponse.json(transformedData, { status: 200 });

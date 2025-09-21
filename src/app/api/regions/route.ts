@@ -8,6 +8,51 @@ import { env } from '@/env.server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Lazy seeding function for regions
+async function ensureMinimalRegions(supabase: any) {
+  try {
+    const { data: regions, error } = await supabase
+      .from('regions')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      console.warn('Could not check regions table:', error.message);
+      return;
+    }
+
+    if (!regions || regions.length === 0) {
+      console.log('Regions table is empty, seeding minimal data...');
+      
+      const minimalRegions = [
+        {
+          name: 'Cape Town CBD',
+          slug: 'cape-town-cbd',
+          state: 'Western Cape'
+        },
+        {
+          name: 'Atlantic Seaboard',
+          slug: 'atlantic-seaboard',
+          state: 'Western Cape'
+        },
+        {
+          name: 'Southern Suburbs',
+          slug: 'southern-suburbs',
+          state: 'Western Cape'
+        }
+      ];
+
+      for (const region of minimalRegions) {
+        await supabase
+          .from('regions')
+          .upsert(region, { onConflict: 'slug' });
+      }
+    }
+  } catch (error) {
+    console.warn('Error during regions lazy seeding:', error);
+  }
+}
+
 export async function GET() {
   if (!env.NEXT_PUBLIC_SUPABASE_URL) {
     return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 });
@@ -17,7 +62,12 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await supabaseAdmin()
+    const supabase = supabaseAdmin();
+    
+    // Ensure minimal regions exist
+    await ensureMinimalRegions(supabase);
+    
+    const { data, error } = await supabase
       .from('regions')
       .select('*')
       .order('id', { ascending: true });
