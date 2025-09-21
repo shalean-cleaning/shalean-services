@@ -72,6 +72,7 @@ export interface BookingState {
   createDraftBooking: () => Promise<{ success: boolean; id?: string; error?: string }>;
   updateBooking: (bookingId: string, updates: Partial<any>) => Promise<{ success: boolean; error?: string }>;
   composeDraftPayload: () => any;
+  validateBookingData: () => boolean;
   
   // Enhanced booking system actions
   hydrateFromServer: (booking: Booking & { booking_items?: BookingItem[] }) => void;
@@ -269,7 +270,63 @@ export const useBookingStore = create<BookingState>()(
       composeDraftPayload: () => {
         const state = get();
         
-        // Validate required fields
+        // For draft creation, we only include fields that are available
+        // No strict validation - draft can be created with partial data
+        const payload: any = {};
+        
+        // Add available fields
+        if (state.selectedService) {
+          payload.serviceId = state.selectedService.id;
+        }
+        if (state.location.regionId) {
+          payload.regionId = state.location.regionId;
+        }
+        if (state.location.suburbId) {
+          payload.suburbId = state.location.suburbId;
+        }
+        if (state.location.address?.trim()) {
+          payload.address = state.location.address;
+        }
+        if (state.location.postcode?.trim()) {
+          payload.postcode = state.location.postcode;
+        }
+        if (state.rooms.bedrooms) {
+          payload.bedrooms = state.rooms.bedrooms;
+        }
+        if (state.rooms.bathrooms) {
+          payload.bathrooms = state.rooms.bathrooms;
+        }
+        if (state.extras.length > 0) {
+          payload.extras = state.extras.map(extra => ({
+            id: extra.id,
+            quantity: extra.quantity,
+            price: extra.price
+          }));
+        }
+        if (state.customerInfo.specialInstructions?.trim()) {
+          payload.specialInstructions = state.customerInfo.specialInstructions;
+        }
+        if (state.scheduling.selectedDate) {
+          payload.bookingDate = state.scheduling.selectedDate;
+        }
+        if (state.scheduling.selectedTime) {
+          payload.startTime = state.scheduling.selectedTime;
+        }
+        if (state.pricing.totalPrice > 0) {
+          payload.totalPrice = state.pricing.totalPrice;
+        }
+        
+        // Add default values
+        payload.frequency = 'one-time';
+        payload.timezone = 'Africa/Johannesburg';
+        
+        return payload;
+      },
+
+      validateBookingData: () => {
+        const state = get();
+        
+        // Validate required fields for final booking submission
         if (!state.selectedService) {
           throw new Error("Service selection is required");
         }
@@ -282,37 +339,11 @@ export const useBookingStore = create<BookingState>()(
         if (!state.location.postcode.trim()) {
           throw new Error("Postcode is required");
         }
-
-        // Determine time format
-        let timePayload: any = {};
-        if (state.scheduling.selectedDate && state.scheduling.selectedTime) {
-          timePayload = {
-            bookingDate: state.scheduling.selectedDate,
-            startTime: state.scheduling.selectedTime
-          };
-        } else {
+        if (!state.scheduling.selectedDate || !state.scheduling.selectedTime) {
           throw new Error("Date and time selection are required");
         }
-
-        return {
-          serviceId: state.selectedService.id,
-          regionId: state.location.regionId,
-          suburbId: state.location.suburbId,
-          totalPrice: state.pricing.totalPrice,
-          address: state.location.address,
-          postcode: state.location.postcode,
-          bedrooms: state.rooms.bedrooms,
-          bathrooms: state.rooms.bathrooms,
-          extras: state.extras.map(extra => ({
-            id: extra.id,
-            quantity: extra.quantity,
-            price: extra.price
-          })),
-          specialInstructions: state.customerInfo.specialInstructions,
-          frequency: 'one-time' as const,
-          timezone: 'Africa/Johannesburg',
-          ...timePayload
-        };
+        
+        return true;
       },
       
       createDraftBooking: async () => {
