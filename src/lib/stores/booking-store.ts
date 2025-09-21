@@ -519,7 +519,7 @@ export const useBookingStore = create<BookingState>()(
             quantity: item.qty,
           })),
           regionId: booking.region_id,
-          suburbId: booking.suburb_id,
+          suburbId: booking.area_id,
           startISO: booking.start_ts,
           endISO: booking.end_ts,
           cleanerId: booking.cleaner_id,
@@ -530,7 +530,7 @@ export const useBookingStore = create<BookingState>()(
           },
           pricing: {
             basePrice: 0, // Will be calculated from service
-            totalPrice: booking.total_price,
+            totalPrice: booking.total_price || 0,
             deliveryFee: 0, // Will be calculated from suburb
           },
           
@@ -544,7 +544,7 @@ export const useBookingStore = create<BookingState>()(
             quantity: item.qty,
           })),
           selectedRegion: booking.region_id,
-          selectedSuburb: booking.suburb_id,
+          selectedSuburb: booking.area_id,
           selectedDate: booking.booking_date,
           selectedTime: booking.start_time,
           address: booking.address || '',
@@ -552,7 +552,7 @@ export const useBookingStore = create<BookingState>()(
           specialInstructions: booking.special_instructions || '',
           selectedCleanerId: booking.cleaner_id,
           autoAssign: booking.auto_assign || false,
-          totalPrice: booking.total_price,
+          totalPrice: booking.total_price || 0,
         });
       },
 

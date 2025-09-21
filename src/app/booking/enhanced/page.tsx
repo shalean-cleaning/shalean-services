@@ -120,7 +120,7 @@ export default function EnhancedBookingPage() {
                           <div>
                             <h3 className="font-semibold">Booking #{booking.id.slice(-8)}</h3>
                             <p className="text-sm text-gray-600">
-                              {new Date(booking.booking_date).toLocaleDateString()} at {booking.start_time}
+                              {booking.booking_date ? new Date(booking.booking_date).toLocaleDateString() : 'Date TBD'} at {booking.start_time || 'Time TBD'}
                             </p>
                           </div>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${

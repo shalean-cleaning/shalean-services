@@ -120,6 +120,9 @@ export async function POST(req: Request) {
           const bookingStart = booking.start_time;
           const bookingEnd = booking.end_time;
           
+          // Skip if booking times are null
+          if (!bookingStart || !bookingEnd) return false;
+          
           // Check for time overlap
           return (startTime < bookingEnd && endTime > bookingStart);
         });
