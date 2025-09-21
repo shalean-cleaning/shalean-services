@@ -119,7 +119,7 @@ export async function updateBookingTotalPrice(
     if (!shouldCalculateTotalPrice(booking)) {
       return {
         success: true,
-        total_price: null // Keep as null until we have enough data
+        total_price: undefined // Keep as undefined until we have enough data
       }
     }
 
