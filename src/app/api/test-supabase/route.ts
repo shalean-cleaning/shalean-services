@@ -23,7 +23,7 @@ export async function GET() {
     // Test Supabase admin client creation
     let adminClientTest = { success: false, error: null };
     try {
-      const adminClient = createSupabaseAdmin();
+      createSupabaseAdmin();
       adminClientTest = { success: true, error: null };
     } catch (error) {
       adminClientTest = { 
@@ -35,7 +35,7 @@ export async function GET() {
     // Test Supabase server client creation
     let serverClientTest = { success: false, error: null };
     try {
-      const serverClient = await createSupabaseServer();
+      await createSupabaseServer();
       serverClientTest = { success: true, error: null };
     } catch (error) {
       serverClientTest = { 
