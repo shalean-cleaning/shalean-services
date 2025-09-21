@@ -27,15 +27,11 @@ const steps = [
   { id: 6, title: 'Confirmation', description: 'Booking confirmed' },
 ];
 
-export function BookingStepper({ service, _extras, _regions }: BookingStepperProps) {
+export function BookingStepper({ service, extras: _extras, regions: _regions }: BookingStepperProps) {
   const {
     currentStep,
     setCurrentStep,
     setSelectedService,
-    rooms,
-    location,
-    scheduling,
-    cleaner,
   } = useBookingStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -77,24 +73,6 @@ export function BookingStepper({ service, _extras, _regions }: BookingStepperPro
     }
   };
 
-  const _canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return !!service;
-      case 2:
-        return rooms.bedrooms >= 1 && rooms.bathrooms >= 1;
-      case 3:
-        return !!(location.suburbId && scheduling.selectedDate && scheduling.selectedTime && location.address && location.postcode);
-      case 4:
-        return !!cleaner.selectedCleanerId || cleaner.autoAssign;
-      case 5:
-        return true; // Review step - handled by review page
-      case 6:
-        return true; // Confirmation step
-      default:
-        return false;
-    }
-  };
 
   const renderStep = () => {
     switch (currentStep) {

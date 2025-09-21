@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { 
   ChevronLeft, 
   CreditCard, 
@@ -25,8 +25,6 @@ import { formatZAR } from '@/lib/format';
 
 export default function BookingReviewPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const _bookingId = searchParams.get('bookingId');
   
   const { loading: authLoading, isAuthenticated, user } = useRequireAuth();
   const {

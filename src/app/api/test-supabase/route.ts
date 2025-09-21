@@ -21,7 +21,7 @@ export async function GET() {
     };
 
     // Test Supabase admin client creation
-    let adminClientTest = { success: false, error: null };
+    let adminClientTest: { success: boolean; error: string | null } = { success: false, error: null };
     try {
       createSupabaseAdmin();
       adminClientTest = { success: true, error: null };
@@ -33,7 +33,7 @@ export async function GET() {
     }
 
     // Test Supabase server client creation
-    let serverClientTest = { success: false, error: null };
+    let serverClientTest: { success: boolean; error: string | null } = { success: false, error: null };
     try {
       await createSupabaseServer();
       serverClientTest = { success: true, error: null };
