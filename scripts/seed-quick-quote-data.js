@@ -104,7 +104,7 @@ async function seedServices() {
   ];
 
   for (const service of services) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('services')
       .upsert(service, { onConflict: 'slug' })
       .select();
@@ -159,7 +159,7 @@ async function seedExtras() {
   ];
 
   for (const extra of extras) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('extras')
       .upsert(extra, { onConflict: 'slug' })
       .select();
@@ -199,7 +199,7 @@ async function seedRegions() {
   ];
 
   for (const region of regions) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('regions')
       .upsert(region, { onConflict: 'slug' })
       .select();
@@ -302,7 +302,7 @@ async function seedSuburbs() {
       continue;
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('suburbs')
       .upsert(suburb, { onConflict: 'slug' })
       .select();
@@ -337,7 +337,7 @@ async function seedFrequencyDiscounts() {
   ];
 
   for (const discount of discounts) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('frequency_discounts')
       .upsert(discount, { onConflict: 'frequency' })
       .select();
