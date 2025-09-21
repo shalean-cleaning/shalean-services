@@ -4,14 +4,33 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '@/env.server';
 import { Database } from '@/lib/database.types';
 
+// Enhanced validation schema
 const bodySchema = z.object({
-  regionId: z.string().min(1),
-  suburbId: z.string().min(1),
-  date: z.string().min(1), // ISO date string
-  timeSlot: z.string().min(1), // "HH:mm" format
-  bedrooms: z.number().min(1).default(1),
-  bathrooms: z.number().min(1).default(1),
+  regionId: z.string().min(1, "Region ID is required"),
+  suburbId: z.string().min(1, "Suburb ID is required"),
+  date: z.string().min(1, "Date is required").refine((date) => {
+    const parsedDate = new Date(date);
+    return !isNaN(parsedDate.getTime()) && parsedDate >= new Date();
+  }, "Date must be valid and not in the past"),
+  timeSlot: z.string().min(1, "Time slot is required").refine((time) => {
+    return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+  }, "Time slot must be in HH:mm format"),
+  bedrooms: z.number().min(1).max(10).default(1),
+  bathrooms: z.number().min(1).max(10).default(1),
 });
+
+// Standardized response interface (for future use)
+// interface AvailabilityResponse {
+//   success: boolean;
+//   cleaners: AvailableCleaner[];
+//   totalCount: number;
+//   date: string;
+//   timeSlot: string;
+//   suburbId: string;
+//   regionId: string;
+//   message?: string;
+//   error?: string;
+// }
 
 interface AvailableCleaner {
   id: string;
@@ -28,33 +47,45 @@ interface AvailableCleaner {
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { suburbId, date, timeSlot } = bodySchema.parse(json);
-
-    // Validate date format
-    const selectedDate = new Date(date);
-    if (isNaN(selectedDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+    
+    // Validate input with enhanced schema
+    const validationResult = bodySchema.safeParse(json);
+    if (!validationResult.success) {
+      const errors = validationResult.error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message
+      }));
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Validation failed',
+        details: errors
+      }, { status: 400 });
     }
 
-    // Calculate service duration (default 2 hours)
+    const { regionId, suburbId, date, timeSlot } = validationResult.data;
+    // Note: bedrooms and bathrooms are validated but not currently used in the query
+    // They can be used for future capacity-based filtering
+
+    // Calculate service duration and end time
     const serviceDuration = 120; // 2 hours in minutes
-    const startTime = timeSlot;
-    const startHour = parseInt(startTime.split(':')[0]);
-    const startMinute = parseInt(startTime.split(':')[1]);
+    const [startHour, startMinute] = timeSlot.split(':').map(Number);
     const endHour = startHour + Math.floor(serviceDuration / 60);
     const endMinute = startMinute + (serviceDuration % 60);
     const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
 
     // Check if Supabase is configured
     if (!env.NEXT_PUBLIC_SUPABASE_URL || (!env.SUPABASE_SERVICE_ROLE_KEY && !env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
-      console.warn('Supabase not configured, returning mock data');
-      return NextResponse.json({ 
-        cleaners: getMockCleaners(),
-        totalCount: 3,
+      console.warn('Supabase not configured, returning empty results');
+      return NextResponse.json({
+        success: true,
+        cleaners: [],
+        totalCount: 0,
         date,
         timeSlot,
         suburbId,
-        note: 'Using mock data - Supabase not configured'
+        regionId,
+        message: 'Service temporarily unavailable - please try again later'
       }, { status: 200 });
     }
 
@@ -64,9 +95,9 @@ export async function POST(req: Request) {
       env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Try to fetch cleaners from database
+    // Single optimized query with proper joins and filters
     try {
-      const { data: cleanerData, error: cleanerError } = await supabaseAdmin
+      const { data: availableCleaners, error: queryError } = await supabaseAdmin
         .from('cleaners')
         .select(`
           id,
@@ -78,58 +109,49 @@ export async function POST(req: Request) {
           profiles!inner (
             first_name,
             last_name
+          ),
+          bookings!left (
+            id,
+            start_time,
+            end_time,
+            status
           )
         `)
         .eq('is_active', true)
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .not('bookings.status', 'in', '(PENDING,CONFIRMED,IN_PROGRESS)')
+        .or(`bookings.id.is.null,and(bookings.booking_date.neq.${date},or(bookings.start_time.gt.${endTime},bookings.end_time.lt.${timeSlot}))`);
 
-      if (cleanerError) {
-        console.error('Error fetching cleaners:', cleanerError);
-        // Return mock data instead of failing
-        return NextResponse.json({ 
-          cleaners: getMockCleaners(),
-          totalCount: 3,
+      if (queryError) {
+        console.error('Error fetching available cleaners:', queryError);
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to fetch available cleaners',
+          cleaners: [],
+          totalCount: 0,
           date,
           timeSlot,
           suburbId,
-          note: 'Using mock data - database error'
-        }, { status: 200 });
+          regionId
+        }, { status: 500 });
       }
 
-      // Get existing bookings for this date and time slot to check conflicts
-      const { data: existingBookings, error: bookingError } = await supabaseAdmin
-        .from('bookings')
-        .select('start_time, end_time, cleaner_id')
-        .eq('suburb_id', suburbId)
-        .eq('booking_date', date)
-        .in('status', ['PENDING', 'CONFIRMED', 'IN_PROGRESS']);
-
-      if (bookingError) {
-        console.error('Error fetching existing bookings:', bookingError);
-        // Continue without booking conflict check
-      }
-
-      // Filter available cleaners
-      const availableCleaners: AvailableCleaner[] = [];
-
-      for (const cleaner of cleanerData || []) {
-        // Check if cleaner has any conflicting bookings
-        const hasConflict = existingBookings?.some(booking => {
-          if (booking.cleaner_id !== cleaner.id) return false;
-          
-          const bookingStart = booking.start_time;
-          const bookingEnd = booking.end_time;
-          
-          // Skip if booking times are null
-          if (!bookingStart || !bookingEnd) return false;
-          
-          // Check for time overlap
-          return (startTime < bookingEnd && endTime > bookingStart);
-        });
-
-        if (!hasConflict) {
-          // Generate ETA (simulate based on distance/availability)
-          const etaMinutes = Math.floor(Math.random() * 30) + 15; // 15-45 minutes
+      // Transform and filter results
+      const cleaners: AvailableCleaner[] = (availableCleaners || [])
+        .filter(cleaner => {
+          // Additional client-side filtering for time conflicts
+          const hasConflict = cleaner.bookings?.some(booking => {
+            if (!booking.start_time || !booking.end_time) return false;
+            return (timeSlot < booking.end_time && endTime > booking.start_time);
+          });
+          return !hasConflict;
+        })
+        .map(cleaner => {
+          // Generate ETA based on cleaner attributes
+          const baseEta = 20; // Base 20 minutes
+          const rating = cleaner.rating || 0;
+          const ratingBonus = rating >= 4.5 ? -5 : rating >= 4.0 ? -2 : 0;
+          const etaMinutes = Math.max(10, baseEta + ratingBonus + Math.floor(Math.random() * 10));
           const eta = `${etaMinutes} min`;
 
           // Generate badges based on cleaner attributes
@@ -137,107 +159,63 @@ export async function POST(req: Request) {
           if (cleaner.rating && cleaner.rating >= 4.5) badges.push('Top Rated');
           if (cleaner.rating && cleaner.rating >= 4.0) badges.push('Highly Rated');
           if (cleaner.rating && cleaner.rating >= 3.5) badges.push('Reliable');
+          if (cleaner.bio && cleaner.bio.length > 50) badges.push('Experienced');
 
           // Get cleaner name from profiles table
           const profile = cleaner.profiles;
           const cleanerName = profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown Cleaner';
 
-          availableCleaners.push({
+          return {
             id: cleaner.id,
             name: cleanerName,
             rating: cleaner.rating || 0,
-            totalRatings: Math.floor(Math.random() * 100) + 10, // Simulate total ratings
-            experienceYears: Math.floor(Math.random() * 10) + 1, // Simulate experience
+            totalRatings: Math.floor(Math.random() * 100) + 10, // TODO: Get from actual data
+            experienceYears: Math.floor(Math.random() * 10) + 1, // TODO: Get from actual data
             bio: cleaner.bio || undefined,
-            avatarUrl: undefined, // No avatar in current schema
+            avatarUrl: undefined, // TODO: Add avatar support
             eta,
             badges
-          });
-        }
-      }
+          };
+        })
+        .sort((a, b) => b.rating - a.rating); // Sort by rating (highest first)
 
-      // Sort cleaners by rating (highest first)
-      availableCleaners.sort((a, b) => b.rating - a.rating);
-
-      // If no cleaners found, return mock data
-      if (availableCleaners.length === 0) {
-        return NextResponse.json({ 
-          cleaners: getMockCleaners(),
-          totalCount: 3,
-          date,
-          timeSlot,
-          suburbId,
-          note: 'Using mock data - no cleaners available'
-        }, { status: 200 });
-      }
-
-      return NextResponse.json({ 
-        cleaners: availableCleaners,
-        totalCount: availableCleaners.length,
+      // Return standardized response
+      return NextResponse.json({
+        success: true,
+        cleaners,
+        totalCount: cleaners.length,
         date,
         timeSlot,
-        suburbId
+        suburbId,
+        regionId,
+        message: cleaners.length === 0 ? 'No cleaners available for the selected time slot. Please try a different time or date.' : undefined
       }, { status: 200 });
 
     } catch (dbError) {
       console.error('Database connection error:', dbError);
-      // Return mock data instead of failing
-      return NextResponse.json({ 
-        cleaners: getMockCleaners(),
-        totalCount: 3,
+      return NextResponse.json({
+        success: false,
+        error: 'Service temporarily unavailable',
+        cleaners: [],
+        totalCount: 0,
         date,
         timeSlot,
         suburbId,
-        note: 'Using mock data - database connection error'
-      }, { status: 200 });
+        regionId,
+        message: 'Please try again in a few moments'
+      }, { status: 503 });
     }
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
     console.error("[cleaners/availability] error:", errorMessage);
     
-    return NextResponse.json({ 
-      error: "Invalid request", 
-      details: errorMessage 
+    return NextResponse.json({
+      success: false,
+      error: "Invalid request",
+      details: errorMessage,
+      cleaners: [],
+      totalCount: 0
     }, { status: 400 });
   }
-}
-
-// Mock data function for fallback
-function getMockCleaners(): AvailableCleaner[] {
-  return [
-    {
-      id: 'mock-cleaner-1',
-      name: 'Sarah Johnson',
-      rating: 4.8,
-      totalRatings: 127,
-      experienceYears: 5,
-      bio: 'Professional cleaner with 5 years of experience. Specializes in deep cleaning and eco-friendly products.',
-      avatarUrl: undefined,
-      eta: '25 min',
-      badges: ['Top Rated', 'Eco-Friendly']
-    },
-    {
-      id: 'mock-cleaner-2',
-      name: 'Michael Chen',
-      rating: 4.6,
-      totalRatings: 89,
-      experienceYears: 3,
-      bio: 'Reliable and thorough cleaner with attention to detail. Available for regular and one-time cleanings.',
-      avatarUrl: undefined,
-      eta: '30 min',
-      badges: ['Highly Rated', 'Reliable']
-    },
-    {
-      id: 'mock-cleaner-3',
-      name: 'Lisa Williams',
-      rating: 4.4,
-      totalRatings: 156,
-      experienceYears: 7,
-      bio: 'Experienced cleaner with expertise in organizing and maintaining clean homes. Pet-friendly and family-oriented.',
-      avatarUrl: undefined,
-      eta: '20 min',
-      badges: ['Experienced', 'Pet-Friendly']
-    }
-  ];
 }

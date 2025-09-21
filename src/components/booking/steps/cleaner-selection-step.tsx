@@ -76,13 +76,30 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         console.error("[availability] status:", res.status, res.statusText, "body:", text);
         throw new Error(text || `availability failed: ${res.status}`);
       }
-      return text ? JSON.parse(text) : { cleaners: [] };
+      return text ? JSON.parse(text) : { success: false, cleaners: [] };
     })
-    .then((data) => setAvailableCleaners(Array.isArray(data.cleaners) ? data.cleaners : []))
+    .then((data) => {
+      // Handle the new standardized response format
+      if (data.success && Array.isArray(data.cleaners)) {
+        setAvailableCleaners(data.cleaners);
+        // Clear any previous errors if we got a successful response
+        setError(null);
+      } else {
+        // Handle error responses or empty results
+        setAvailableCleaners([]);
+        if (data.error) {
+          setError(data.message || data.error || "Failed to load available cleaners");
+        } else if (data.cleaners && data.cleaners.length === 0) {
+          // No cleaners available - this is not an error, just empty state
+          setError(null);
+        }
+      }
+    })
     .catch((err) => {
       if (err.name !== "AbortError") {
         setError("We couldn't load available cleaners. Please adjust date or time and try again.");
         console.error(err);
+        setAvailableCleaners([]);
       }
     })
     .finally(() => setIsLoading(false));
@@ -339,14 +356,22 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         {error && (
           <Card className="p-6 text-center border-red-200 bg-red-50">
             <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-            <p className="text-red-700">{error}</p>
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-              className="mt-3"
-            >
-              Try Again
-            </Button>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">
+              Unable to Load Cleaners
+            </h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="mr-2"
+              >
+                Try Again
+              </Button>
+              <p className="text-sm text-red-600">
+                You can still continue with <span className="font-medium">Auto-assign Best Match</span> above.
+              </p>
+            </div>
           </Card>
         )}
 
