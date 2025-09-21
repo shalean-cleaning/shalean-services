@@ -276,6 +276,16 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     return createSuccessResponse(response);
 
   } catch (error) {
+    // Log the actual error for debugging
+    logger.error('Draft POST handler error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      requestId,
+      customerId,
+      sessionId,
+    });
+
     // Extract context for error handling
     const context = {
       endpoint,
@@ -378,6 +388,16 @@ async function handleDraftGet(request: Request): Promise<NextResponse> {
     return createSuccessResponse(response);
 
   } catch (error) {
+    // Log the actual error for debugging
+    logger.error('Draft GET handler error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      requestId,
+      customerId,
+      sessionId,
+    });
+
     // Extract context for error handling
     const context = {
       endpoint,
