@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { env } from '@/env.server'
 import { updateBookingTotalPrice } from '@/lib/validation/price-calculation'
 import { getCurrentBookingStep } from '@/lib/validation/booking-validation'
-import { ApiErrorHandler, withErrorHandler, createSuccessResponse } from '@/lib/api-error-handler'
+import { ApiErrorHandler, createSuccessResponse } from '@/lib/api-error-handler'
 import { logger } from '@/lib/logger'
 
 // Helper function to generate session ID for guest users
