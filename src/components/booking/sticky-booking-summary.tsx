@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Home, MapPin, ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
+import { Calendar, Home, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

@@ -5,13 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
   CreditCard, 
-  CheckCircle, 
   AlertCircle, 
   Loader2, 
   User, 
   MapPin, 
   Home, 
-  Star,
   Calendar,
   Clock
 } from 'lucide-react';
@@ -28,7 +26,7 @@ import { formatZAR } from '@/lib/format';
 export default function BookingReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const bookingId = searchParams.get('bookingId');
+  const _bookingId = searchParams.get('bookingId');
   
   const { loading: authLoading, isAuthenticated, user } = useRequireAuth();
   const {
@@ -44,7 +42,7 @@ export default function BookingReviewPage() {
     createDraftBooking,
   } = useBookingStore();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   

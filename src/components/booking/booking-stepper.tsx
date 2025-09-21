@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+// import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { CleanerSelectionStep } from './steps/cleaner-selection-step';
@@ -8,7 +8,7 @@ import { ServiceSelectionStep } from './steps/service-selection-step';
 import { RoomsExtrasStep } from './steps/rooms-extras-step';
 import { LocationSchedulingStep } from './steps/location-scheduling-step';
 import { StickyBookingSummary } from './sticky-booking-summary';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { Service, ServiceItem, Region } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 
@@ -27,7 +27,7 @@ const steps = [
   { id: 6, title: 'Confirmation', description: 'Booking confirmed' },
 ];
 
-export function BookingStepper({ service, extras, regions }: BookingStepperProps) {
+export function BookingStepper({ service, _extras, _regions }: BookingStepperProps) {
   const {
     currentStep,
     setCurrentStep,
@@ -77,7 +77,7 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
     }
   };
 
-  const canProceed = () => {
+  const _canProceed = () => {
     switch (currentStep) {
       case 1:
         return !!service;
