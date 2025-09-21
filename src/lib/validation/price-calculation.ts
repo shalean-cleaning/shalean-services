@@ -133,7 +133,7 @@ export async function updateBookingTotalPrice(
     }
 
     // Calculate price
-    const { total, breakdown } = await calculateBookingPrice(supabase, input)
+    const { total } = await calculateBookingPrice(supabase, input)
 
     // Update the booking with calculated price
     const { error: updateError } = await supabase
