@@ -198,7 +198,8 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     // Create new DRAFT booking with minimal required data
     const insertData: any = {
       status: 'DRAFT',
-      booking_date: new Date().toISOString().split('T')[0], // Default to today
+      scheduled_date: new Date().toISOString().split('T')[0], // Default to today (production schema)
+      booking_date: new Date().toISOString().split('T')[0], // Default to today (local schema)
       start_time: '09:00', // Default start time
       end_time: '11:00', // Default end time
       total_price: 0 // Default price
@@ -216,10 +217,14 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     // Add optional fields if provided
     if (requestData.serviceId) insertData.service_id = requestData.serviceId
     if (requestData.suburbId) insertData.area_id = requestData.suburbId
-    if (requestData.bookingDate) insertData.booking_date = requestData.bookingDate
+    if (requestData.bookingDate) {
+      insertData.scheduled_date = requestData.bookingDate // Production schema
+      insertData.booking_date = requestData.bookingDate // Local schema
+    }
     if (requestData.startTime) insertData.start_time = requestData.startTime
     if (requestData.endTime) insertData.end_time = requestData.endTime
-    if (requestData.address) insertData.address = requestData.address
+    // Note: address column may not exist in production schema
+    // if (requestData.address) insertData.address = requestData.address
     if (requestData.postcode) insertData.postcode = requestData.postcode
     if (requestData.bedrooms !== undefined) insertData.bedrooms = requestData.bedrooms
     if (requestData.bathrooms !== undefined) insertData.bathrooms = requestData.bathrooms
