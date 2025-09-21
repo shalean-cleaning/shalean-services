@@ -3,6 +3,32 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { env } from '@/env.server'
 
+// Helper function to generate session ID for guest users
+function generateSessionId(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+// Helper function to get or create session ID for guest users
+async function getOrCreateSessionId(): Promise<string> {
+  const cookieStore = await cookies()
+  let sessionId = cookieStore.get('booking-session-id')?.value
+  
+  if (!sessionId) {
+    sessionId = generateSessionId()
+    cookieStore.set('booking-session-id', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
+    })
+  }
+  
+  return sessionId
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServer()
@@ -24,6 +50,7 @@ export async function POST(request: Request) {
     const authHeader = request.headers.get('authorization')
     let user = null
     let customerId = null
+    let sessionId = null
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Handle Bearer token authentication
@@ -41,10 +68,11 @@ export async function POST(request: Request) {
       if (!authError && cookieUser) {
         user = cookieUser
         customerId = user.id
+      } else {
+        // Guest user - get or create session ID
+        sessionId = await getOrCreateSessionId()
       }
     }
-    
-    // For guest bookings, customerId will be null - this is allowed per PRD
 
     // Parse request body
     let requestData;
@@ -57,15 +85,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate required fields
-    if (!requestData.serviceId || !requestData.suburbId) {
-      return NextResponse.json(
-        { error: 'Service and suburb selection are required' },
-        { status: 422 }
-      )
-    }
+    // For DRAFT creation, we only need customer_id OR session_id
+    // Other fields are optional and can be added later
 
-    // Check if user already has a DRAFT booking (or get from cookie for guest users)
+    // Check if user already has a DRAFT booking
     let existingDraft = null
     let fetchError = null
     
@@ -79,21 +102,16 @@ export async function POST(request: Request) {
         .single()
       existingDraft = result.data
       fetchError = result.error
-    } else {
-      // Guest user - check by cookie
-      const cookieStore = await cookies()
-      const bookingDraftId = cookieStore.get('booking-draft-id')?.value
-      
-      if (bookingDraftId) {
-        const result = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('id', bookingDraftId)
-          .eq('status', 'DRAFT')
-          .single()
-        existingDraft = result.data
-        fetchError = result.error
-      }
+    } else if (sessionId) {
+      // Guest user - check by session_id
+      const result = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('status', 'DRAFT')
+        .single()
+      existingDraft = result.data
+      fetchError = result.error
     }
 
     if (fetchError && fetchError.code !== 'PGRST116') {
@@ -118,15 +136,16 @@ export async function POST(request: Request) {
     // If draft exists, update it with new data
     if (existingDraft) {
       const updateData: any = {
-        service_id: requestData.serviceId,
-        suburb_id: requestData.suburbId,
-        total_price: requestData.totalPrice || 0,
         updated_at: new Date().toISOString()
       }
 
-      // Add optional fields if provided
-      if (requestData.bookingDate) updateData.booking_date = requestData.bookingDate
+      // Only update fields that are provided in the request
+      if (requestData.serviceId) updateData.service_id = requestData.serviceId
+      if (requestData.suburbId) updateData.area_id = requestData.suburbId
+      if (requestData.totalPrice !== undefined) updateData.total_price = requestData.totalPrice
+      if (requestData.bookingDate) updateData.scheduled_date = requestData.bookingDate
       if (requestData.startTime) updateData.start_time = requestData.startTime
+      if (requestData.endTime) updateData.end_time = requestData.endTime
       if (requestData.address) updateData.address = requestData.address
       if (requestData.postcode) updateData.postcode = requestData.postcode
       if (requestData.bedrooms !== undefined) updateData.bedrooms = requestData.bedrooms
@@ -149,36 +168,37 @@ export async function POST(request: Request) {
         )
       }
 
-      // Save booking ID to httpOnly cookie
-      const cookieStore = await cookies()
-      cookieStore.set('booking-draft-id', updatedBooking.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: '/'
-      })
-
       return NextResponse.json({
         booking: updatedBooking,
         isNew: false
       })
     }
 
-    // Create new DRAFT booking with provided data
+    // Create new DRAFT booking with minimal required data
     const insertData: any = {
-      customer_id: customerId, // null for guest bookings
-      service_id: requestData.serviceId,
-      suburb_id: requestData.suburbId,
-      booking_date: requestData.bookingDate || new Date().toISOString().split('T')[0],
-      start_time: requestData.startTime || '09:00',
-      end_time: requestData.endTime || '11:00',
       status: 'DRAFT',
-      total_price: requestData.totalPrice || 0,
       auto_assign: requestData.autoAssign !== undefined ? requestData.autoAssign : true
     }
 
+    // Set customer_id or session_id (at least one is required)
+    if (customerId) {
+      insertData.customer_id = customerId
+    } else if (sessionId) {
+      insertData.session_id = sessionId
+    } else {
+      return NextResponse.json(
+        { error: 'Either customer authentication or session is required' },
+        { status: 401 }
+      )
+    }
+
     // Add optional fields if provided
+    if (requestData.serviceId) insertData.service_id = requestData.serviceId
+    if (requestData.suburbId) insertData.area_id = requestData.suburbId
+    if (requestData.bookingDate) insertData.scheduled_date = requestData.bookingDate
+    if (requestData.startTime) insertData.start_time = requestData.startTime
+    if (requestData.endTime) insertData.end_time = requestData.endTime
+    if (requestData.totalPrice !== undefined) insertData.total_price = requestData.totalPrice
     if (requestData.address) insertData.address = requestData.address
     if (requestData.postcode) insertData.postcode = requestData.postcode
     if (requestData.bedrooms !== undefined) insertData.bedrooms = requestData.bedrooms
@@ -198,16 +218,6 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
-
-    // Save booking ID to httpOnly cookie
-    const cookieStore = await cookies()
-    cookieStore.set('booking-draft-id', newBooking.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/'
-    })
     
     return NextResponse.json({
       booking: newBooking,
@@ -230,6 +240,8 @@ export async function GET(request: Request) {
     // Check for Authorization header (Bearer token)
     const authHeader = request.headers.get('authorization')
     let user = null
+    let customerId = null
+    let sessionId = null
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Handle Bearer token authentication
@@ -238,6 +250,7 @@ export async function GET(request: Request) {
       
       if (!tokenError && tokenUser) {
         user = tokenUser
+        customerId = user.id
       }
     } else {
       // Handle cookie-based authentication (existing flow)
@@ -245,41 +258,51 @@ export async function GET(request: Request) {
       
       if (!authError && cookieUser) {
         user = cookieUser
+        customerId = user.id
+      } else {
+        // Guest user - get session ID
+        sessionId = await getOrCreateSessionId()
       }
     }
+
+    // Fetch the draft booking
+    let booking = null
+    let fetchError = null
     
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    if (customerId) {
+      // Authenticated user - get by customer_id
+      const result = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('customer_id', customerId)
+        .eq('status', 'DRAFT')
+        .single()
+      booking = result.data
+      fetchError = result.error
+    } else if (sessionId) {
+      // Guest user - get by session_id
+      const result = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('status', 'DRAFT')
+        .single()
+      booking = result.data
+      fetchError = result.error
     }
 
-    // Get draft booking from cookie
-    const cookieStore = await cookies()
-    const bookingId = cookieStore.get('booking-draft-id')?.value
-
-    if (!bookingId) {
-      return NextResponse.json(
-        { error: 'No draft booking found' },
-        { status: 404 }
-      )
-    }
-
-    // Fetch the booking
-    const { data: booking, error: fetchError } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('id', bookingId)
-      .eq('customer_id', user.id)
-      .eq('status', 'DRAFT')
-      .single()
-
-    if (fetchError) {
+    if (fetchError && fetchError.code !== 'PGRST116') {
       console.error('Error fetching draft booking:', fetchError)
       return NextResponse.json(
         { error: 'Failed to fetch draft booking' },
         { status: 500 }
+      )
+    }
+
+    if (!booking) {
+      return NextResponse.json(
+        { error: 'No draft booking found' },
+        { status: 404 }
       )
     }
 

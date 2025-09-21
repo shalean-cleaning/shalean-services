@@ -54,19 +54,20 @@ export type Database = {
       bookings: {
         Row: {
           id: string
-          customer_id: string
+          customer_id: string | null
+          session_id: string | null
           cleaner_id: string | null
-          suburb_id: string
-          service_id: string
+          area_id: string | null
+          service_id: string | null
           service_slug: string | null
           region_id: string | null
-          booking_date: string
-          start_time: string
-          end_time: string
+          booking_date: string | null
+          start_time: string | null
+          end_time: string | null
           start_ts: string | null
           end_ts: string | null
           status: 'DRAFT' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'READY_FOR_PAYMENT'
-          total_price: number
+          total_price: number | null
           notes: string | null
           special_instructions: string | null
           auto_assign: boolean
@@ -81,19 +82,20 @@ export type Database = {
         }
         Insert: {
           id?: string
-          customer_id: string
+          customer_id?: string | null
+          session_id?: string | null
           cleaner_id?: string | null
-          suburb_id: string
-          service_id: string
+          area_id?: string | null
+          service_id?: string | null
           service_slug?: string | null
           region_id?: string | null
-          booking_date: string
-          start_time: string
-          end_time: string
+          booking_date?: string | null
+          start_time?: string | null
+          end_time?: string | null
           start_ts?: string | null
           end_ts?: string | null
           status?: 'DRAFT' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'READY_FOR_PAYMENT'
-          total_price: number
+          total_price?: number | null
           notes?: string | null
           special_instructions?: string | null
           auto_assign?: boolean
@@ -108,19 +110,20 @@ export type Database = {
         }
         Update: {
           id?: string
-          customer_id?: string
+          customer_id?: string | null
+          session_id?: string | null
           cleaner_id?: string | null
-          suburb_id?: string
-          service_id?: string
+          area_id?: string | null
+          service_id?: string | null
           service_slug?: string | null
           region_id?: string | null
-          booking_date?: string
-          start_time?: string
-          end_time?: string
+          booking_date?: string | null
+          start_time?: string | null
+          end_time?: string | null
           start_ts?: string | null
           end_ts?: string | null
           status?: 'DRAFT' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'READY_FOR_PAYMENT'
-          total_price?: number
+          total_price?: number | null
           notes?: string | null
           special_instructions?: string | null
           auto_assign?: boolean
