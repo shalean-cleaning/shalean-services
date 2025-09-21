@@ -2,6 +2,8 @@ import { createSupabaseServer } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { env } from '@/env.server'
+import { updateBookingTotalPrice } from '@/lib/validation/price-calculation'
+import { getCurrentBookingStep } from '@/lib/validation/booking-validation'
 
 // Helper function to generate session ID for guest users
 function generateSessionId(): string {
@@ -142,8 +144,7 @@ export async function POST(request: Request) {
       // Only update fields that are provided in the request
       if (requestData.serviceId) updateData.service_id = requestData.serviceId
       if (requestData.suburbId) updateData.area_id = requestData.suburbId
-      if (requestData.totalPrice !== undefined) updateData.total_price = requestData.totalPrice
-      if (requestData.bookingDate) updateData.scheduled_date = requestData.bookingDate
+      if (requestData.bookingDate) updateData.booking_date = requestData.bookingDate
       if (requestData.startTime) updateData.start_time = requestData.startTime
       if (requestData.endTime) updateData.end_time = requestData.endTime
       if (requestData.address) updateData.address = requestData.address
@@ -153,6 +154,7 @@ export async function POST(request: Request) {
       if (requestData.specialInstructions) updateData.special_instructions = requestData.specialInstructions
       if (requestData.autoAssign !== undefined) updateData.auto_assign = requestData.autoAssign
 
+      // Update the booking first
       const { data: updatedBooking, error: updateError } = await supabase
         .from('bookings')
         .update(updateData)
@@ -168,9 +170,33 @@ export async function POST(request: Request) {
         )
       }
 
+      // Calculate and update total_price if we have enough data
+      const priceResult = await updateBookingTotalPrice(supabase, updatedBooking)
+      if (!priceResult.success) {
+        console.warn('Failed to calculate total price:', priceResult.error)
+        // Don't fail the request, just log the warning
+      }
+
+      // Get the updated booking with calculated price
+      const { data: finalBooking, error: finalError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', existingDraft.id)
+        .single()
+
+      if (finalError) {
+        console.error('Error fetching updated booking:', finalError)
+        return NextResponse.json(
+          { error: 'Failed to fetch updated booking' },
+          { status: 500 }
+        )
+      }
+
       return NextResponse.json({
-        booking: updatedBooking,
-        isNew: false
+        booking: finalBooking,
+        isNew: false,
+        currentStep: getCurrentBookingStep(finalBooking),
+        priceCalculated: priceResult.success
       })
     }
 
@@ -195,10 +221,9 @@ export async function POST(request: Request) {
     // Add optional fields if provided
     if (requestData.serviceId) insertData.service_id = requestData.serviceId
     if (requestData.suburbId) insertData.area_id = requestData.suburbId
-    if (requestData.bookingDate) insertData.scheduled_date = requestData.bookingDate
+    if (requestData.bookingDate) insertData.booking_date = requestData.bookingDate
     if (requestData.startTime) insertData.start_time = requestData.startTime
     if (requestData.endTime) insertData.end_time = requestData.endTime
-    if (requestData.totalPrice !== undefined) insertData.total_price = requestData.totalPrice
     if (requestData.address) insertData.address = requestData.address
     if (requestData.postcode) insertData.postcode = requestData.postcode
     if (requestData.bedrooms !== undefined) insertData.bedrooms = requestData.bedrooms
@@ -218,10 +243,34 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    // Calculate and update total_price if we have enough data
+    const priceResult = await updateBookingTotalPrice(supabase, newBooking)
+    if (!priceResult.success) {
+      console.warn('Failed to calculate total price for new booking:', priceResult.error)
+      // Don't fail the request, just log the warning
+    }
+
+    // Get the final booking with calculated price
+    const { data: finalBooking, error: finalError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', newBooking.id)
+      .single()
+
+    if (finalError) {
+      console.error('Error fetching new booking:', finalError)
+      return NextResponse.json(
+        { error: 'Failed to fetch new booking' },
+        { status: 500 }
+      )
+    }
     
     return NextResponse.json({
-      booking: newBooking,
-      isNew: true
+      booking: finalBooking,
+      isNew: true,
+      currentStep: getCurrentBookingStep(finalBooking),
+      priceCalculated: priceResult.success
     })
 
   } catch (error) {

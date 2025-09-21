@@ -17,6 +17,12 @@ export async function getServices(): Promise<ServiceWithPricing[]> {
   try {
     const supabase = await createSupabaseServer();
     
+    // Check if Supabase is properly configured
+    if (!supabase) {
+      logger.error("[getServices] Supabase client not available");
+      return [];
+    }
+    
     // Get services with pricing information
     const { data: svcs, error: svcsErr } = await supabase
       .from('services')

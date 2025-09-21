@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { createSupabaseAdmin } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { env } from '@/env.server';
+import { validateStatusTransition } from '@/lib/validation/booking-validation';
+import { validateTotalPriceForStatus } from '@/lib/validation/price-calculation';
 
 // Validation schema for payment initiation
 const InitiatePaymentSchema = z.object({
@@ -145,6 +147,12 @@ async function validateBooking(
       return { isValid: false, error: 'Booking is not in a valid state for payment', errorCode: 'invalid_status' };
     }
 
+    // Validate total_price for payment
+    const totalPriceValidation = validateTotalPriceForStatus(booking, 'READY_FOR_PAYMENT');
+    if (!totalPriceValidation.isValid) {
+      return { isValid: false, error: totalPriceValidation.error || 'Total price is required for payment', errorCode: 'invalid_price' };
+    }
+
     return { isValid: true, booking };
   } catch (error) {
     logger.error('Booking validation error:', error);
@@ -264,6 +272,89 @@ export async function initiatePaymentAction(input: InitiatePaymentInput) {
       error: "Payment initiation failed",
       errorCode: "init_failed",
       details: errorMessage
+    };
+  }
+}
+
+/**
+ * Server action to confirm payment and update booking status to CONFIRMED
+ */
+export async function confirmPaymentAction(
+  bookingId: string,
+  paystackReference: string,
+  paystackStatus: string
+) {
+  try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
+    // Validate input
+    if (!bookingId || !paystackReference) {
+      return {
+        success: false,
+        error: 'Booking ID and payment reference are required'
+      };
+    }
+
+    // Get the booking
+    const { data: booking, error: fetchError } = await supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+
+    if (fetchError || !booking) {
+      return {
+        success: false,
+        error: 'Booking not found'
+      };
+    }
+
+    // Validate status transition
+    const validationResult = validateStatusTransition(booking, booking.status, 'CONFIRMED');
+    if (!validationResult.isValid) {
+      return {
+        success: false,
+        error: 'Invalid status transition',
+        details: validationResult.errors
+      };
+    }
+
+    // Update booking with payment details and status
+    const { error: updateError } = await supabaseAdmin
+      .from('bookings')
+      .update({
+        status: 'CONFIRMED',
+        paystack_ref: paystackReference,
+        paystack_status: paystackStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId);
+
+    if (updateError) {
+      logger.error('Failed to update booking status:', updateError);
+      return {
+        success: false,
+        error: 'Failed to update booking status'
+      };
+    }
+
+    logger.info('Payment confirmed and booking status updated', {
+      bookingId,
+      paystackReference,
+      paystackStatus
+    });
+
+    return {
+      success: true,
+      message: 'Payment confirmed and booking status updated'
+    };
+
+  } catch (error) {
+    logger.error('Payment confirmation error:', error);
+    return {
+      success: false,
+      error: 'Failed to confirm payment',
+      details: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }

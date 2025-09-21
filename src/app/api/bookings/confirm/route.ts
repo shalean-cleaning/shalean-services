@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { sendBookingConfirmation } from "@/app/actions/send-booking-confirmation";
+import { validateStatusTransition, createValidationErrorMessage } from '@/lib/validation/booking-validation';
+import { validateTotalPriceForStatus, updateBookingTotalPrice } from '@/lib/validation/price-calculation';
 
 export const runtime = "nodejs";
 
@@ -72,29 +74,42 @@ export async function POST(req: Request) {
       }, { status: 422 });
     }
 
-    // Validate required fields for finalization
-    const missingFields: string[] = [];
+    // Use new validation system for status transition
+    const validationResult = validateStatusTransition(booking, booking.status, 'READY_FOR_PAYMENT');
     
-    if (!booking.address) missingFields.push('address');
-    if (!booking.postcode) missingFields.push('postcode');
-    if (booking.bedrooms === null || booking.bedrooms === undefined) missingFields.push('bedrooms');
-    if (booking.bathrooms === null || booking.bathrooms === undefined) missingFields.push('bathrooms');
-    if (!booking.service_id) missingFields.push('service');
-    if (!booking.suburb_id) missingFields.push('location');
-    if (!booking.booking_date) missingFields.push('booking_date');
-    if (!booking.start_time) missingFields.push('start_time');
-    if (!booking.total_price || booking.total_price <= 0) missingFields.push('total_price');
-
-    if (missingFields.length > 0) {
+    if (!validationResult.isValid) {
       return NextResponse.json({
         success: false,
-        error: "MISSING_REQUIRED_FIELDS",
-        message: "Booking cannot be confirmed - missing required information",
+        error: "VALIDATION_FAILED",
+        message: createValidationErrorMessage(validationResult),
         details: {
-          missingFields,
-          guidance: "Please complete all required fields before confirming your booking"
+          missingFields: validationResult.missingFields,
+          errors: validationResult.errors,
+          warnings: validationResult.warnings
         }
       }, { status: 422 });
+    }
+
+    // Ensure total_price is calculated and valid
+    const totalPriceValidation = validateTotalPriceForStatus(booking, 'READY_FOR_PAYMENT');
+    if (!totalPriceValidation.isValid) {
+      // Try to calculate the price if it's missing
+      const supabase = await createSupabaseServer();
+      const priceResult = await updateBookingTotalPrice(supabase, booking);
+      
+      if (!priceResult.success || !priceResult.total_price) {
+        return NextResponse.json({
+          success: false,
+          error: "PRICE_CALCULATION_FAILED",
+          message: "Unable to calculate total price for booking",
+          details: {
+            error: priceResult.error || totalPriceValidation.error
+          }
+        }, { status: 422 });
+      }
+      
+      // Update the booking with the calculated price
+      booking.total_price = priceResult.total_price;
     }
 
     // Validate field values

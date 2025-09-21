@@ -20,13 +20,13 @@ export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
   get(_target, prop) {
     if (!_env) {
       _env = ServerEnv.parse({
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjbW5kenRraWtmd254YmZxY3RuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzcwNzI1OSwiZXhwIjoyMDczMjgzMjU5fQ.04fbon1mz-tyKgHcCfAtV5aCUblD1joXVbYaeQBTnyI',
         PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
 
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gcmndztkikfwnxbfqctn.supabase.co',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjbW5kenRraWtmd254YmZxY3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MDcyNTksImV4cCI6MjA3MzI4MzI1OX0.9HQwytJGisUPT_gwb4TyU9rDe76TBA5iw1QOxlgWON0',
       });
     }
     return _env[prop as keyof typeof _env];
