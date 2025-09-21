@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { User } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { User, LogOut } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -23,12 +23,24 @@ interface UserAvatarProps {
 
 export function UserAvatar({ profile }: UserAvatarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    const { error } = await supabase.auth.signOut()
+    
+    if (!error) {
+      // Preserve current page context - don't break booking flow
+      // If user is on a booking page, stay on current page
+      // Otherwise redirect to homepage
+      if (pathname.startsWith('/booking/')) {
+        router.refresh()
+        // Stay on current page - user will see login/signup buttons
+      } else {
+        router.push('/')
+        router.refresh()
+      }
+    }
   }
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -38,6 +50,19 @@ export function UserAvatar({ profile }: UserAvatarProps) {
   }
 
   const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User'
+
+  // Determine dashboard route based on user role
+  const getDashboardRoute = () => {
+    switch (profile.role) {
+      case 'CLEANER':
+        return '/dashboard/cleaner'
+      case 'ADMIN':
+        return '/admin'
+      case 'CUSTOMER':
+      default:
+        return '/account'
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -65,9 +90,9 @@ export function UserAvatar({ profile }: UserAvatarProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/account" className="cursor-pointer">
+          <Link href={getDashboardRoute()} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Account</span>
+            <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -75,6 +100,7 @@ export function UserAvatar({ profile }: UserAvatarProps) {
           onClick={handleSignOut}
           className="cursor-pointer text-red-600 focus:text-red-600"
         >
+          <LogOut className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -6,6 +6,11 @@ import { logger } from '@/lib/logger';
 import { env } from '@/env.server';
 import { validateStatusTransition } from '@/lib/validation/booking-validation';
 import { validateTotalPriceForStatus } from '@/lib/validation/price-calculation';
+import { 
+  shouldUseMockPaystack, 
+  getMockConfig, 
+  mockInitializePayment
+} from '@/lib/payments/mock-paystack';
 
 // Validation schema for payment initiation
 const InitiatePaymentSchema = z.object({
@@ -24,7 +29,7 @@ function generatePaymentReference(bookingId: string): string {
   return `PAY_${bookingId.substring(0, 8)}_${timestamp}_${random}`.toUpperCase();
 }
 
-// Helper function to call Paystack initialize API
+// Helper function to call Paystack initialize API (with mock support)
 async function initializePaystackPayment(
   email: string,
   amount: number,
@@ -32,6 +37,26 @@ async function initializePaystackPayment(
   callbackUrl: string,
   metadata: Record<string, any>
 ): Promise<{ authorization_url: string; reference: string }> {
+  // Use mock Paystack in development or when configured
+  if (shouldUseMockPaystack()) {
+    logger.info('Using mock Paystack for payment initialization');
+    const mockConfig = getMockConfig();
+    const mockResponse = await mockInitializePayment(
+      email,
+      amount,
+      reference,
+      callbackUrl,
+      metadata,
+      mockConfig
+    );
+    
+    return {
+      authorization_url: mockResponse.data.authorization_url,
+      reference: mockResponse.data.reference
+    };
+  }
+
+  // Real Paystack API call
   const paystackUrl = 'https://api.paystack.co/transaction/initialize';
   
   const payload = {

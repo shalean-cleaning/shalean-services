@@ -12,7 +12,7 @@ interface RoomsSelectionStepProps {
 }
 
 export function RoomsSelectionStep({ bedroomCount, bathroomCount }: RoomsSelectionStepProps) {
-  const { setBedroomCount, setBathroomCount } = useBookingStore();
+  const { setRooms, rooms } = useBookingStore();
 
   const RoomCounter = ({ 
     label, 
@@ -77,14 +77,14 @@ export function RoomsSelectionStep({ bedroomCount, bathroomCount }: RoomsSelecti
         <RoomCounter
           label="Bedrooms"
           count={bedroomCount}
-          setCount={setBedroomCount}
+          setCount={(count) => setRooms({ ...rooms, bedrooms: count })}
           icon={Bed}
         />
         
         <RoomCounter
           label="Bathrooms"
           count={bathroomCount}
-          setCount={setBathroomCount}
+          setCount={(count) => setRooms({ ...rooms, bathrooms: count })}
           icon={Bath}
         />
       </div>

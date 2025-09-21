@@ -15,14 +15,11 @@ interface BookingSummaryProps {
 export function BookingSummary({ service: _service }: BookingSummaryProps) {
   const {
     selectedService,
-    bedroomCount,
-    bathroomCount,
-    selectedExtras,
-    selectedDate,
-    selectedTime,
-    address,
-    deliveryFee,
-    totalPrice,
+    rooms,
+    storeExtras,
+    location,
+    scheduling,
+    pricing,
   } = useBookingStore();
 
   if (!selectedService) {
@@ -52,33 +49,33 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
 
         <div className="flex items-center gap-3 text-sm text-gray-600">
           <Calendar className="w-4 h-4" />
-          <span>{bedroomCount} bedroom{bedroomCount !== 1 ? 's' : ''}, {bathroomCount} bathroom{bathroomCount !== 1 ? 's' : ''}</span>
+          <span>{rooms.bedrooms} bedroom{rooms.bedrooms !== 1 ? 's' : ''}, {rooms.bathrooms} bathroom{rooms.bathrooms !== 1 ? 's' : ''}</span>
         </div>
 
         {/* Location Information */}
-        {address && (
+        {location.address && (
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">Service Location</h4>
-              <p className="text-sm text-gray-500">{address}</p>
+              <p className="text-sm text-gray-500">{location.address}</p>
             </div>
           </div>
         )}
 
         {/* Scheduling Information */}
-        {selectedDate && selectedTime && (
+        {scheduling.selectedDate && scheduling.selectedTime && (
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">Scheduled Time</h4>
               <p className="text-sm text-gray-500">
-                {new Date(selectedDate).toLocaleDateString('en-US', { 
+                {new Date(scheduling.selectedDate).toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric' 
-                })} at {selectedTime}
+                })} at {scheduling.selectedTime}
               </p>
             </div>
           </div>
@@ -94,32 +91,32 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
           <span className="font-medium">{formatZAR(basePrice * 100)}</span>
         </div>
 
-        {bedroomCount > 1 && (
+        {rooms.bedrooms > 1 && (
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Additional bedrooms (×{bedroomCount - 1})</span>
-            <span className="font-medium">+{formatZAR((bedroomCount - 1) * 20 * 100)}</span>
+            <span className="text-gray-600">Additional bedrooms (×{rooms.bedrooms - 1})</span>
+            <span className="font-medium">+{formatZAR((rooms.bedrooms - 1) * 20 * 100)}</span>
           </div>
         )}
 
-        {bathroomCount > 1 && (
+        {rooms.bathrooms > 1 && (
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Additional bathrooms (×{bathroomCount - 1})</span>
-            <span className="font-medium">+{formatZAR((bathroomCount - 1) * 15 * 100)}</span>
+            <span className="text-gray-600">Additional bathrooms (×{rooms.bathrooms - 1})</span>
+            <span className="font-medium">+{formatZAR((rooms.bathrooms - 1) * 15 * 100)}</span>
           </div>
         )}
 
-        {deliveryFee > 0 && (
+        {pricing.deliveryFee > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Delivery fee</span>
-            <span className="font-medium">+{formatZAR(deliveryFee * 100)}</span>
+            <span className="font-medium">+{formatZAR(pricing.deliveryFee * 100)}</span>
           </div>
         )}
 
-        {selectedExtras.length > 0 && (
+        {storeExtras.length > 0 && (
           <>
             <Separator />
             <div className="space-y-2">
-              {selectedExtras.map((extra) => (
+              {storeExtras.map((extra: any) => (
                 <div key={extra.id} className="flex justify-between text-sm">
                   <div className="flex items-center gap-1">
                     <Plus className="w-3 h-3 text-gray-400" />
@@ -136,7 +133,7 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
         
         <div className="flex justify-between text-lg font-semibold">
           <span>Total</span>
-          <span className="text-green-600">{formatZAR(totalPrice * 100)}</span>
+          <span className="text-green-600">{formatZAR(pricing.totalPrice * 100)}</span>
         </div>
       </div>
 

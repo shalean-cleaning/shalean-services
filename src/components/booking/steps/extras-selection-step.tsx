@@ -21,15 +21,15 @@ interface ExtrasSelectionStepProps {
 }
 
 export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionStepProps) {
-  const { addExtra, removeExtra, updateExtraQuantity } = useBookingStore();
+  const { addExtra, removeExtra, updateExtraQuantity, extras: storeExtras } = useBookingStore();
   const [hoveredExtra, setHoveredExtra] = useState<string | null>(null);
 
   const isExtraSelected = (extraId: string) => {
-    return selectedExtras.some(extra => extra.id === extraId);
+    return storeExtras.some(extra => extra.id === extraId);
   };
 
   const getExtraQuantity = (extraId: string) => {
-    const extra = selectedExtras.find(e => e.id === extraId);
+    const extra = storeExtras.find(e => e.id === extraId);
     return extra?.quantity || 0;
   };
 
@@ -37,7 +37,11 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
     if (isExtraSelected(extra.id)) {
       removeExtra(extra.id);
     } else {
-      addExtra(extra);
+      addExtra({
+        id: extra.id,
+        name: extra.name,
+        price: extra.base_fee
+      });
     }
   };
 
@@ -104,7 +108,7 @@ export function ExtrasSelectionStep({ extras, selectedExtras }: ExtrasSelectionS
                       )}
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="font-medium">Price: {formatZAR(extra.price * 100)}</span>
+                        <span className="font-medium">Price: {formatZAR(extra.base_fee * 100)}</span>
                       </div>
                     </div>
                   </div>

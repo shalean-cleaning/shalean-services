@@ -182,7 +182,7 @@ export default function EnhancedBookingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="font-semibold">Date:</label>
-                      <p className="text-gray-600">{new Date(selectedBooking.booking_date).toLocaleDateString()}</p>
+                      <p className="text-gray-600">{selectedBooking.booking_date ? new Date(selectedBooking.booking_date).toLocaleDateString() : 'No date set'}</p>
                     </div>
                     <div>
                       <label className="font-semibold">Time:</label>

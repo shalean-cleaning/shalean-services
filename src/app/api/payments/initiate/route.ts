@@ -3,6 +3,11 @@ import { z } from "zod";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { env } from "@/env.server";
+import { 
+  shouldUseMockPaystack, 
+  getMockConfig, 
+  mockInitializePayment 
+} from "@/lib/payments/mock-paystack";
 
 export const runtime = "nodejs";
 
@@ -97,7 +102,7 @@ async function validateBooking(
   }
 }
 
-// Helper function to call Paystack initialize API
+// Helper function to call Paystack initialize API (with mock support)
 async function initializePaystackPayment(
   email: string,
   amount: number,
@@ -105,6 +110,26 @@ async function initializePaystackPayment(
   callbackUrl: string,
   metadata: Record<string, any>
 ): Promise<{ authorization_url: string; reference: string }> {
+  // Use mock Paystack in development or when configured
+  if (shouldUseMockPaystack()) {
+    logger.info('Using mock Paystack for payment initialization');
+    const mockConfig = getMockConfig();
+    const mockResponse = await mockInitializePayment(
+      email,
+      amount,
+      reference,
+      callbackUrl,
+      metadata,
+      mockConfig
+    );
+    
+    return {
+      authorization_url: mockResponse.data.authorization_url,
+      reference: mockResponse.data.reference
+    };
+  }
+
+  // Real Paystack API call
   const paystackUrl = 'https://api.paystack.co/transaction/initialize';
   
   const payload = {

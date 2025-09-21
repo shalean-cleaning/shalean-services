@@ -10,14 +10,7 @@ import { DateTimePicker } from '@/components/booking/date-time-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Region, Area } from '@/lib/database.types';
-
-// Type for the areas API response (includes additional properties from suburbs)
-interface AreaWithPostcode extends Area {
-  postcode?: string;
-  delivery_fee?: number;
-  region?: any;
-}
+import { Region, AreaWithPostcode } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useAvailability } from '@/hooks/useAvailability';
 
@@ -39,21 +32,12 @@ interface LocationSchedulingStepProps {
 
 export function LocationSchedulingStep({ regions: _regions }: LocationSchedulingStepProps) {
   const {
-    selectedSuburb,
-    selectedArea,
-    selectedDate,
-    selectedTime,
-    address,
-    address2,
-    postcode,
-    specialInstructions,
-    setSelectedArea,
-    setSelectedDate,
-    setSelectedTime,
-    setAddress,
-    setAddress2,
-    setPostcode,
-    setSpecialInstructions,
+    location,
+    scheduling,
+    customerInfo,
+    setLocation,
+    setScheduling,
+    setCustomerInfo,
     setCurrentStep,
   } = useBookingStore();
 
@@ -70,13 +54,13 @@ export function LocationSchedulingStep({ regions: _regions }: LocationScheduling
     resolver: zodResolver(locationSchema),
     mode: "onChange",
     defaultValues: {
-      area: selectedArea || selectedSuburb || '', // Use selectedArea first, fallback to selectedSuburb
-      address: address || '',
-      address2: address2 || '',
-      postcode: postcode || '',
-      date: selectedDate || '',
-      time: selectedTime || '',
-      specialInstructions: specialInstructions || '',
+      area: location.suburbId || '',
+      address: location.address || '',
+      address2: location.address2 || '',
+      postcode: location.postcode || '',
+      date: scheduling.selectedDate || '',
+      time: scheduling.selectedTime || '',
+      specialInstructions: customerInfo.specialInstructions || '',
     },
   });
 
@@ -107,13 +91,19 @@ export function LocationSchedulingStep({ regions: _regions }: LocationScheduling
 
   const onSubmit = async (data: LocationFormData) => {
     // Persist all form data to the store
-    setSelectedArea(data.area); // Use the new setSelectedArea function
-    setSelectedDate(data.date);
-    setSelectedTime(data.time);
-    setAddress(data.address);
-    setAddress2(data.address2 || '');
-    setPostcode(data.postcode);
-    setSpecialInstructions(data.specialInstructions || '');
+    setLocation({
+      suburbId: data.area,
+      address: data.address,
+      address2: data.address2 || '',
+      postcode: data.postcode,
+    });
+    setScheduling({
+      selectedDate: data.date,
+      selectedTime: data.time,
+    });
+    setCustomerInfo({
+      specialInstructions: data.specialInstructions || '',
+    });
     
     // Advance to next step
     setCurrentStep(5);
@@ -154,7 +144,7 @@ export function LocationSchedulingStep({ regions: _regions }: LocationScheduling
                     value={field.value}
                     onValueChange={(value) => {
                       field.onChange(value);
-                      setSelectedArea(value); // Use the new setSelectedArea function
+                      setLocation({ suburbId: value });
                     }}
                     disabled={loadingAreas}
                   >
@@ -246,14 +236,14 @@ export function LocationSchedulingStep({ regions: _regions }: LocationScheduling
                         selectedTime={timeField.value}
                         onDateChange={(date) => {
                           field.onChange(date);
-                          setSelectedDate(date);
+                          setScheduling({ selectedDate: date });
                           // Reset time when date changes
                           timeField.onChange('');
-                          setSelectedTime(null);
+                          setScheduling({ selectedTime: null });
                         }}
                         onTimeChange={(time) => {
                           timeField.onChange(time);
-                          setSelectedTime(time);
+                          setScheduling({ selectedTime: time });
                         }}
                         availableTimes={availableTimes}
                         loadingTimes={loadingTimes}

@@ -203,7 +203,10 @@ export async function POST(request: Request) {
     // Create new DRAFT booking with minimal required data
     const insertData: any = {
       status: 'DRAFT',
-      auto_assign: requestData.autoAssign !== undefined ? requestData.autoAssign : true
+      booking_date: new Date().toISOString().split('T')[0], // Default to today
+      start_time: '09:00', // Default start time
+      end_time: '11:00', // Default end time
+      total_price: 0 // Default price
     }
 
     // Set customer_id or session_id (at least one is required)

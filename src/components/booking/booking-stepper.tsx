@@ -31,16 +31,10 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
     currentStep,
     setCurrentStep,
     setSelectedService,
-    bedroomCount,
-    bathroomCount,
-    selectedExtras,
-    selectedSuburb,
-    selectedDate,
-    selectedTime,
-    selectedCleanerId,
-    autoAssign,
-    address,
-    postcode,
+    rooms,
+    location,
+    scheduling,
+    cleaner,
   } = useBookingStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -87,13 +81,13 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 1:
         return !!service;
       case 2:
-        return bedroomCount >= 1 && bathroomCount >= 1;
+        return rooms.bedrooms >= 1 && rooms.bathrooms >= 1;
       case 3:
         return true; // Extras are optional
       case 4:
-        return !!(selectedSuburb && selectedDate && selectedTime && address && postcode);
+        return !!(location.suburbId && scheduling.selectedDate && scheduling.selectedTime && location.address && location.postcode);
       case 5:
-        return !!selectedCleanerId || autoAssign;
+        return !!cleaner.selectedCleanerId || cleaner.autoAssign;
       default:
         return false;
     }
@@ -110,15 +104,15 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 2:
         return (
           <RoomsSelectionStep 
-            bedroomCount={bedroomCount}
-            bathroomCount={bathroomCount}
+            bedroomCount={rooms.bedrooms}
+            bathroomCount={rooms.bathrooms}
           />
         );
       case 3:
         return (
           <ExtrasSelectionStep 
             extras={extras}
-            selectedExtras={selectedExtras}
+            selectedExtras={[]}
           />
         );
       case 4:

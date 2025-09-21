@@ -16,18 +16,13 @@ export function BookingReviewStep() {
   const router = useRouter();
   const {
     selectedService,
-    bedroomCount,
-    bathroomCount,
-    selectedExtras,
-    selectedDate,
-    selectedTime,
-    selectedCleanerId,
-    autoAssign,
-    address,
-    postcode,
-    specialInstructions,
-    totalPrice,
-    availableCleaners,
+    rooms,
+    storeExtras,
+    location,
+    scheduling,
+    cleaner,
+    customerInfo,
+    pricing,
     composeDraftPayload,
   } = useBookingStore();
 
@@ -128,8 +123,8 @@ export function BookingReviewStep() {
           // Add cleaner selection to payload
           const payloadWithCleaner = {
             ...payload,
-            selectedCleanerId: selectedCleanerId || undefined,
-            autoAssign: autoAssign
+            selectedCleanerId: cleaner.selectedCleanerId || undefined,
+            autoAssign: cleaner.autoAssign
           };
           
           
@@ -185,7 +180,7 @@ export function BookingReviewStep() {
     };
 
     handleDraft();
-  }, [composeDraftPayload, selectedCleanerId, autoAssign, draftCreated, router]);
+  }, [composeDraftPayload, cleaner.selectedCleanerId, cleaner.autoAssign, draftCreated, router]);
 
 
   const handleCompleteBooking = async () => {
@@ -238,8 +233,8 @@ export function BookingReviewStep() {
   };
 
 
-  const selectedCleaner = selectedCleanerId 
-    ? availableCleaners.find(c => c.id === selectedCleanerId)
+  const selectedCleaner = cleaner.selectedCleanerId 
+    ? cleaner.availableCleaners.find(c => c.id === cleaner.selectedCleanerId)
     : null;
 
   const formatDate = (dateStr: string) => {
@@ -356,17 +351,17 @@ export function BookingReviewStep() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Bedrooms:</span>
-                <span className="font-medium">{bedroomCount}</span>
+                <span className="font-medium">{rooms.bedrooms}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Bathrooms:</span>
-                <span className="font-medium">{bathroomCount}</span>
+                <span className="font-medium">{rooms.bathrooms}</span>
               </div>
-              {selectedExtras.length > 0 && (
+              {storeExtras.length > 0 && (
                 <div>
                   <span className="text-gray-600">Extras:</span>
                   <ul className="mt-1 space-y-1">
-                    {selectedExtras.map((extra) => (
+                    {storeExtras.map((extra) => (
                       <li key={extra.id} className="text-sm">
                         {extra.name} × {extra.quantity}
                       </li>
@@ -386,23 +381,23 @@ export function BookingReviewStep() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Date:</span>
-                <span className="font-medium">{selectedDate && formatDate(selectedDate)}</span>
+                <span className="font-medium">{scheduling.selectedDate && formatDate(scheduling.selectedDate)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Time:</span>
-                <span className="font-medium">{selectedTime && formatTime(selectedTime)}</span>
+                <span className="font-medium">{scheduling.selectedTime && formatTime(scheduling.selectedTime)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Address:</span>
                 <span className="font-medium text-right max-w-xs">
-                  {address}
-                  {postcode && `, ${postcode}`}
+                  {location.address}
+                  {location.postcode && `, ${location.postcode}`}
                 </span>
               </div>
-              {specialInstructions && (
+              {customerInfo.specialInstructions && (
                 <div>
                   <span className="text-gray-600">Special Instructions:</span>
-                  <p className="mt-1 text-sm">{specialInstructions}</p>
+                  <p className="mt-1 text-sm">{customerInfo.specialInstructions}</p>
                 </div>
               )}
             </div>
@@ -415,7 +410,7 @@ export function BookingReviewStep() {
               Cleaner Assignment
             </h2>
             <div className="space-y-3">
-              {autoAssign ? (
+              {cleaner.autoAssign ? (
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-blue-500 mr-2" />
                   <span className="font-medium">Auto-assign best available cleaner</span>
@@ -511,10 +506,10 @@ export function BookingReviewStep() {
                 <span>R{selectedService?.base_fee || 0}</span>
               </div>
               
-              {selectedExtras.length > 0 && (
+              {storeExtras.length > 0 && (
                 <>
                   <Separator />
-                  {selectedExtras.map((extra) => (
+                  {storeExtras.map((extra) => (
                     <div key={extra.id} className="flex justify-between text-sm">
                       <span className="text-gray-600">{extra.name} × {extra.quantity}:</span>
                       <span>R{(extra.price * extra.quantity).toFixed(2)}</span>
@@ -526,7 +521,7 @@ export function BookingReviewStep() {
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total:</span>
-                <span>R{totalPrice.toFixed(2)}</span>
+                <span>R{pricing.totalPrice.toFixed(2)}</span>
               </div>
             </div>
 

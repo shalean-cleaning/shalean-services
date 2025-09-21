@@ -24,14 +24,10 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
   const { loading: authLoading, isAuthenticated } = useRequireAuth();
   const supabase = createClient();
   const {
-    selectedSuburb,
-    selectedDate,
-    selectedTime,
-    selectedCleanerId,
-    autoAssign,
-    availableCleaners,
-    setSelectedCleanerId,
-    setAvailableCleaners,
+    location,
+    scheduling,
+    cleaner,
+    setCleaner,
   } = useBookingStore();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -44,11 +40,11 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
 
   // Fetch available cleaners when component mounts or dependencies change
   useEffect(() => {
-    const { selectedRegion, bedroomCount, bathroomCount } = useBookingStore.getState();
+    const { rooms } = useBookingStore.getState();
     
-    if (!selectedRegion || !selectedSuburb || !selectedDate || !selectedTime) {
+    if (!location.regionId || !location.suburbId || !scheduling.selectedDate || !scheduling.selectedTime) {
       setError(null);
-      setAvailableCleaners([]);
+      setCleaner({ availableCleaners: [] });
       return;
     }
 
@@ -60,12 +56,12 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        regionId: selectedRegion,
-        suburbId: selectedSuburb,
-        date: selectedDate,             // ISO string
-        timeSlot: selectedTime,        // "10:00"
-        bedrooms: bedroomCount ?? 1,
-        bathrooms: bathroomCount ?? 1,
+        regionId: location.regionId,
+        suburbId: location.suburbId,
+        date: scheduling.selectedDate,             // ISO string
+        timeSlot: scheduling.selectedTime,        // "10:00"
+        bedrooms: rooms.bedrooms ?? 1,
+        bathrooms: rooms.bathrooms ?? 1,
       }),
       signal: ac.signal,
       next: { revalidate: 60 }, // Cache for 1 minute (availability changes frequently)
@@ -81,12 +77,12 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     .then((data) => {
       // Handle the new standardized response format
       if (data.success && Array.isArray(data.cleaners)) {
-        setAvailableCleaners(data.cleaners);
+        setCleaner({ availableCleaners: data.cleaners });
         // Clear any previous errors if we got a successful response
         setError(null);
       } else {
         // Handle error responses or empty results
-        setAvailableCleaners([]);
+        setCleaner({ availableCleaners: [] });
         if (data.error) {
           setError(data.message || data.error || "Failed to load available cleaners");
         } else if (data.cleaners && data.cleaners.length === 0) {
@@ -99,25 +95,29 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       if (err.name !== "AbortError") {
         setError("We couldn't load available cleaners. Please adjust date or time and try again.");
         console.error(err);
-        setAvailableCleaners([]);
+        setCleaner({ availableCleaners: [] });
       }
     })
     .finally(() => setIsLoading(false));
 
     return () => ac.abort();
-  }, [selectedSuburb, selectedDate, selectedTime, setAvailableCleaners]);
+  }, [location.suburbId, scheduling.selectedDate, scheduling.selectedTime, setCleaner]);
 
   const handleCleanerSelect = (cleanerId: string) => {
-    setSelectedCleanerId(cleanerId);
-    // setAutoAssign is already handled in the store to clear autoAssign when selecting a cleaner
+    setCleaner({ selectedCleanerId: cleanerId, autoAssign: false });
   };
 
   const handleAutoAssign = () => {
-    const { autoAssignCleaner } = useBookingStore.getState();
-    autoAssignCleaner(); // This will pick the first available cleaner as per PRD
+    const { cleaner: currentCleaner } = useBookingStore.getState();
+    if (currentCleaner.availableCleaners.length > 0) {
+      const firstCleaner = currentCleaner.availableCleaners[0];
+      setCleaner({ selectedCleanerId: firstCleaner.id, autoAssign: true });
+    } else {
+      setCleaner({ autoAssign: true, selectedCleanerId: null });
+    }
   };
 
-  const canContinue = !!selectedCleanerId || autoAssign;
+  const canContinue = !!cleaner.selectedCleanerId || cleaner.autoAssign;
 
 
   async function handleContinue() {
@@ -143,17 +143,6 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     
     setIsSaving(true);
     try {
-      // Persist selection: if auto-assign → autoAssign: true & clear selectedCleanerId; else set selectedCleanerId & autoAssign: false
-      if (autoAssign) {
-        // Auto-assign mode: set autoAssign true, clear selectedCleanerId
-        const { setAutoAssign } = useBookingStore.getState();
-        setAutoAssign(true);
-      } else {
-        // Manual selection: set autoAssign false, persist selectedCleanerId
-        const { setSelectedCleanerId } = useBookingStore.getState();
-        setSelectedCleanerId(selectedCleanerId);
-      }
-      
       // Build the payload from the store via a single composer
       const { composeDraftPayload } = useBookingStore.getState();
       const payload = composeDraftPayload();
@@ -161,8 +150,8 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       // Add cleaner selection to payload
       const payloadWithCleaner = {
         ...payload,
-        selectedCleanerId: selectedCleanerId || undefined,
-        autoAssign: autoAssign
+        selectedCleanerId: cleaner.selectedCleanerId || undefined,
+        autoAssign: cleaner.autoAssign
       };
       
       // Get the current session token for authentication
@@ -284,14 +273,14 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
 
       {/* Auto-assign option */}
       <Card className={`p-4 border-2 transition-colors ${
-        autoAssign 
+        cleaner.autoAssign 
           ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-500' 
           : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
       }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              autoAssign ? 'bg-blue-600' : 'bg-blue-500'
+              cleaner.autoAssign ? 'bg-blue-600' : 'bg-blue-500'
             }`}>
               <Sparkles className="w-5 h-5 text-white" />
             </div>
@@ -306,13 +295,13 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
             onClick={handleAutoAssign}
             disabled={isLoading}
             className={`${
-              autoAssign 
+              cleaner.autoAssign 
                 ? 'bg-blue-600 hover:bg-blue-700' 
                 : 'bg-blue-500 hover:bg-blue-600'
             }`}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {autoAssign ? 'Selected' : 'Auto-assign'}
+            {cleaner.autoAssign ? 'Selected' : 'Auto-assign'}
           </Button>
         </div>
       </Card>
@@ -325,10 +314,10 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
           <h3 className="text-lg font-semibold text-gray-900">
             Available Cleaners
           </h3>
-          {availableCleaners.length > 0 && (
+          {cleaner.availableCleaners.length > 0 && (
             <div className="flex items-center space-x-1 text-sm text-gray-600">
               <Users className="w-4 h-4" />
-              <span>{availableCleaners.length} available</span>
+              <span>{cleaner.availableCleaners.length} available</span>
             </div>
           )}
         </div>
@@ -376,7 +365,7 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         )}
 
         {/* Empty state */}
-        {!isLoading && !error && availableCleaners.length === 0 && (
+        {!isLoading && !error && cleaner.availableCleaners.length === 0 && (
           <Card className="p-6 text-center">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -392,13 +381,13 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
         )}
 
         {/* Cleaners list */}
-        {!isLoading && !error && availableCleaners.length > 0 && (
+        {!isLoading && !error && cleaner.availableCleaners.length > 0 && (
           <div className="space-y-4">
-            {availableCleaners.map((cleaner) => (
+            {cleaner.availableCleaners.map((cleanerItem) => (
               <CleanerCard
-                key={cleaner.id}
-                cleaner={cleaner}
-                isSelected={selectedCleanerId === cleaner.id}
+                key={cleanerItem.id}
+                cleaner={cleanerItem}
+                isSelected={cleaner.selectedCleanerId === cleanerItem.id}
                 onSelect={handleCleanerSelect}
               />
             ))}
@@ -407,28 +396,28 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
       </div>
 
       {/* Selected cleaner summary */}
-      {(selectedCleanerId || autoAssign) && (
+      {(cleaner.selectedCleanerId || cleaner.autoAssign) && (
         <Card className={`p-4 border-2 ${
-          autoAssign 
+          cleaner.autoAssign 
             ? 'bg-blue-50 border-blue-200' 
             : 'bg-green-50 border-green-200'
         }`}>
           <div className="flex items-center space-x-3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              autoAssign ? 'bg-blue-500' : 'bg-green-500'
+              cleaner.autoAssign ? 'bg-blue-500' : 'bg-green-500'
             }`}>
               <Clock className="w-4 h-4 text-white" />
             </div>
             <div>
               <p className={`font-semibold ${
-                autoAssign ? 'text-blue-800' : 'text-green-800'
+                cleaner.autoAssign ? 'text-blue-800' : 'text-green-800'
               }`}>
-                {autoAssign ? 'Auto-assign Selected' : 'Cleaner Selected Successfully'}
+                {cleaner.autoAssign ? 'Auto-assign Selected' : 'Cleaner Selected Successfully'}
               </p>
               <p className={`text-sm ${
-                autoAssign ? 'text-blue-600' : 'text-green-600'
+                cleaner.autoAssign ? 'text-blue-600' : 'text-green-600'
               }`}>
-                {autoAssign 
+                {cleaner.autoAssign 
                   ? 'We\'ll assign the best available cleaner for your booking'
                   : 'Your booking will be confirmed with the selected cleaner'
                 }

@@ -1,5 +1,15 @@
 import 'server-only';
 import { cache } from "react";
+import { 
+  CheckCircle, 
+  Calendar, 
+  Settings, 
+  ShieldCheck, 
+  Heart, 
+  Leaf, 
+  DollarSign, 
+  Phone 
+} from 'lucide-react';
 
 import { createSupabaseServer } from "@/lib/supabase/server";
 
@@ -199,17 +209,17 @@ export async function getTeamMembers() {
   }
 }
 
-// Icon mapping utility
+// Icon mapping utility - using static imports to prevent runtime errors
 export function getIconComponent(iconName: string) {
-  const iconMap: Record<string, () => Promise<React.ComponentType>> = {
-    'check-circle': () => import('lucide-react').then(m => m.CheckCircle),
-    'calendar': () => import('lucide-react').then(m => m.Calendar),
-    'settings': () => import('lucide-react').then(m => m.Settings),
-    'shield-check': () => import('lucide-react').then(m => m.ShieldCheck),
-    'heart': () => import('lucide-react').then(m => m.Heart),
-    'leaf': () => import('lucide-react').then(m => m.Leaf),
-    'dollar-sign': () => import('lucide-react').then(m => m.DollarSign),
-    'phone': () => import('lucide-react').then(m => m.Phone),
+  const iconMap: Record<string, React.ComponentType> = {
+    'check-circle': CheckCircle,
+    'calendar': Calendar,
+    'settings': Settings,
+    'shield-check': ShieldCheck,
+    'heart': Heart,
+    'leaf': Leaf,
+    'dollar-sign': DollarSign,
+    'phone': Phone,
   }
   
   return iconMap[iconName] || null

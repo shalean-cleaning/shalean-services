@@ -57,7 +57,13 @@ export function useUser(): AuthUser {
           console.error('Error fetching profile:', error)
           setProfile(null)
         } else {
-          setProfile(profile)
+          // Transform database profile to UserProfile interface
+          const userProfile: UserProfile = {
+            ...profile,
+            full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
+            is_active: true // Default to active since we don't have this field in the database
+          }
+          setProfile(userProfile)
         }
       } else {
         setProfile(null)
@@ -83,7 +89,13 @@ export function useUser(): AuthUser {
             console.error('Error fetching profile:', error)
             setProfile(null)
           } else {
-            setProfile(profile)
+            // Transform database profile to UserProfile interface
+            const userProfile: UserProfile = {
+              ...profile,
+              full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
+              is_active: true // Default to active since we don't have this field in the database
+            }
+            setProfile(userProfile)
           }
         } else {
           setProfile(null)

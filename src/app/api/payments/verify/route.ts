@@ -4,6 +4,11 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { env } from "@/env.server";
 import { generateShortId } from "@/lib/utils/short-id";
+import { 
+  shouldUseMockPaystack, 
+  getMockConfig, 
+  mockVerifyPayment 
+} from "@/lib/payments/mock-paystack";
 
 export const runtime = "nodejs";
 
@@ -20,7 +25,7 @@ const VerifyPaymentSchema = z.object({
 
 // type VerifyPaymentInput = z.infer<typeof VerifyPaymentSchema>;
 
-// Helper function to verify payment with Paystack
+// Helper function to verify payment with Paystack (with mock support)
 async function verifyPaystackPayment(reference: string): Promise<{
   status: string;
   amount: number;
@@ -31,6 +36,25 @@ async function verifyPaystackPayment(reference: string): Promise<{
   customer: any;
   metadata: any;
 }> {
+  // Use mock Paystack in development or when configured
+  if (shouldUseMockPaystack()) {
+    logger.info('Using mock Paystack for payment verification');
+    const mockConfig = getMockConfig();
+    const mockResponse = await mockVerifyPayment(reference, mockConfig);
+    
+    return {
+      status: mockResponse.data.status,
+      amount: mockResponse.data.amount,
+      currency: mockResponse.data.currency,
+      gateway_response: mockResponse.data.gateway_response,
+      paid_at: mockResponse.data.paid_at,
+      transaction_id: mockResponse.data.id.toString(),
+      customer: mockResponse.data.customer,
+      metadata: mockResponse.data.metadata
+    };
+  }
+
+  // Real Paystack API call
   const paystackUrl = `https://api.paystack.co/transaction/verify/${reference}`;
   
   const response = await fetch(paystackUrl, {

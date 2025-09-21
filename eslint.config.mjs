@@ -17,7 +17,11 @@ export default [
       "**/dist/**",
       "**/build/**",
       ".next/static/**",
-      "**/.next/static/**"
+      "**/.next/static/**",
+      "*.js", // Ignore root-level JS files (scripts)
+      "fix-*.js",
+      "reset-*.js",
+      "update-*.js"
     ],
   },
   {
