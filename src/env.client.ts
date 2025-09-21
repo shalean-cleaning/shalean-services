@@ -7,10 +7,17 @@ const ClientEnv = z.object({
 });
 
 // Environment variables for client-side
-const fallbackEnv = {
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gcmndztkikfwnxbfqctn.supabase.co',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjbW5kenRraWtmd254YmZxY3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MDcyNTksImV4cCI6MjA3MzI4MzI1OX0.9HQwytJGisUPT_gwb4TyU9rDe76TBA5iw1QOxlgWON0',
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-};
+try {
+  const clientEnv = {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  };
 
-export const envClient = ClientEnv.parse(fallbackEnv);
+  export const envClient = ClientEnv.parse(clientEnv);
+} catch (error) {
+  console.error('❌ Client environment validation failed:', error);
+  console.error('Please check your environment variables and ensure all required values are set.');
+  console.error('Required variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  throw error;
+}

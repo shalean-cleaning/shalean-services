@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { env } from '@/env.server'
 import { updateBookingTotalPrice } from '@/lib/validation/price-calculation'
 import { getCurrentBookingStep } from '@/lib/validation/booking-validation'
+import { ApiErrorHandler, withErrorHandler, createSuccessResponse } from '@/lib/api-error-handler'
+import { logger } from '@/lib/logger'
 
 // Helper function to generate session ID for guest users
 function generateSessionId(): string {
@@ -31,21 +33,19 @@ async function getOrCreateSessionId(): Promise<string> {
   return sessionId
 }
 
-export async function POST(request: Request) {
+async function handleDraftPost(request: Request): Promise<NextResponse> {
+  const requestId = Math.random().toString(36).substring(2, 15);
+  const endpoint = '/api/bookings/draft';
+  
+  logger.apiRequest(endpoint, 'POST', requestId);
+
   try {
     const supabase = await createSupabaseServer()
     
-    // Check if Supabase is properly configured
-    if (env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder') || 
-        env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.includes('placeholder')) {
-      console.error('Supabase not configured - using placeholder values')
-      return NextResponse.json(
-        { 
-          error: 'Database not configured',
-          details: 'Supabase environment variables are not set correctly'
-        },
-        { status: 503 }
-      )
+    // Environment variables are now validated at startup, so if we reach here they should be valid
+    // But we'll add a safety check just in case
+    if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      throw ApiErrorHandler.databaseError('Supabase environment variables are missing');
     }
     
     // Check for Authorization header (Bearer token) - optional for guest bookings
@@ -80,11 +80,8 @@ export async function POST(request: Request) {
     let requestData;
     try {
       requestData = await request.json()
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
-        { status: 400 }
-      )
+    } catch (error) {
+      throw ApiErrorHandler.validationError('Invalid JSON in request body');
     }
 
     // For DRAFT creation, we only need customer_id OR session_id
@@ -117,22 +114,13 @@ export async function POST(request: Request) {
     }
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching existing draft:', {
-        error: fetchError,
+      logger.databaseError(fetchError, 'SELECT bookings WHERE customer_id/session_id', requestId);
+      throw ApiErrorHandler.databaseError('Failed to check for existing draft', {
         errorCode: fetchError.code,
         errorMessage: fetchError.message,
         userId: customerId,
-        supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
-        hasAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        isPlaceholderUrl: env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')
-      })
-      return NextResponse.json(
-        { 
-          error: 'Failed to check for existing draft',
-          details: process.env.NODE_ENV === 'development' ? fetchError.message : undefined
-        },
-        { status: 500 }
-      )
+        sessionId: sessionId,
+      });
     }
 
     // If draft exists, update it with new data
@@ -163,17 +151,21 @@ export async function POST(request: Request) {
         .single()
 
       if (updateError) {
-        console.error('Error updating draft booking:', updateError)
-        return NextResponse.json(
-          { error: 'Failed to update draft booking' },
-          { status: 500 }
-        )
+        logger.databaseError(updateError, 'UPDATE bookings', requestId);
+        throw ApiErrorHandler.databaseError('Failed to update draft booking', {
+          bookingId: existingDraft.id,
+          updateData,
+        });
       }
 
       // Calculate and update total_price if we have enough data
       const priceResult = await updateBookingTotalPrice(supabase, updatedBooking)
       if (!priceResult.success) {
-        console.warn('Failed to calculate total price:', priceResult.error)
+        logger.warn('Failed to calculate total price for updated booking', {
+          requestId,
+          bookingId: existingDraft.id,
+          error: priceResult.error,
+        });
         // Don't fail the request, just log the warning
       }
 
@@ -185,19 +177,21 @@ export async function POST(request: Request) {
         .single()
 
       if (finalError) {
-        console.error('Error fetching updated booking:', finalError)
-        return NextResponse.json(
-          { error: 'Failed to fetch updated booking' },
-          { status: 500 }
-        )
+        logger.databaseError(finalError, 'SELECT bookings WHERE id', requestId);
+        throw ApiErrorHandler.databaseError('Failed to fetch updated booking', {
+          bookingId: existingDraft.id,
+        });
       }
 
-      return NextResponse.json({
+      const response = {
         booking: finalBooking,
         isNew: false,
         currentStep: getCurrentBookingStep(finalBooking),
         priceCalculated: priceResult.success
-      })
+      };
+
+      logger.apiResponse(endpoint, 'POST', requestId, 200, { bookingId: finalBooking.id, isNew: false });
+      return createSuccessResponse(response);
     }
 
     // Create new DRAFT booking with minimal required data
@@ -215,10 +209,7 @@ export async function POST(request: Request) {
     } else if (sessionId) {
       insertData.session_id = sessionId
     } else {
-      return NextResponse.json(
-        { error: 'Either customer authentication or session is required' },
-        { status: 401 }
-      )
+      throw ApiErrorHandler.unauthorizedError('Either customer authentication or session is required');
     }
 
     // Add optional fields if provided
@@ -240,17 +231,22 @@ export async function POST(request: Request) {
       .single()
 
     if (createError) {
-      console.error('Error creating draft booking:', createError)
-      return NextResponse.json(
-        { error: 'Failed to create draft booking' },
-        { status: 500 }
-      )
+      logger.databaseError(createError, 'INSERT bookings', requestId);
+      throw ApiErrorHandler.databaseError('Failed to create draft booking', {
+        insertData,
+        customerId,
+        sessionId,
+      });
     }
 
     // Calculate and update total_price if we have enough data
     const priceResult = await updateBookingTotalPrice(supabase, newBooking)
     if (!priceResult.success) {
-      console.warn('Failed to calculate total price for new booking:', priceResult.error)
+      logger.warn('Failed to calculate total price for new booking', {
+        requestId,
+        bookingId: newBooking.id,
+        error: priceResult.error,
+      });
       // Don't fail the request, just log the warning
     }
 
@@ -262,30 +258,48 @@ export async function POST(request: Request) {
       .single()
 
     if (finalError) {
-      console.error('Error fetching new booking:', finalError)
-      return NextResponse.json(
-        { error: 'Failed to fetch new booking' },
-        { status: 500 }
-      )
+      logger.databaseError(finalError, 'SELECT bookings WHERE id', requestId);
+      throw ApiErrorHandler.databaseError('Failed to fetch new booking', {
+        bookingId: newBooking.id,
+      });
     }
     
-    return NextResponse.json({
+    const response = {
       booking: finalBooking,
       isNew: true,
       currentStep: getCurrentBookingStep(finalBooking),
       priceCalculated: priceResult.success
-    })
+    };
+
+    logger.apiResponse(endpoint, 'POST', requestId, 200, { bookingId: finalBooking.id, isNew: true });
+    return createSuccessResponse(response);
 
   } catch (error) {
-    console.error('Unexpected error in draft API:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    // Extract context for error handling
+    const context = {
+      endpoint,
+      method: 'POST',
+      userId: customerId,
+      sessionId: sessionId,
+      userAgent: request.headers.get('user-agent'),
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+      body: requestData,
+      headers: Object.fromEntries(request.headers.entries()),
+    };
+
+    return ApiErrorHandler.handle(error, context);
   }
 }
 
-export async function GET(request: Request) {
+// Export the wrapped handler
+export const POST = withErrorHandler(handleDraftPost, '/api/bookings/draft');
+
+async function handleDraftGet(request: Request): Promise<NextResponse> {
+  const requestId = Math.random().toString(36).substring(2, 15);
+  const endpoint = '/api/bookings/draft';
+  
+  logger.apiRequest(endpoint, 'GET', requestId);
+
   try {
     const supabase = await createSupabaseServer()
     
@@ -344,27 +358,38 @@ export async function GET(request: Request) {
     }
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching draft booking:', fetchError)
-      return NextResponse.json(
-        { error: 'Failed to fetch draft booking' },
-        { status: 500 }
-      )
+      logger.databaseError(fetchError, 'SELECT bookings WHERE customer_id/session_id', requestId);
+      throw ApiErrorHandler.databaseError('Failed to fetch draft booking', {
+        errorCode: fetchError.code,
+        errorMessage: fetchError.message,
+        userId: customerId,
+        sessionId: sessionId,
+      });
     }
 
     if (!booking) {
-      return NextResponse.json(
-        { error: 'No draft booking found' },
-        { status: 404 }
-      )
+      throw ApiErrorHandler.notFoundError('No draft booking found');
     }
 
-    return NextResponse.json({ booking })
+    const response = { booking };
+    logger.apiResponse(endpoint, 'GET', requestId, 200, { bookingId: booking.id });
+    return createSuccessResponse(response);
 
   } catch (error) {
-    console.error('Unexpected error in draft GET API:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    // Extract context for error handling
+    const context = {
+      endpoint,
+      method: 'GET',
+      userId: customerId,
+      sessionId: sessionId,
+      userAgent: request.headers.get('user-agent'),
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+      headers: Object.fromEntries(request.headers.entries()),
+    };
+
+    return ApiErrorHandler.handle(error, context);
   }
 }
+
+// Export the wrapped handler
+export const GET = withErrorHandler(handleDraftGet, '/api/bookings/draft');

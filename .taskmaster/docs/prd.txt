@@ -1,278 +1,124 @@
-Product Requirements Document (PRD) – Shalean Cleaning Services Web Application
-1. Objective
-
-Build a responsive, dynamic, SEO-optimized, and secure web application for Shalean Cleaning Services, enabling customers to book services easily, admins to manage operations and pricing, and cleaners to manage assigned jobs.
-
-Key Principles
-
-No hardcoded data: all services, pricing, extras, content, locations, and cleaner data must be stored in Supabase and fetched dynamically.
-
-Fast performance: load time ≤ 2 seconds; optimized queries, caching, and lazy loading.
-
-SEO & clean URLs: short, crawl-friendly, canonical URLs; no sensitive data in URLs.
-
-Secure by design: sessions/cookies for state, no tokens/PII in query strings, all payments via Paystack.
-
-2. Features
-2.1 Customer Portal
-Homepage (Dynamic)
-
-Header: Home, Services, How It Works, Blog, Contact, Login/Signup, Book Now.
-
-Hero Section: Headline, tagline, background image.
-
-CTAs: Book a Cleaner, Get a Free Quote, Apply to Work.
-
-How It Works: 3–4 steps (Select Service → Book → Cleaner Arrives → Relax).
-
-Why Choose Shalean: Trusted Cleaners, Affordable Prices, Flexible Scheduling, 100% Satisfaction Guarantee.
-
-Our Team: Dynamic grid of team members (name, role, photo, bio).
-
-Blog Preview: Latest 3–4 posts.
-
-Testimonials: Dynamic reviews.
-
-Footer: Quick links, contact info, social media icons.
-
-Quick Quote Flow
-
-URL: /quote (SEO landing) or modal ?quote=open.
-
-Steps:
-
-Service + Rooms
-
-Extras
-
-Frequency + Location
-
-Live total: base + rooms + extras + discounts + fees.
-
-Output: price breakdown + “What’s included.”
-
-CTAs: Continue to Booking (prefilled) or Email me this Quote.
-
-State: stored in DB (quotes table), not exposed in URL.
-
-Booking Flow (Stepper)
-
-Service
-
-URL: /book/{service-slug}
-
-Shows service details (features, duration, base fee).
-
-User confirms or changes service.
-
-Rooms & Extras
-
-Bedrooms (0–10), Bathrooms (0–10).
-
-Extras (dynamic checkboxes with prices).
-
-Live price updates.
-
-Location & Date/Time
-
-Select suburb/area (from DB).
-
-Enter address.
-
-Choose date & time (available slots only).
-
-Cleaner Selection
-
-List of available cleaners for area & slot.
-
-Cleaner cards: name, rating, completed jobs, badges.
-
-Option: “Auto-assign best available.”
-
-Review & Payment
-
-Sticky summary (desktop), collapsible FAB (mobile).
-
-Contact info (guest allowed).
-
-Apply promo code.
-
-Paystack checkout → save booking → send confirmation email.
-
-2.2 Cleaner Portal
-
-Dashboard: list of today’s & upcoming jobs.
-
-Actions: accept/decline, update status (On My Way, Arrived, Completed).
-
-Availability: set working hours + service areas.
-
-Ratings: view feedback.
-
-Profile Management: update contact info & availability.
-
-2.3 Admin Portal
-
-Dashboard: overview of bookings, payments, cleaners.
-
-Booking Management: create, edit, reassign bookings.
-
-Pricing Management:
-
-Base service fee.
-
-Per-bedroom/bathroom pricing.
-
-Extras.
-
-Frequency discounts.
-
-Service fees.
-
-Area-based adjustments.
-
-Cleaner Management: add/edit cleaners, manage availability, assign service areas.
-
-Location Management: add/edit suburbs or zones.
-
-Customer Management: view bookings, payments, profiles.
-
-Content Management: homepage blocks, team, blog.
-
-Reports & Analytics: revenue, popular services, bookings by location.
-
-3. Technical Requirements
-Frontend
-
-Framework: Next.js (App Router).
-
-UI: TailwindCSS + shadcn/ui.
-
-Performance: ISR for blogs, SWR caching for pricing/locations, parallel fetches.
-
-Stepper: dynamic booking flow with sticky summary.
-
-Backend
-
-Supabase: Postgres DB, Auth, Storage, Edge Functions.
-
-Payments: Paystack integration.
-
-Emails: Resend/Postmark.
-
-Cleaner availability: queried via DB + edge function.
-
-Security: RLS for multi-role safety.
-
-Database Schema (Core Tables)
-
-services (id, slug, name, description, base_fee, active)
-
-service_pricing (service_id, per_bedroom, per_bathroom, service_fee_flat, service_fee_pct, active_from/to)
-
-extras (id, slug, name, description, price, active)
-
-service_extras (service_id, extra_id, required)
-
-frequency_discounts (frequency, discount_pct, active_from/to)
-
-areas (id, slug, name, price_adjustment_pct, active)
-
-cleaners (id, name, contact_info, bio, rating, active)
-
-cleaner_areas (cleaner_id, area_id)
-
-cleaner_availability (cleaner_id, day_of_week, start_time, end_time, is_available)
-
-service_features (service_id, label, sort_order)
-
-bookings (id, customer_id, service_id, bedrooms, bathrooms, extras[], frequency, area_id, cleaner_id, total_price, status, created_at)
-
-quotes (id, service_id, bedrooms, bathrooms, extras[], frequency, area_id, total_estimate, email, created_at)
-
-4. URL Design & Security
-SEO-friendly routes (indexable)
-
-Home: /
-
-Services list: /services
-
-Service page: /services/{slug}
-
-Blog: /blog and /blog/{slug}
-
-How it Works: /how-it-works
-
-Contact: /contact
-
-Careers: /careers/apply
-
-Quote landing: /quote
-
-Transactional routes (noindex)
-
-Booking: /book/{service-slug}
-
-Quote detail: /q/{short-id} (opaque, no PII)
-
-Booking confirmation: /order/{short-id}
-
-Security rules
-
-Never include PII or secrets in URLs (no emails, phone, tokens).
-
-State stored in sessions, DB, or short opaque IDs.
-
-All sensitive actions use POST.
-
-Confirmation pages follow PRG (Post-Redirect-Get).
-
-robots.txt: disallow /book/, /q/, /order/, /api/.
-
-5. User Roles & Permissions
-
-Customer: book services, select location/cleaner, manage bookings.
-
-Cleaner: manage assigned jobs, set availability, edit profile.
-
-Admin: manage services, pricing, locations, cleaners, content, and reports.
-
-6. Success Metrics
-
-Booking completion ≤ 3 minutes.
-
-Page load ≤ 2s.
-
-Bounce rate ↓ on homepage.
-
-Conversion ↑ with Quick Quote & Cleaner Selection.
-
-Cleaner utilization ≥ 80%.
-
-Customer satisfaction ≥ 4.5/5.
-
-7. Future Enhancements (Phase 2)
-
-Recurring bookings (weekly, bi-weekly, monthly).
-
-Referral program (refer & earn).
-
-Cleaner GPS navigation.
-
-Auto-assign algorithm for cleaner matching.
-
-Mobile apps (React Native).
-
-✅ This PRD now fully covers:
-
-Homepage design blocks
-
-Quick Quote flow
-
-Booking form with service → rooms/extras → location → cleaner → payment
-
-Dynamic pricing & locations
-
-Cleaner availability
-
-SEO-friendly URLs & security
+# Product Requirements Document: Fix Booking Draft API 500 Error
+
+## Problem Statement
+The `/api/bookings/draft` endpoint is returning 500 Internal Server Error, preventing users from creating or updating draft bookings in the Shalean Services booking system.
+
+## Root Cause Analysis
+Based on investigation of the codebase, the 500 error is likely caused by one or more of the following issues:
+
+### 1. Environment Configuration Issues
+- Supabase environment variables may not be properly configured
+- The API checks for placeholder values in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Fallback values are hardcoded in `env.server.ts` but may not be valid
+
+### 2. Database Connection Issues
+- Supabase client creation may be failing
+- Database queries may be failing due to connection issues
+- Missing or invalid service role key for server-side operations
+
+### 3. Data Validation Issues
+- Price calculation functions may be failing due to missing data
+- Booking validation may be throwing unhandled errors
+- Database constraints may be violated during insert/update operations
+
+### 4. Authentication Issues
+- Session ID generation for guest users may be failing
+- Cookie handling for session management may have issues
+- Bearer token authentication may not be working properly
+
+## Success Criteria
+- `/api/bookings/draft` endpoint returns 200 status for valid requests
+- Draft bookings can be created successfully for both authenticated and guest users
+- Draft bookings can be updated without errors
+- Proper error handling with meaningful error messages
+- All database operations complete successfully
+- Price calculations work correctly when sufficient data is provided
+
+## Technical Requirements
+
+### 1. Environment Configuration
+- Ensure all required Supabase environment variables are properly set
+- Remove hardcoded fallback values that may be invalid
+- Add proper validation for environment variables
+- Implement graceful degradation when environment is not fully configured
+
+### 2. Error Handling Improvements
+- Add comprehensive error logging with context
+- Implement proper error responses with meaningful messages
+- Add validation for all input parameters
+- Handle database connection failures gracefully
+
+### 3. Database Operations
+- Ensure all database queries have proper error handling
+- Add transaction support for complex operations
+- Validate data before database operations
+- Handle foreign key constraint violations
+
+### 4. Authentication & Session Management
+- Fix session ID generation and cookie handling
+- Ensure proper authentication flow for both guest and authenticated users
+- Add validation for authentication tokens
+- Handle session expiration gracefully
+
+### 5. Price Calculation
+- Add error handling for price calculation functions
+- Ensure price calculation doesn't fail the entire request
+- Add fallback pricing when calculation fails
+- Validate input data for price calculations
+
+## Implementation Plan
+
+### Phase 1: Environment & Configuration Fixes
+1. Review and fix environment variable configuration
+2. Remove invalid hardcoded fallback values
+3. Add proper environment validation
+4. Test database connectivity
+
+### Phase 2: Error Handling & Logging
+1. Add comprehensive error logging throughout the API
+2. Implement proper error response formatting
+3. Add input validation for all endpoints
+4. Test error scenarios
+
+### Phase 3: Database & Authentication Fixes
+1. Fix database connection issues
+2. Improve authentication flow
+3. Fix session management
+4. Test with both guest and authenticated users
+
+### Phase 4: Price Calculation & Validation
+1. Fix price calculation error handling
+2. Add proper data validation
+3. Test price calculation scenarios
+4. Ensure graceful degradation
+
+### Phase 5: Testing & Validation
+1. Test all API endpoints thoroughly
+2. Test with various data scenarios
+3. Test error conditions
+4. Validate error messages are user-friendly
+
+## Acceptance Criteria
+- [ ] `/api/bookings/draft` POST endpoint works without 500 errors
+- [ ] `/api/bookings/draft` GET endpoint works without 500 errors
+- [ ] Draft bookings can be created for guest users
+- [ ] Draft bookings can be created for authenticated users
+- [ ] Draft bookings can be updated successfully
+- [ ] Price calculations work when sufficient data is provided
+- [ ] Error messages are meaningful and helpful
+- [ ] All database operations complete successfully
+- [ ] Authentication works for both guest and authenticated users
+- [ ] Session management works correctly
+
+## Risk Mitigation
+- Test changes in development environment first
+- Implement comprehensive logging to identify issues quickly
+- Add monitoring for API endpoint health
+- Create rollback plan for production deployment
+- Document all changes for future reference
+
+## Dependencies
+- Supabase database must be accessible
+- Environment variables must be properly configured
+- Database schema must be up to date
+- Authentication system must be functional
