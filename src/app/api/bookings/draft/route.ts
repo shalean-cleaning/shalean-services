@@ -292,8 +292,8 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
   }
 }
 
-// Export the wrapped handler
-export const POST = withErrorHandler(handleDraftPost, '/api/bookings/draft');
+// Export the handler directly (error handling is done inside the function)
+export const POST = handleDraftPost;
 
 async function handleDraftGet(request: Request): Promise<NextResponse> {
   const requestId = Math.random().toString(36).substring(2, 15);
@@ -393,5 +393,5 @@ async function handleDraftGet(request: Request): Promise<NextResponse> {
   }
 }
 
-// Export the wrapped handler
-export const GET = withErrorHandler(handleDraftGet, '/api/bookings/draft');
+// Export the handler directly (error handling is done inside the function)
+export const GET = handleDraftGet;
