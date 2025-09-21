@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { useBookingStore } from '@/lib/stores/booking-store';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase-client';
+import { buildBookingReturnToUrl } from '@/lib/utils';
 
 interface CleanerSelectionStepProps {
   onNext?: () => void;
@@ -113,8 +114,13 @@ export function CleanerSelectionStep({ onNext: _onNext, onPrevious, canGoBack = 
     
     // Check authentication before proceeding - this is the authentication gate per PRD
     if (!isAuthenticated) {
-      // Redirect to login with return URL to booking review
-      router.push(`/auth/login?returnTo=${encodeURIComponent('/booking/review')}`);
+      // Store booking context and redirect to login
+      const { selectedService, currentStep } = useBookingStore.getState();
+      const returnTo = buildBookingReturnToUrl('/booking/review', {
+        currentStep: currentStep,
+        serviceSlug: selectedService?.slug,
+      });
+      router.push(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
     

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase-client'
+import { getAndClearBookingContext, validateReturnTo } from '@/lib/utils'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -73,9 +74,16 @@ function LoginForm() {
           setError(error.message)
         }
       } else {
-        // Login successful - redirect will be handled by the signIn function
-        router.refresh()
-        router.push(returnTo)
+        // Login successful - check for booking context first
+        const bookingContext = getAndClearBookingContext()
+        if (bookingContext) {
+          router.refresh()
+          router.push(bookingContext.returnPath)
+        } else {
+          const validatedReturnTo = validateReturnTo(returnTo)
+          router.refresh()
+          router.push(validatedReturnTo)
+        }
       }
     } catch {
       setError('An unexpected error occurred. Please try again.')

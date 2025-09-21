@@ -33,8 +33,10 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // Redirect to the validated return URL
-      return NextResponse.redirect(`${origin}${validatedReturnTo}`)
+      // Redirect to the validated return URL with booking context check header
+      const response = NextResponse.redirect(`${origin}${validatedReturnTo}`)
+      response.headers.set('X-Booking-Context-Check', 'true')
+      return response
     }
   }
 
