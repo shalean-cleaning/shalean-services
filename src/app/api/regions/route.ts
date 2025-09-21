@@ -22,7 +22,6 @@ async function ensureMinimalRegions(supabase: any) {
     }
 
     if (!regions || regions.length === 0) {
-      console.log('Regions table is empty, seeding minimal data...');
       
       const minimalRegions = [
         {

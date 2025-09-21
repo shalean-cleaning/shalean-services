@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TeamStats } from "@/components/team/team-stats";
 
 export const metadata: Metadata = {
   title: "Our Team - Shalean Services",
@@ -22,25 +23,8 @@ export default function OurTeamPage() {
           </p>
         </div>
 
-        {/* Team Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">500+</div>
-            <div className="text-gray-600">Professional Cleaners</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">50+</div>
-            <div className="text-gray-600">Support Staff</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">5+</div>
-            <div className="text-gray-600">Years Experience</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">10,000+</div>
-            <div className="text-gray-600">Happy Customers</div>
-          </div>
-        </div>
+        {/* Team Stats - Dynamic from database */}
+        <TeamStats />
 
         {/* Leadership Team */}
         <div className="mb-12">

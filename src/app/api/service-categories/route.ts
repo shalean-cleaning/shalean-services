@@ -25,44 +25,22 @@ export async function GET() {
       return NextResponse.json({ error: servicesErr.message }, { status: 500 });
     }
 
-    // Create mock categories based on service names for backward compatibility
-    const categories = [
-      {
-        id: 'standard-cleaning',
-        name: 'Standard Cleaning',
-        description: 'Regular home cleaning services',
-        icon: 'home',
-        sort_order: 0
-      },
-      {
-        id: 'deep-cleaning',
-        name: 'Deep Cleaning',
-        description: 'Intensive clean including hard-to-reach areas',
-        icon: 'sparkles',
-        sort_order: 1
-      },
-      {
-        id: 'move-in-out',
-        name: 'Move-In/Out Cleaning',
-        description: 'Pre/post move deep clean',
-        icon: 'truck',
-        sort_order: 2
-      },
-      {
-        id: 'post-construction',
-        name: 'Post-Construction',
-        description: 'Dust & residue removal after builds',
-        icon: 'construction',
-        sort_order: 3
-      },
-      {
-        id: 'airbnb',
-        name: 'Airbnb/Short-Let',
-        description: 'Turnover cleaning for hosts',
-        icon: 'apartment',
-        sort_order: 4
+    // Fetch categories from database if available, otherwise return empty array
+    let categories: any[] = [];
+    
+    try {
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('service_categories')
+        .select('id, name, description, icon, sort_order')
+        .eq('active', true)
+        .order('sort_order');
+
+      if (!categoriesError && categoriesData) {
+        categories = categoriesData;
       }
-    ];
+    } catch (error) {
+      console.warn('Service categories table not available:', error);
+    }
 
     return NextResponse.json({ 
       categories,

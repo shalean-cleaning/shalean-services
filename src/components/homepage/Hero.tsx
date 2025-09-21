@@ -53,7 +53,7 @@ export default async function Hero() {
             <MotionItem variants={fadeUp}>
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-semibold mb-6">
                 <Shield className="w-4 h-4 mr-2" />
-                Trusted by 1000+ families
+                Trusted by families across South Africa
               </div>
             </MotionItem>
             

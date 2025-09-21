@@ -189,18 +189,22 @@ export const useBookingStore = create<BookingState>()(
         set({ location: { ...get().location, ...location } });
         // Fetch delivery fee for the selected suburb
         if (location.suburbId) {
-          fetch(`/api/areas`)
-            .then(res => res.json())
-            .then(areas => {
-              const area = areas.find((a: { id: string; delivery_fee: number }) => a.id === location.suburbId);
-              if (area) {
-                set({ pricing: { ...get().pricing, deliveryFee: area.delivery_fee || 0 } });
-              }
-            })
-            .catch(err => {
-              console.error('Error fetching area delivery fee:', err);
-              set({ pricing: { ...get().pricing, deliveryFee: 0 } });
-            });
+          // Use cached delivery fee if available, otherwise fetch
+          const cachedFee = get().pricing.deliveryFee;
+          if (cachedFee === 0) {
+            fetch(`/api/areas`)
+              .then(res => res.json())
+              .then(areas => {
+                const area = areas.find((a: { id: string; delivery_fee: number }) => a.id === location.suburbId);
+                if (area) {
+                  set({ pricing: { ...get().pricing, deliveryFee: area.delivery_fee || 0 } });
+                }
+              })
+              .catch(err => {
+                console.error('Error fetching area delivery fee:', err);
+                set({ pricing: { ...get().pricing, deliveryFee: 0 } });
+              });
+          }
         } else {
           set({ pricing: { ...get().pricing, deliveryFee: 0 } });
         }
@@ -240,7 +244,7 @@ export const useBookingStore = create<BookingState>()(
           roomPrice += (rooms.bathrooms - 1) * additionalBathroomPrice;
         }
         
-        // Add extras
+        // Add extras - optimized calculation
         const extrasTotal = extras.reduce(
           (total, extra) => total + (extra.price * extra.quantity),
           0
@@ -248,7 +252,10 @@ export const useBookingStore = create<BookingState>()(
         
         const totalPrice = roomPrice + extrasTotal + pricing.deliveryFee;
         
-        set({ pricing: { ...pricing, totalPrice } });
+        // Only update if price has changed to prevent unnecessary re-renders
+        if (pricing.totalPrice !== totalPrice) {
+          set({ pricing: { ...pricing, totalPrice } });
+        }
       },
       
       setCurrentStep: (step) => {

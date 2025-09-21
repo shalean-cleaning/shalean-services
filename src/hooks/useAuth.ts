@@ -59,8 +59,8 @@ export function useUser(): AuthUser {
         } else {
           // Transform database profile to UserProfile interface
           const userProfile: UserProfile = {
-            ...profile,
-            full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
+            ...(profile as any),
+            full_name: `${(profile as any)?.first_name || ''} ${(profile as any)?.last_name || ''}`.trim() || 'User',
             is_active: true // Default to active since we don't have this field in the database
           }
           setProfile(userProfile)
@@ -91,8 +91,8 @@ export function useUser(): AuthUser {
           } else {
             // Transform database profile to UserProfile interface
             const userProfile: UserProfile = {
-              ...profile,
-              full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
+              ...(profile as any),
+              full_name: `${(profile as any)?.first_name || ''} ${(profile as any)?.last_name || ''}`.trim() || 'User',
               is_active: true // Default to active since we don't have this field in the database
             }
             setProfile(userProfile)

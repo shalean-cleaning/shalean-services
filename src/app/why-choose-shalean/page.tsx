@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { CheckCircle, Shield, Clock, Star, Users, Award } from 'lucide-react';
 import SafeImage from '@/components/ui/safe-image';
 import { IMAGES } from '@/lib/images';
+import { DynamicStats } from '@/components/stats/dynamic-stats';
 
 export const metadata: Metadata = {
   title: 'Why Choose Shalean Cleaning Services',
@@ -21,7 +22,7 @@ const features = [
   {
     icon: Star,
     title: '5-Star Rated Service',
-    description: 'Consistently rated 5 stars by our customers with over 1000+ satisfied clients across South Africa.'
+    description: 'Consistently rated 5 stars by our customers with satisfied clients across South Africa.'
   },
   {
     icon: Clock,
@@ -45,12 +46,7 @@ const features = [
   }
 ];
 
-const stats = [
-  { number: '1000+', label: 'Happy Customers' },
-  { number: '5.0', label: 'Average Rating' },
-  { number: '50+', label: 'Professional Cleaners' },
-  { number: '99%', label: 'Customer Satisfaction' }
-];
+// Stats will be fetched dynamically from database
 
 export default function WhyChooseShaleanPage() {
   return (
@@ -91,14 +87,7 @@ export default function WhyChooseShaleanPage() {
       {/* Stats Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{stat.number}</div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+          <DynamicStats />
         </div>
       </section>
 

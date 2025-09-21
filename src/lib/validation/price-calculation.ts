@@ -41,27 +41,38 @@ export async function calculateBookingPrice(
 ): Promise<{ total: number; breakdown: PriceBreakdown }> {
   const { service_id, area_id, bedrooms, bathrooms, extras = [] } = input
 
-  // Get service pricing
-  const { data: serviceData, error: serviceError } = await supabase
-    .from('services')
-    .select('base_price, name, service_fee_flat, service_fee_pct')
-    .eq('id', service_id)
-    .single()
+  // Parallel fetch of service and area data for better performance
+  const [serviceResult, areaResult] = await Promise.allSettled([
+    supabase
+      .from('services')
+      .select('base_price, name, service_fee_flat, service_fee_pct')
+      .eq('id', service_id)
+      .single(),
+    supabase
+      .from('suburbs')
+      .select('delivery_fee, name, price_adjustment_pct')
+      .eq('id', area_id)
+      .single()
+  ])
 
-  if (serviceError) {
-    throw new Error(`Failed to fetch service data: ${serviceError.message}`)
+  // Handle service data result
+  if (serviceResult.status === 'rejected' || serviceResult.value.error) {
+    const error = serviceResult.status === 'rejected' 
+      ? serviceResult.reason 
+      : serviceResult.value.error
+    throw new Error(`Failed to fetch service data: ${error.message || error}`)
   }
 
-  // Get area pricing
-  const { data: areaData, error: areaError } = await supabase
-    .from('suburbs')
-    .select('delivery_fee, name, price_adjustment_pct')
-    .eq('id', area_id)
-    .single()
-
-  if (areaError) {
-    throw new Error(`Failed to fetch area data: ${areaError.message}`)
+  // Handle area data result
+  if (areaResult.status === 'rejected' || areaResult.value.error) {
+    const error = areaResult.status === 'rejected' 
+      ? areaResult.reason 
+      : areaResult.value.error
+    throw new Error(`Failed to fetch area data: ${error.message || error}`)
   }
+
+  const serviceData = serviceResult.value.data
+  const areaData = areaResult.value.data
 
   // Calculate base price
   const basePrice = serviceData.base_price || 0

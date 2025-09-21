@@ -20,7 +20,7 @@ export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
   get(_target, prop) {
     if (!_env) {
       _env = ServerEnv.parse({
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjbW5kenRraWtmd254YmZxY3RuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzcwNzI1OSwiZXhwIjoyMDczMjgzMjU5fQ.04fbon1mz-tyKgHcCfAtV5aCUblD1joXVbYaeQBTnyI',
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
 

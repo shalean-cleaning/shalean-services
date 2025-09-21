@@ -23,7 +23,7 @@ async function getCleanerJobs(userId: string) {
     }
   )
 
-  // Get all bookings assigned to this cleaner
+  // Get all bookings assigned to this cleaner with optimized query
   const { data: bookings, error } = await supabase
     .from("bookings")
     .select(`
@@ -56,6 +56,7 @@ async function getCleanerJobs(userId: string) {
     .in("status", ["CONFIRMED", "IN_PROGRESS", "COMPLETED"])
     .order("booking_date", { ascending: true })
     .order("start_time", { ascending: true })
+    .limit(50) // Limit results for performance
 
   if (error) {
     console.error("Error fetching cleaner jobs:", error)

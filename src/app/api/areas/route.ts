@@ -27,18 +27,7 @@ export async function GET(request: NextRequest) {
     // This can be updated when the areas table is properly implemented
     let query = supabaseAdmin
       .from('suburbs')
-      .select(`
-        id,
-        name,
-        postcode,
-        delivery_fee,
-        region_id,
-        regions!inner (
-          id,
-          name,
-          state
-        )
-      `)
+      .select('id, name, postcode, delivery_fee, price_adjustment_pct, active, region_id')
       .eq('active', true)
       .order('name', { ascending: true });
 
@@ -54,15 +43,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform suburbs to areas format for PRD compliance
-    const areas = (data ?? []).map(suburb => ({
+    const areas = (data ?? []).map((suburb: any) => ({
       id: suburb.id,
-      slug: suburb.name.toLowerCase().replace(/\s+/g, '-'),
-      name: suburb.name,
-      price_adjustment_pct: 0, // Default for now
-      active: true,
-      postcode: suburb.postcode,
-      delivery_fee: suburb.delivery_fee,
-      region: suburb.regions
+      slug: suburb.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown',
+      name: suburb.name || 'Unknown Area',
+      price_adjustment_pct: suburb.price_adjustment_pct || 0,
+      active: suburb.active ?? true,
+      postcode: suburb.postcode || '',
+      delivery_fee: suburb.delivery_fee || 0,
+      region: { id: suburb.region_id, name: 'Unknown Region', state: 'Unknown' }
     }));
 
     return NextResponse.json(areas, { status: 200 });

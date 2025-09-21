@@ -17,7 +17,6 @@ async function ensureMinimalData(supabase: any) {
 
     // If no services exist, seed minimal data
     if (!services || services.length === 0) {
-      console.log('Services table is empty, seeding minimal data...');
       
       const minimalServices = [
         {
@@ -50,7 +49,6 @@ async function ensureMinimalData(supabase: any) {
       .limit(1);
 
     if (!extrasError && (!extras || extras.length === 0)) {
-      console.log('Extras table is empty, seeding minimal data...');
       
       const minimalExtras = [
         {
@@ -82,59 +80,76 @@ async function ensureMinimalData(supabase: any) {
 }
 
 export async function GET() {
-  const supabase = await createSupabaseServer();
-  
-  // Ensure minimal data exists
-  await ensureMinimalData(supabase);
-  
-  // Get services with pricing information
-  const { data: svcs, error: svcsErr } = await supabase
-    .from('services')
-    .select(`
-      id,
-      name,
-      slug,
-      description,
-      base_fee,
-      active
-    `)
-    .eq('active', true)
-    .order('name');
-  if (svcsErr) return NextResponse.json({ error: svcsErr.message }, { status: 500 });
+  try {
+    const supabase = await createSupabaseServer();
+    
+    // Ensure minimal data exists
+    await ensureMinimalData(supabase);
+    
+    // Get services with pricing information
+    const { data: svcs, error: svcsErr } = await supabase
+      .from('services')
+      .select(`
+        id,
+        name,
+        slug,
+        description,
+        base_fee,
+        active
+      `)
+      .eq('active', true)
+      .order('name');
+    
+    if (svcsErr) {
+      console.error('Error fetching services:', svcsErr);
+      return NextResponse.json({ error: svcsErr.message }, { status: 500 });
+    }
 
-  // Get extras (service items)
-  const { data: ex, error: exErr } = await supabase
-    .from('extras')
-    .select('id,name,description,price,active')
-    .eq('active', true)
-    .order('name');
-  
-  // Handle case where extras table doesn't exist yet
-  if (exErr) {
-    console.warn('extras table not found, using empty array:', exErr.message);
-    // Return empty array instead of error
+    // Get extras (service items) - handle gracefully if table doesn't exist
+    let extras: any[] = [];
+    try {
+      const { data: ex, error: exErr } = await supabase
+        .from('extras')
+        .select('id,name,description,price,active')
+        .eq('active', true)
+        .order('name');
+      
+      if (exErr) {
+        console.warn('extras table not found, using empty array:', exErr.message);
+      } else {
+        extras = ex ?? [];
+      }
+    } catch (err) {
+      console.warn('Error fetching extras:', err);
+      extras = [];
+    }
+
+    // Normalize services data
+    const servicesNormalized = (svcs ?? []).map(s => {
+      const price = s.base_fee != null ? Number(s.base_fee) : 0;
+      const cents = Math.round(price * 100);
+      return { 
+        ...s, 
+        base_price_cents: cents, 
+        base_price: price, // For backward compatibility
+        base_fee: price,
+        // Default pricing values (these should come from a pricing rules table in the future)
+        per_bedroom: 20, // $20 per additional bedroom
+        per_bathroom: 15, // $15 per additional bathroom
+        service_fee_flat: 0,
+        service_fee_pct: 0
+      };
+    });
+
+    // Return services and service items in a flat structure (no categories in PRD)
+    return NextResponse.json({ 
+      services: servicesNormalized, 
+      extras 
+    });
+  } catch (error) {
+    console.error('Unexpected error in services API:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error' 
+    }, { status: 500 });
   }
-
-  // Normalize services data
-  const servicesNormalized = (svcs ?? []).map(s => {
-    const price = s.base_fee != null ? Number(s.base_fee) : 0;
-    const cents = Math.round(price * 100);
-    return { 
-      ...s, 
-      base_price_cents: cents, 
-      base_price: price, // For backward compatibility
-      base_fee: price,
-      // Default pricing values (these should come from a pricing rules table in the future)
-      per_bedroom: 20, // $20 per additional bedroom
-      per_bathroom: 15, // $15 per additional bathroom
-      service_fee_flat: 0,
-      service_fee_pct: 0
-    };
-  });
-
-  // Return services and service items in a flat structure (no categories in PRD)
-  return NextResponse.json({ 
-    services: servicesNormalized, 
-    extras: ex ?? [] 
-  });
 }

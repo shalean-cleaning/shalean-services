@@ -16,7 +16,7 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
   const {
     selectedService,
     rooms,
-    storeExtras,
+    extras,
     location,
     scheduling,
     pricing,
@@ -112,11 +112,11 @@ export function BookingSummary({ service: _service }: BookingSummaryProps) {
           </div>
         )}
 
-        {storeExtras.length > 0 && (
+        {extras.length > 0 && (
           <>
             <Separator />
             <div className="space-y-2">
-              {storeExtras.map((extra: any) => (
+              {extras.map((extra: any) => (
                 <div key={extra.id} className="flex justify-between text-sm">
                   <div className="flex items-center gap-1">
                     <Plus className="w-3 h-3 text-gray-400" />

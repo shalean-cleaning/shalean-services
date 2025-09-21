@@ -95,14 +95,7 @@ export async function POST(req: Request) {
     try {
       const { data: availableCleaners, error: queryError } = await supabaseAdmin
         .from('cleaners')
-        .select(`
-          id,
-          name,
-          contact_info,
-          bio,
-          active,
-          created_at
-        `)
+        .select('id, name, bio, avatar_url, active')
         .eq('active', true);
 
       if (queryError) {
@@ -121,11 +114,11 @@ export async function POST(req: Request) {
 
       // Transform and filter results
       const cleaners: AvailableCleaner[] = (availableCleaners || [])
-        .map(cleaner => {
+        .map((cleaner: any) => {
           // Generate ETA based on cleaner attributes
           const baseEta = 20; // Base 20 minutes
-          // Since we don't have ratings in the database, generate a random rating for demo purposes
-          const rating = Math.random() * 2 + 3; // Random rating between 3.0 and 5.0
+          // Use default rating since we don't have ratings in the database yet
+          const rating = 4.5; // Default high rating
           const ratingBonus = rating >= 4.5 ? -5 : rating >= 4.0 ? -2 : 0;
           const etaMinutes = Math.max(10, baseEta + ratingBonus + Math.floor(Math.random() * 10));
           const eta = `${etaMinutes} min`;
@@ -135,18 +128,18 @@ export async function POST(req: Request) {
           if (rating >= 4.5) badges.push('Top Rated');
           if (rating >= 4.0) badges.push('Highly Rated');
           if (rating >= 3.5) badges.push('Reliable');
-          if (cleaner.bio && cleaner.bio.length > 50) badges.push('Experienced');
+          if (cleaner.bio && typeof cleaner.bio === 'string' && cleaner.bio.length > 50) badges.push('Experienced');
 
           // Get cleaner name
-          const cleanerName = cleaner.name || 'Unknown Cleaner';
+          const cleanerName = (cleaner.name && typeof cleaner.name === 'string') ? cleaner.name : 'Unknown Cleaner';
 
           return {
             id: cleaner.id,
             name: cleanerName,
             rating: Math.round(rating * 10) / 10, // Round to 1 decimal place
-            totalRatings: Math.floor(Math.random() * 100) + 10, // TODO: Get from actual data
-            experienceYears: Math.floor(Math.random() * 10) + 1, // TODO: Get from actual data
-            bio: cleaner.bio || undefined,
+            totalRatings: 25, // Default rating count
+            experienceYears: 3, // Default experience
+            bio: (cleaner.bio && typeof cleaner.bio === 'string') ? cleaner.bio : undefined,
             eta,
             badges
           };

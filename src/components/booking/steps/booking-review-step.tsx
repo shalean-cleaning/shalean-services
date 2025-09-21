@@ -17,7 +17,7 @@ export function BookingReviewStep() {
   const {
     selectedService,
     rooms,
-    storeExtras,
+    extras,
     location,
     scheduling,
     cleaner,
@@ -357,11 +357,11 @@ export function BookingReviewStep() {
                 <span className="text-gray-600">Bathrooms:</span>
                 <span className="font-medium">{rooms.bathrooms}</span>
               </div>
-              {storeExtras.length > 0 && (
+              {extras.length > 0 && (
                 <div>
                   <span className="text-gray-600">Extras:</span>
                   <ul className="mt-1 space-y-1">
-                    {storeExtras.map((extra) => (
+                    {extras.map((extra: any) => (
                       <li key={extra.id} className="text-sm">
                         {extra.name} × {extra.quantity}
                       </li>
@@ -506,10 +506,10 @@ export function BookingReviewStep() {
                 <span>R{selectedService?.base_fee || 0}</span>
               </div>
               
-              {storeExtras.length > 0 && (
+              {extras.length > 0 && (
                 <>
                   <Separator />
-                  {storeExtras.map((extra) => (
+                  {extras.map((extra: any) => (
                     <div key={extra.id} className="flex justify-between text-sm">
                       <span className="text-gray-600">{extra.name} × {extra.quantity}:</span>
                       <span>R{(extra.price * extra.quantity).toFixed(2)}</span>

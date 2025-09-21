@@ -58,6 +58,5 @@ export async function sendBookingConfirmation(data: BookingConfirmationData) {
     throw new Error(`Failed to send email: ${error.message}`);
   }
 
-  // console.log('Booking confirmation email sent successfully:', emailData);
   return { success: true, messageId: emailData?.id };
 }
