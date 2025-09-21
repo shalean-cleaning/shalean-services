@@ -30,8 +30,11 @@ export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
           NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('❌ Environment validation failed:', error);
+        // eslint-disable-next-line no-console
         console.error('Please check your environment variables and ensure all required values are set.');
+        // eslint-disable-next-line no-console
         console.error('Required variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY');
         process.exit(1);
       }

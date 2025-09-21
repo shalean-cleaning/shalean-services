@@ -21,7 +21,7 @@ export async function GET() {
     let adminClientTest = { success: false, error: null };
     try {
       const adminClient = createSupabaseAdmin();
-      const { data, error } = await adminClient.from('regions').select('count').limit(1);
+      const { error } = await adminClient.from('regions').select('count').limit(1);
       adminClientTest = { success: !error, error: error?.message || null };
     } catch (error) {
       adminClientTest = { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -31,7 +31,7 @@ export async function GET() {
     let serverClientTest = { success: false, error: null };
     try {
       const serverClient = await createSupabaseServer();
-      const { data, error } = await serverClient.from('regions').select('count').limit(1);
+      const { error } = await serverClient.from('regions').select('count').limit(1);
       serverClientTest = { success: !error, error: error?.message || null };
     } catch (error) {
       serverClientTest = { success: false, error: error instanceof Error ? error.message : 'Unknown error' };

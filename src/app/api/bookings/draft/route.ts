@@ -80,7 +80,7 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     let requestData;
     try {
       requestData = await request.json()
-    } catch (error) {
+    } catch {
       throw ApiErrorHandler.validationError('Invalid JSON in request body');
     }
 
