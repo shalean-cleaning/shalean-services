@@ -22,7 +22,7 @@ async function testDraftAPI() {
   // Test 2: Check if session_id column exists
   console.log('\n2. Checking if session_id column exists...');
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('bookings')
       .select('session_id')
       .limit(1);
@@ -70,7 +70,7 @@ async function testDraftAPI() {
   // Test 4: Check if helper functions exist
   console.log('\n4. Checking if helper functions exist...');
   try {
-    const { data, error } = await supabase.rpc('generate_session_id');
+    const { error } = await supabase.rpc('generate_session_id');
     
     if (error) {
       console.error('❌ generate_session_id function not found:', error.message);

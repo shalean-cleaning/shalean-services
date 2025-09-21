@@ -47,7 +47,7 @@ async function testAPI() {
       
       // Test 3: Update the existing draft
       console.log('\n3. Testing draft update...');
-      const { data: updateData, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('bookings')
         .update({
           service_id: 'test-service',

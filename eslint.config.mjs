@@ -156,4 +156,13 @@ export default [
       "@typescript-eslint/no-explicit-any": "off", // Allow any in API routes and lib files
     },
   },
+  // Test files configuration - allow console and relaxed rules
+  {
+    files: ["test-*.js", "**/test-*.js"],
+    rules: {
+      "no-console": "off", // Allow console in test files
+      "@typescript-eslint/no-unused-vars": "off", // Allow unused vars in test files
+      "@typescript-eslint/no-explicit-any": "off", // Allow any in test files
+    },
+  },
 ];
