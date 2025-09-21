@@ -1,189 +1,30 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
-import { env } from "@/env.server";
-import { generateShortId } from "@/lib/utils/short-id";
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createSupabaseAdmin, createSupabaseServer } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { env } from '@/env.server';
 import { 
   shouldUseMockPaystack, 
-  getMockConfig, 
   mockVerifyPayment 
-} from "@/lib/payments/mock-paystack";
+} from '@/lib/payments/mock-paystack';
+import { sendBookingConfirmation } from '@/app/actions/send-booking-confirmation';
 
-export const runtime = "nodejs";
-
-type UpdateResult = {
-  success: boolean;
-  bookingId?: string;
-  shortId?: string;
-  error?: string;
-};
+export const runtime = 'nodejs';
 
 const VerifyPaymentSchema = z.object({
-  reference: z.string().min(1, "Reference is required"),
+  reference: z.string().min(1, 'Payment reference is required'),
 });
 
-// type VerifyPaymentInput = z.infer<typeof VerifyPaymentSchema>;
-
-// Helper function to verify payment with Paystack (with mock support)
-async function verifyPaystackPayment(reference: string): Promise<{
-  status: string;
-  amount: number;
-  currency: string;
-  gateway_response: string;
-  paid_at: string;
-  transaction_id: string;
-  customer: any;
-  metadata: any;
-}> {
-  // Use mock Paystack in development or when configured
-  if (shouldUseMockPaystack()) {
-    logger.info('Using mock Paystack for payment verification');
-    const mockConfig = getMockConfig();
-    const mockResponse = await mockVerifyPayment(reference, mockConfig);
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
     
-    return {
-      status: mockResponse.data.status,
-      amount: mockResponse.data.amount,
-      currency: mockResponse.data.currency,
-      gateway_response: mockResponse.data.gateway_response,
-      paid_at: mockResponse.data.paid_at,
-      transaction_id: mockResponse.data.id.toString(),
-      customer: mockResponse.data.customer,
-      metadata: mockResponse.data.metadata
-    };
-  }
-
-  // Real Paystack API call
-  const paystackUrl = `https://api.paystack.co/transaction/verify/${reference}`;
-  
-  const response = await fetch(paystackUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${env.PAYSTACK_SECRET_KEY}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Paystack API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
-  }
-
-  const data = await response.json();
-  
-  if (!data.status) {
-    throw new Error('Invalid response from Paystack');
-  }
-
-  return {
-    status: data.data.status,
-    amount: data.data.amount,
-    currency: data.data.currency,
-    gateway_response: data.data.gateway_response,
-    paid_at: data.data.paid_at,
-    transaction_id: data.data.id.toString(),
-    customer: data.data.customer,
-    metadata: data.data.metadata
-  };
-}
-
-// Helper function to update payment and booking status
-async function updatePaymentAndBooking(
-  supabaseAdmin: ReturnType<typeof createSupabaseAdmin>,
-  reference: string,
-  paystackData: any
-): Promise<UpdateResult> {
-  try {
-    // Get the payment record
-    const { data: payment, error: paymentError } = await supabaseAdmin
-      .from('payments')
-      .select(`
-        id,
-        booking_id,
-        amount_minor,
-        status
-      `)
-      .eq('reference', reference)
-      .single();
-
-    if (paymentError || !payment) {
-      return { success: false, error: 'Payment record not found' };
-    }
-
-    // Validate amount matches
-    if (paystackData.amount !== payment.amount_minor) {
-      logger.warn(`Amount mismatch for reference ${reference}: stored=${payment.amount_minor}, paystack=${paystackData.amount}`);
-      return { success: false, error: 'Payment amount mismatch' };
-    }
-
-    // Validate currency
-    if (paystackData.currency !== 'ZAR') {
-      return { success: false, error: 'Invalid currency' };
-    }
-
-    // Update payment record
-    const { error: updatePaymentError } = await supabaseAdmin
-      .from('payments')
-      .update({
-        status: 'PAID',
-        transaction_id: paystackData.transaction_id,
-        payment_method: 'paystack',
-        gateway_payload: {
-          gateway_response: paystackData.gateway_response,
-          paid_at: paystackData.paid_at,
-          customer: paystackData.customer,
-          metadata: paystackData.metadata
-        },
-        processed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', payment.id);
-
-    if (updatePaymentError) {
-      logger.error('Failed to update payment record:', updatePaymentError);
-      return { success: false, error: 'Failed to update payment record' };
-    }
-
-    // Generate short ID for the booking
-    const shortId = generateShortId();
-
-    // Update booking status to PAID and add short_id
-    const { error: updateBookingError } = await supabaseAdmin
-      .from('bookings')
-      .update({
-        status: 'PAID',
-        short_id: shortId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', payment.booking_id);
-
-    if (updateBookingError) {
-      logger.error('Failed to update booking status:', updateBookingError);
-      // Don't fail the whole operation, just log the error
-    }
-
-    logger.info(`Payment verified and updated for booking ${payment.booking_id} with reference ${reference} and short_id ${shortId}`);
-
-    return { success: true, bookingId: payment.booking_id, shortId };
-
-  } catch (error) {
-    logger.error('Error updating payment and booking:', error);
-    return { success: false, error: 'Failed to update payment and booking' };
-  }
-}
-
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const reference = searchParams.get('reference');
-
     // Validate input
-    const validationResult = VerifyPaymentSchema.safeParse({ reference });
+    const validationResult = VerifyPaymentSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json({
         success: false,
-        error: "Validation failed",
+        error: 'Validation failed',
         details: validationResult.error.issues.map(err => ({
           field: err.path.join('.'),
           message: err.message
@@ -191,58 +32,153 @@ export async function GET(req: Request) {
       }, { status: 400 });
     }
 
-    const { reference: validReference } = validationResult.data;
+    const { reference } = validationResult.data;
     const supabaseAdmin = createSupabaseAdmin();
+    const supabaseServer = await createSupabaseServer();
 
-    // Verify payment with Paystack
-    const paystackData = await verifyPaystackPayment(validReference);
-
-    // Check if payment was successful
-    if (paystackData.status !== 'success') {
-      // Update payment status to failed
-      await supabaseAdmin
-        .from('payments')
-        .update({
-          status: 'FAILED',
-          gateway_payload: {
-            gateway_response: paystackData.gateway_response,
-            status: paystackData.status
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq('reference', validReference);
-
+    // Get customer from session
+    const { data: { session }, error: sessionError } = await supabaseServer.auth.getSession();
+    
+    if (sessionError || !session?.user) {
       return NextResponse.json({
         success: false,
-        error: "Payment was not successful",
-        details: paystackData.gateway_response
+        error: 'Authentication required'
+      }, { status: 401 });
+    }
+
+    const customerId = session.user.id;
+
+    // Find payment record with booking details
+    const { data: payment, error: paymentError } = await supabaseAdmin
+      .from('payments')
+      .select(`
+        *,
+        bookings (
+          *,
+          services (
+            id,
+            name,
+            description
+          ),
+          cleaners (
+            id,
+            name
+          )
+        )
+      `)
+      .eq('reference', reference)
+      .eq('customer_id', customerId)
+      .single();
+
+    if (paymentError || !payment) {
+      return NextResponse.json({
+        success: false,
+        error: 'Payment not found'
+      }, { status: 404 });
+    }
+
+    // Verify payment with Paystack
+    let verificationResult;
+    
+    if (shouldUseMockPaystack()) {
+      // Use mock verification for development
+      verificationResult = await mockVerifyPayment(reference);
+    } else {
+      // Use real Paystack verification
+      const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${env.PAYSTACK_SECRET_KEY}`,
+        },
+      });
+
+      if (!paystackResponse.ok) {
+        throw new Error('Paystack verification failed');
+      }
+
+      verificationResult = await paystackResponse.json();
+    }
+
+    // Check if payment was successful
+    if (verificationResult.status !== 'success' || verificationResult.data.status !== 'success') {
+      return NextResponse.json({
+        success: false,
+        error: 'Payment verification failed',
+        details: verificationResult.message || 'Payment was not successful'
       }, { status: 400 });
     }
 
-    // Update payment and booking status
-    const updateResult = await updatePaymentAndBooking(supabaseAdmin, validReference, paystackData);
-    
-    if (!updateResult.success) {
-      return NextResponse.json({
-        success: false,
-        error: updateResult.error
-      }, { status: 500 });
+    // Update payment record
+    const { error: updateError } = await supabaseAdmin
+      .from('payments')
+      .update({
+        status: 'SUCCESS',
+        gateway_reference: verificationResult.data.reference,
+        gateway_response: verificationResult,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', payment.id);
+
+    if (updateError) {
+      logger.error('Failed to update payment record:', updateError);
     }
+
+    // Update booking status
+    const { error: bookingUpdateError } = await supabaseAdmin
+      .from('bookings')
+      .update({
+        status: 'CONFIRMED',
+        paystack_ref: reference,
+        paystack_status: 'success',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', payment.booking_id);
+
+    if (bookingUpdateError) {
+      logger.error('Failed to update booking status:', bookingUpdateError);
+    }
+
+    // Send confirmation email
+    try {
+      const booking = payment.bookings;
+      if (booking) {
+        await sendBookingConfirmation({
+          customerName: session.user.user_metadata?.full_name || session.user.email || 'Customer',
+          customerEmail: session.user.email || '',
+          bookingId: booking.id,
+          serviceName: booking.services?.name || 'Cleaning Service',
+          bookingDate: booking.booking_date || '',
+          bookingTime: booking.start_time || '',
+          address: booking.address || '',
+          postcode: booking.postcode || '',
+          bedrooms: booking.bedrooms || 1,
+          bathrooms: booking.bathrooms || 1,
+          totalPrice: booking.total_price || 0,
+          cleanerName: booking.cleaners?.name,
+          specialInstructions: booking.special_instructions,
+        });
+        
+        logger.info(`Confirmation email sent for booking ${booking.id}`);
+      }
+    } catch (emailError) {
+      logger.error('Failed to send confirmation email:', emailError);
+      // Don't fail the payment verification if email fails
+    }
+
+    logger.info(`Payment verified successfully for booking ${payment.booking_id}`);
 
     return NextResponse.json({
       success: true,
-      bookingId: updateResult.bookingId,
-      shortId: updateResult.shortId,
-      message: "Payment verified successfully"
+      bookingId: payment.booking_id,
+      message: 'Payment verified successfully'
     });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error("Payment verification failed:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Payment verification failed:', error);
     
     return NextResponse.json({
       success: false,
-      error: "Payment verification failed",
+      error: 'Payment verification failed',
       details: errorMessage
     }, { status: 500 });
   }

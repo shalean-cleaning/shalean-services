@@ -13,6 +13,12 @@ export const runtime = "nodejs";
 
 const InitiatePaymentSchema = z.object({
   bookingId: z.string().uuid("bookingId must be a valid UUID"),
+  amount: z.number().positive("Amount must be positive"),
+  customerInfo: z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Valid email is required"),
+    phone: z.string().min(1, "Phone is required"),
+  }).optional(),
 });
 
 // type InitiatePaymentInput = z.infer<typeof InitiatePaymentSchema>;
@@ -239,7 +245,7 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    const { bookingId } = validationResult.data;
+    const { bookingId, amount, customerInfo } = validationResult.data;
     const supabaseAdmin = createSupabaseAdmin();
     const supabaseServer = await createSupabaseServer();
 
@@ -254,7 +260,7 @@ export async function POST(req: Request) {
     }
 
     const customerId = session.user.id;
-    const customerEmail = session.user.email!;
+    const customerEmail = customerInfo?.email || session.user.email!;
 
     // Validate booking ownership and status
     const bookingValidation = await validateBooking(supabaseAdmin, bookingId, customerId);
@@ -286,7 +292,8 @@ export async function POST(req: Request) {
     }
 
     const booking = bookingValidation.booking!;
-    const amountMinor = Math.round(booking.total_price * 100); // Convert to cents
+    const paymentAmount = amount || booking.total_price;
+    const amountMinor = Math.round(paymentAmount * 100); // Convert to cents
 
     // Generate unique reference
     const reference = generatePaymentReference(bookingId);
@@ -298,13 +305,15 @@ export async function POST(req: Request) {
     const metadata = {
       booking_id: bookingId,
       customer_id: customerId,
-      customer_email: customerEmail
+      customer_email: customerEmail,
+      customer_name: customerInfo?.name || session.user.user_metadata?.full_name || '',
+      customer_phone: customerInfo?.phone || session.user.user_metadata?.phone || ''
     };
 
     // Initialize payment with Paystack
     const paystackResponse = await initializePaystackPayment(
       customerEmail,
-      booking.total_price,
+      paymentAmount,
       reference,
       callbackUrl,
       metadata
@@ -322,7 +331,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      authorization_url: paystackResponse.authorization_url,
+      paymentUrl: paystackResponse.authorization_url,
       reference: paystackResponse.reference
     });
 

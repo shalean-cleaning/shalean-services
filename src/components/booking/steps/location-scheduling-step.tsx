@@ -1,320 +1,335 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { MapPin, Home, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, MapPin, Calendar, Clock } from 'lucide-react';
 
-import { DateTimePicker } from '@/components/booking/date-time-picker';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Region, AreaWithPostcode } from '@/lib/database.types';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useBookingStore } from '@/lib/stores/booking-store';
-import { useAvailability } from '@/hooks/useAvailability';
-
-const locationSchema = z.object({
-  area: z.string().min(1, 'Please select a service area'),
-  address: z.string().min(5, 'Please enter a valid address'),
-  address2: z.string().optional(),
-  postcode: z.string().min(4, 'Please enter a valid postcode'),
-  date: z.string().min(1, 'Please select a date'),
-  time: z.string().min(1, 'Please select a time'),
-  specialInstructions: z.string().optional(),
-});
-
-type LocationFormData = z.infer<typeof locationSchema>;
 
 interface LocationSchedulingStepProps {
-  regions: Region[];
+  onNext?: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
 }
 
-export function LocationSchedulingStep({ regions: _regions }: LocationSchedulingStepProps) {
-  const {
-    location,
-    scheduling,
+interface Region {
+  id: string;
+  name: string;
+  state: string;
+}
+
+interface Area {
+  id: string;
+  name: string;
+  postcode: string;
+  delivery_fee: number;
+  region_id: string;
+}
+
+export function LocationSchedulingStep({ onNext, onPrevious, canGoBack = true }: LocationSchedulingStepProps) {
+  const router = useRouter();
+  const { 
+    selectedService,
+    location, 
+    scheduling, 
     customerInfo,
-    setLocation,
-    setScheduling,
+    setLocation, 
+    setScheduling, 
     setCustomerInfo,
-    setCurrentStep,
+    setCurrentStep 
   } = useBookingStore();
+  
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(scheduling.selectedDate || '');
+  const [selectedTime, setSelectedTime] = useState(scheduling.selectedTime || '');
 
-  const [areas, setAreas] = useState<AreaWithPostcode[]>([]);
-  const [loadingAreas, setLoadingAreas] = useState(false);
+  // Generate available time slots (7:00 AM to 1:00 PM)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 7; hour <= 13; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+    return slots;
+  };
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    control,
-    formState: { errors, isValid, isSubmitting },
-  } = useForm<LocationFormData>({
-    resolver: zodResolver(locationSchema),
-    mode: "onChange",
-    defaultValues: {
-      area: location.suburbId || '',
-      address: location.address || '',
-      address2: location.address2 || '',
-      postcode: location.postcode || '',
-      date: scheduling.selectedDate || '',
-      time: scheduling.selectedTime || '',
-      specialInstructions: customerInfo.specialInstructions || '',
-    },
-  });
-
-  const watchedArea = watch('area');
-  const watchedDate = watch('date');
-
-  // Use the custom availability hook
-  const { availableTimes, loading: loadingTimes, error: availabilityError } = useAvailability(
-    watchedArea,
-    watchedDate
-  );
-
-  // Fetch areas on component mount
   useEffect(() => {
-    setLoadingAreas(true);
-    fetch('/api/areas')
-      .then(res => res.json())
-      .then(data => {
-        setAreas(data);
-        setLoadingAreas(false);
-      })
-      .catch(err => {
-        console.error('Error fetching areas:', err);
-        setLoadingAreas(false);
-      });
+    const fetchData = async () => {
+      try {
+        // Fetch regions
+        const regionsResponse = await fetch('/api/regions');
+        if (!regionsResponse.ok) throw new Error('Failed to fetch regions');
+        const regionsData = await regionsResponse.json();
+        setRegions(regionsData.regions || []);
+
+        // Fetch areas
+        const areasResponse = await fetch('/api/areas');
+        if (!areasResponse.ok) throw new Error('Failed to fetch areas');
+        const areasData = await areasResponse.json();
+        setAreas(areasData || []);
+
+        // Generate time slots
+        setAvailableTimes(generateTimeSlots());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-
-  const onSubmit = async (data: LocationFormData) => {
-    // Persist all form data to the store
-    setLocation({
-      suburbId: data.area,
-      address: data.address,
-      address2: data.address2 || '',
-      postcode: data.postcode,
-    });
-    setScheduling({
-      selectedDate: data.date,
-      selectedTime: data.time,
-    });
-    setCustomerInfo({
-      specialInstructions: data.specialInstructions || '',
-    });
-    
-    // Advance to next step
-    setCurrentStep(5);
+  const handleRegionChange = (regionId: string) => {
+    setLocation({ regionId, suburbId: null });
   };
 
-  const handlePrevious = () => {
-    setCurrentStep(3);
+  const handleAreaChange = (areaId: string) => {
+    setLocation({ suburbId: areaId });
   };
 
-  const ready = !loadingAreas && !loadingTimes;
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+    setSelectedTime(''); // Reset time when date changes
+    setScheduling({ selectedDate: date, selectedTime: '' });
+  };
+
+  const handleTimeChange = (time: string) => {
+    setSelectedTime(time);
+    setScheduling({ selectedTime: time });
+  };
+
+  const handleContinue = () => {
+    if (canContinue()) {
+      setCurrentStep(4);
+      if (onNext) {
+        onNext();
+      } else if (selectedService) {
+        router.push(`/booking/service/${selectedService.slug}/cleaner`);
+      }
+    }
+  };
+
+  const canContinue = () => {
+    return !!(
+      location.regionId &&
+      location.suburbId &&
+      location.address.trim() &&
+      location.postcode.trim() &&
+      selectedDate &&
+      selectedTime
+    );
+  };
+
+  const filteredAreas = areas.filter(area => 
+    !location.regionId || area.region_id === location.regionId
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading location data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Location & Scheduling</h2>
-        <p className="text-gray-600">Tell us where and when you&apos;d like your cleaning service</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Location & Scheduling
+        </h2>
+        <p className="text-gray-600">
+          Tell us where and when you'd like your cleaning service
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Location Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Service Location
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Area *
-              </label>
-              <Controller
-                name="area"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setLocation({ suburbId: value });
-                    }}
-                    disabled={loadingAreas}
-                  >
-                    <SelectTrigger className={errors.area ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={loadingAreas ? "Loading..." : "Select your service area"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name} {area.postcode && `(${area.postcode})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.area && (
-                <p className="text-red-500 text-sm mt-1">{errors.area.message}</p>
-              )}
-            </div>
+      {/* Location Section */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-blue-600" />
+          Service Location
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Region Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="region">Region</Label>
+            <select
+              id="region"
+              value={location.regionId || ''}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select a region</option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}, {region.state}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street Address *
-                </label>
-                <Input
-                  {...register('address')}
-                  placeholder="123 Main Street"
-                  className={errors.address ? 'border-red-500' : ''}
-                  aria-invalid={!!errors.address}
-                />
-                {errors.address && (
-                  <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Apartment, Suite, etc. (Optional)
-                </label>
-                <Input
-                  {...register('address2')}
-                  placeholder="Apt 4B, Unit 12, etc."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Postcode *
-                </label>
-                <Input
-                  {...register('postcode')}
-                  placeholder="2000"
-                  className={errors.postcode ? 'border-red-500' : ''}
-                  aria-invalid={!!errors.postcode}
-                />
-                {errors.postcode && (
-                  <p className="text-red-500 text-sm mt-1">{errors.postcode.message}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-            {/* Date & Time Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Date & Time Selection
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date & Time *
-              </label>
-              <Controller
-                name="date"
-                control={control}
-                render={({ field }) => (
-                  <Controller
-                    name="time"
-                    control={control}
-                    render={({ field: timeField }) => (
-                      <DateTimePicker
-                        selectedDate={field.value}
-                        selectedTime={timeField.value}
-                        onDateChange={(date) => {
-                          field.onChange(date);
-                          setScheduling({ selectedDate: date });
-                          // Reset time when date changes
-                          timeField.onChange('');
-                          setScheduling({ selectedTime: null });
-                        }}
-                        onTimeChange={(time) => {
-                          timeField.onChange(time);
-                          setScheduling({ selectedTime: time });
-                        }}
-                        availableTimes={availableTimes}
-                        loadingTimes={loadingTimes}
-                      />
-                    )}
-                  />
-                )}
-              />
-              {(errors.date || errors.time) && (
-                <div className="mt-2">
-                  {errors.date && (
-                    <p className="text-red-500 text-sm">{errors.date.message}</p>
-                  )}
-                  {errors.time && (
-                    <p className="text-red-500 text-sm">{errors.time.message}</p>
-                  )}
-                </div>
-              )}
-              {availabilityError && (
-                <div className="mt-2">
-                  <p className="text-amber-600 text-sm">
-                    ⚠️ Unable to load real-time availability. Showing default time slots.
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Special Instructions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Home className="w-5 h-5" />
-              Additional Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Special Instructions (Optional)
-              </label>
-              <textarea
-                {...register('specialInstructions')}
-                placeholder="Any special requests, access instructions, or notes for our cleaner?"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={4}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between items-center pt-6 border-t">
-          <button
-            type="button"
-            onClick={handlePrevious}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Previous
-          </button>
-
-          <button
-            type="submit"
-            disabled={!isValid || isSubmitting || !ready}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Processing...' : 'Next'}
-          </button>
+          {/* Area/Suburb Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="area">Suburb</Label>
+            <select
+              id="area"
+              value={location.suburbId || ''}
+              onChange={(e) => handleAreaChange(e.target.value)}
+              disabled={!location.regionId}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+            >
+              <option value="">Select a suburb</option>
+              {filteredAreas.map((area) => (
+                <option key={area.id} value={area.id}>
+                  {area.name} {area.postcode}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </form>
+
+        {/* Address Fields */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="address">Street Address</Label>
+            <Input
+              id="address"
+              value={location.address}
+              onChange={(e) => setLocation({ address: e.target.value })}
+              placeholder="Enter your street address"
+              className="w-full"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="address2">Address Line 2 (Optional)</Label>
+              <Input
+                id="address2"
+                value={location.address2 || ''}
+                onChange={(e) => setLocation({ address2: e.target.value })}
+                placeholder="Apartment, suite, etc."
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="postcode">Postal Code</Label>
+              <Input
+                id="postcode"
+                value={location.postcode}
+                onChange={(e) => setLocation({ postcode: e.target.value })}
+                placeholder="Postal code"
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scheduling Section */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-600" />
+          Schedule Your Service
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Date Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Preferred Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full"
+            />
+          </div>
+
+          {/* Time Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="time">Preferred Time</Label>
+            <select
+              id="time"
+              value={selectedTime}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              disabled={!selectedDate}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+            >
+              <option value="">Select a time</option>
+              {availableTimes.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Special Instructions */}
+      <div className="space-y-2">
+        <Label htmlFor="instructions">Special Instructions (Optional)</Label>
+        <Textarea
+          id="instructions"
+          value={customerInfo.specialInstructions || ''}
+          onChange={(e) => setCustomerInfo({ specialInstructions: e.target.value })}
+          placeholder="Any special requests or instructions for our cleaners..."
+          rows={3}
+          className="w-full"
+        />
+      </div>
+
+      {/* Navigation Footer */}
+      <div className="flex justify-between items-center pt-6 border-t">
+        <Button
+          variant="outline"
+          onClick={onPrevious}
+          disabled={!canGoBack}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Previous
+        </Button>
+
+        <Button
+          onClick={handleContinue}
+          disabled={!canContinue()}
+          className="px-8 flex items-center gap-2"
+        >
+          Continue
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }

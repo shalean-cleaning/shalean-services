@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { CleanerSelectionStep } from './steps/cleaner-selection-step';
-import { ExtrasSelectionStep } from './steps/extras-selection-step';
-import { LocationSchedulingStep } from './steps/location-scheduling-step';
-import { RoomsSelectionStep } from './steps/rooms-selection-step';
 import { ServiceSelectionStep } from './steps/service-selection-step';
+import { RoomsExtrasStep } from './steps/rooms-extras-step';
+import { LocationSchedulingStep } from './steps/location-scheduling-step';
+import { StickyBookingSummary } from './sticky-booking-summary';
 import { Button } from '@/components/ui/button';
 import { Service, ServiceItem, Region } from '@/lib/database.types';
 import { useBookingStore } from '@/lib/stores/booking-store';
@@ -20,10 +20,11 @@ interface BookingStepperProps {
 
 const steps = [
   { id: 1, title: 'Service', description: 'Select your cleaning service' },
-  { id: 2, title: 'Rooms', description: 'Specify bedrooms & bathrooms' },
-  { id: 3, title: 'Extras', description: 'Add optional extras' },
-  { id: 4, title: 'Location & Time', description: 'Choose location and schedule' },
-  { id: 5, title: 'Cleaner', description: 'Select your cleaner' },
+  { id: 2, title: 'Rooms & Extras', description: 'Specify bedrooms, bathrooms & extras' },
+  { id: 3, title: 'Location & Time', description: 'Choose location and schedule' },
+  { id: 4, title: 'Cleaner', description: 'Select your cleaner' },
+  { id: 5, title: 'Review & Payment', description: 'Review and complete payment' },
+  { id: 6, title: 'Confirmation', description: 'Booking confirmed' },
 ];
 
 export function BookingStepper({ service, extras, regions }: BookingStepperProps) {
@@ -83,11 +84,13 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 2:
         return rooms.bedrooms >= 1 && rooms.bathrooms >= 1;
       case 3:
-        return true; // Extras are optional
-      case 4:
         return !!(location.suburbId && scheduling.selectedDate && scheduling.selectedTime && location.address && location.postcode);
-      case 5:
+      case 4:
         return !!cleaner.selectedCleanerId || cleaner.autoAssign;
+      case 5:
+        return true; // Review step - handled by review page
+      case 6:
+        return true; // Confirmation step
       default:
         return false;
     }
@@ -98,30 +101,27 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
       case 1:
         return (
           <ServiceSelectionStep 
-            service={service}
+            onNext={handleNext}
+            canGoBack={currentStep > 1}
           />
         );
       case 2:
         return (
-          <RoomsSelectionStep 
-            bedroomCount={rooms.bedrooms}
-            bathroomCount={rooms.bathrooms}
+          <RoomsExtrasStep 
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            canGoBack={currentStep > 1}
           />
         );
       case 3:
         return (
-          <ExtrasSelectionStep 
-            extras={extras}
-            selectedExtras={[]}
+          <LocationSchedulingStep 
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            canGoBack={currentStep > 1}
           />
         );
       case 4:
-        return (
-          <LocationSchedulingStep 
-            regions={regions}
-          />
-        );
-      case 5:
         return (
           <CleanerSelectionStep 
             onPrevious={handlePrevious}
@@ -143,11 +143,11 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
   }
 
   return (
-    <div className="p-6">
-      {/* Step Progress */}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Progress Steps */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
+          {steps.slice(0, 4).map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className="flex items-center">
                 <div
@@ -168,7 +168,7 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
                   <p className="text-xs text-gray-500">{step.description}</p>
                 </div>
               </div>
-              {index < steps.length - 1 && (
+              {index < 3 && (
                 <div className={`flex-1 h-0.5 mx-4 ${
                   currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'
                 }`} />
@@ -178,36 +178,19 @@ export function BookingStepper({ service, extras, regions }: BookingStepperProps
         </div>
       </div>
 
-      {/* Step Content */}
-      <div className="mb-8">
-        {renderStep()}
-      </div>
-
-      {/* Navigation - Only show for steps that don't have their own navigation */}
-      {currentStep !== 4 && currentStep !== 5 && (
-        <div className="flex justify-between items-center pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </Button>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed()}
-              className="flex items-center gap-2"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            {renderStep()}
           </div>
         </div>
-      )}
+
+        {/* Sticky Summary */}
+        <div className="lg:col-span-1">
+          <StickyBookingSummary currentStep={currentStep} />
+        </div>
+      </div>
     </div>
   );
 }

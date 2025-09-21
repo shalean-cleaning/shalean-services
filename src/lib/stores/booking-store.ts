@@ -53,6 +53,17 @@ export interface BookingState {
     basePrice: number;
     totalPrice: number;
     deliveryFee: number;
+    serviceFee: number;
+    discounts: number;
+    breakdown: {
+      baseService: number;
+      bedrooms: number;
+      bathrooms: number;
+      extras: number;
+      deliveryFee: number;
+      serviceFee: number;
+      discounts: number;
+    };
   };
   currentStep: number;
   
@@ -66,7 +77,8 @@ export interface BookingState {
   setScheduling: (scheduling: Partial<BookingState['scheduling']>) => void;
   setCleaner: (cleaner: Partial<BookingState['cleaner']>) => void;
   setCustomerInfo: (info: Partial<BookingState['customerInfo']>) => void;
-  calculateTotalPrice: () => void;
+  calculateTotalPrice: () => Promise<void>;
+  calculateTotalPriceFallback: () => void;
   setCurrentStep: (step: number) => void;
   resetBooking: () => void;
   createDraftBooking: () => Promise<{ success: boolean; id?: string; error?: string }>;
@@ -115,6 +127,17 @@ const initialState = {
     basePrice: 0,
     totalPrice: 0,
     deliveryFee: 0,
+    serviceFee: 0,
+    discounts: 0,
+    breakdown: {
+      baseService: 0,
+      bedrooms: 0,
+      bathrooms: 0,
+      extras: 0,
+      deliveryFee: 0,
+      serviceFee: 0,
+      discounts: 0,
+    },
   },
   currentStep: 1,
 };
@@ -228,7 +251,69 @@ export const useBookingStore = create<BookingState>()(
         set({ customerInfo: { ...get().customerInfo, ...info } });
       },
       
-      calculateTotalPrice: () => {
+      calculateTotalPrice: async () => {
+        const { pricing, rooms, extras, selectedService, location } = get();
+        
+        if (!selectedService) {
+          return;
+        }
+
+        try {
+          // Fetch dynamic pricing from API
+          const response = await fetch('/api/pricing/calculate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              serviceId: selectedService.id,
+              bedrooms: rooms.bedrooms,
+              bathrooms: rooms.bathrooms,
+              extras: extras.map(extra => ({
+                id: extra.id,
+                quantity: extra.quantity
+              })),
+              suburbId: location.suburbId,
+            }),
+          });
+
+          if (response.ok) {
+            const pricingData = await response.json();
+            
+            const newPricing = {
+              basePrice: pricingData.basePrice || 0,
+              totalPrice: pricingData.totalPrice || 0,
+              deliveryFee: pricingData.deliveryFee || 0,
+              serviceFee: pricingData.serviceFee || 0,
+              discounts: pricingData.discounts || 0,
+              breakdown: {
+                baseService: pricingData.breakdown?.baseService || 0,
+                bedrooms: pricingData.breakdown?.bedrooms || 0,
+                bathrooms: pricingData.breakdown?.bathrooms || 0,
+                extras: pricingData.breakdown?.extras || 0,
+                deliveryFee: pricingData.breakdown?.deliveryFee || 0,
+                serviceFee: pricingData.breakdown?.serviceFee || 0,
+                discounts: pricingData.breakdown?.discounts || 0,
+              },
+            };
+
+            // Only update if price has changed to prevent unnecessary re-renders
+            if (pricing.totalPrice !== newPricing.totalPrice) {
+              set({ pricing: newPricing });
+            }
+          } else {
+            // Fallback to basic calculation if API fails
+            console.warn('Pricing API failed, using fallback calculation');
+            get().calculateTotalPriceFallback();
+          }
+        } catch (error) {
+          console.error('Error calculating pricing:', error);
+          // Fallback to basic calculation
+          get().calculateTotalPriceFallback();
+        }
+      },
+
+      calculateTotalPriceFallback: () => {
         const { pricing, rooms, extras } = get();
         
         // Base price calculation
@@ -253,9 +338,23 @@ export const useBookingStore = create<BookingState>()(
         
         const totalPrice = roomPrice + extrasTotal + pricing.deliveryFee;
         
+        const newPricing = {
+          ...pricing,
+          totalPrice,
+          breakdown: {
+            baseService: pricing.basePrice,
+            bedrooms: rooms.bedrooms > 1 ? (rooms.bedrooms - 1) * additionalBedroomPrice : 0,
+            bathrooms: rooms.bathrooms > 1 ? (rooms.bathrooms - 1) * additionalBathroomPrice : 0,
+            extras: extrasTotal,
+            deliveryFee: pricing.deliveryFee,
+            serviceFee: 0,
+            discounts: 0,
+          },
+        };
+        
         // Only update if price has changed to prevent unnecessary re-renders
         if (pricing.totalPrice !== totalPrice) {
-          set({ pricing: { ...pricing, totalPrice } });
+          set({ pricing: newPricing });
         }
       },
       
@@ -457,6 +556,17 @@ export const useBookingStore = create<BookingState>()(
             basePrice: 0, // Will be calculated from service
             totalPrice: booking.total_price || 0,
             deliveryFee: 0, // Will be calculated from suburb
+            serviceFee: 0,
+            discounts: 0,
+            breakdown: {
+              baseService: 0,
+              bedrooms: 0,
+              bathrooms: 0,
+              extras: 0,
+              deliveryFee: 0,
+              serviceFee: 0,
+              discounts: 0,
+            },
           },
           
         });
