@@ -1,6 +1,8 @@
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,11 +22,34 @@ export async function GET(
 
     const { id: bookingId } = await params
 
-    // Fetch the booking with items - RLS will ensure user can only access their own bookings
+    if (!bookingId) {
+      return NextResponse.json(
+        { error: 'Booking ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch the booking with related data (enhanced for new booking flow)
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
       .select(`
         *,
+        services (
+          id,
+          name,
+          description,
+          base_fee
+        ),
+        cleaners (
+          id,
+          name,
+          phone
+        ),
+        suburbs (
+          id,
+          name,
+          postcode
+        ),
         booking_items (
           id,
           service_item_id,
@@ -70,7 +95,37 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ booking })
+    // Transform the data for the frontend (enhanced format for new booking flow)
+    const transformedBooking = {
+      id: booking.id,
+      status: booking.status,
+      total_price: booking.total_price,
+      booking_date: booking.booking_date,
+      start_time: booking.start_time,
+      end_time: booking.end_time,
+      address: booking.address,
+      postcode: booking.postcode,
+      bedrooms: booking.bedrooms,
+      bathrooms: booking.bathrooms,
+      special_instructions: booking.special_instructions,
+      service: {
+        name: booking.services?.name || 'Unknown Service',
+        description: booking.services?.description || '',
+      },
+      cleaner: booking.cleaners ? {
+        name: booking.cleaners.name,
+        phone: booking.cleaners.phone,
+      } : null,
+      customer: {
+        name: user.user_metadata?.full_name || user.email || 'Unknown',
+        email: user.email || '',
+        phone: user.user_metadata?.phone || '',
+      },
+      // Include original booking_items for backward compatibility
+      booking_items: booking.booking_items || []
+    };
+
+    return NextResponse.json({ booking: transformedBooking })
 
   } catch (error) {
     console.error('Unexpected error in booking GET API:', error)
