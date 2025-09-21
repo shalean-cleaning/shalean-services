@@ -64,7 +64,7 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
     setIsBooking(true);
     try {
       // Redirect to booking flow with pre-filled service
-      router.push(`/book/${quote.services.slug}?quote=${quote.short_id}`);
+      router.push(`/booking/service/${quote.services.slug}?quote=${quote.short_id}`);
     } catch (error) {
       console.error('Error redirecting to booking:', error);
     } finally {

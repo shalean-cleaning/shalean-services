@@ -1,5 +1,5 @@
 User-agent: *
-Disallow: /book/
+Disallow: /booking/
 Disallow: /q/
 Disallow: /order/
 Disallow: /api/

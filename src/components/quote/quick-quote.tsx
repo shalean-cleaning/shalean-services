@@ -342,7 +342,7 @@ export function QuickQuote({ onClose, isModal: _isModal = false }: QuickQuotePro
     // Navigate to booking flow
     const service = services.find(s => s.id === quoteState.serviceId);
     if (service) {
-      router.push(`/book/${service.slug}`);
+      router.push(`/booking/service/${service.slug}`);
     }
   };
 
