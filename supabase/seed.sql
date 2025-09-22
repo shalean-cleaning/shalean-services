@@ -55,47 +55,45 @@ standard_house AS (
 move_in_out AS (
   SELECT id FROM services WHERE name = 'Move-in/Move-out Cleaning'
 )
-INSERT INTO service_items (id, service_id, name, description, is_included, additional_price, sort_order) VALUES
+INSERT INTO service_items (id, service_id, name, description, price, sort_order) VALUES
 -- Standard House Cleaning items
-(gen_random_uuid(), (SELECT id FROM standard_house), 'Kitchen Cleaning', 'Clean countertops, appliances, sink, and cabinets', true, 0.00, 1),
-(gen_random_uuid(), (SELECT id FROM standard_house), 'Bathroom Cleaning', 'Clean toilets, showers, sinks, and mirrors', true, 0.00, 2),
-(gen_random_uuid(), (SELECT id FROM standard_house), 'Bedroom Cleaning', 'Dust furniture, vacuum floors, make beds', true, 0.00, 3),
-(gen_random_uuid(), (SELECT id FROM standard_house), 'Living Area Cleaning', 'Dust surfaces, vacuum/sweep floors, clean windows', true, 0.00, 4),
+(gen_random_uuid(), (SELECT id FROM standard_house), 'Kitchen Cleaning', 'Clean countertops, appliances, sink, and cabinets', 0.00, 1),
+(gen_random_uuid(), (SELECT id FROM standard_house), 'Bathroom Cleaning', 'Clean toilets, showers, sinks, and mirrors', 0.00, 2),
+(gen_random_uuid(), (SELECT id FROM standard_house), 'Bedroom Cleaning', 'Dust furniture, vacuum floors, make beds', 0.00, 3),
+(gen_random_uuid(), (SELECT id FROM standard_house), 'Living Area Cleaning', 'Dust surfaces, vacuum/sweep floors, clean windows', 0.00, 4),
 
 -- Deep Cleaning additional items
-(gen_random_uuid(), (SELECT id FROM move_in_out), 'Inside Appliances', 'Clean inside of oven, microwave, and refrigerator', true, 0.00, 5),
-(gen_random_uuid(), (SELECT id FROM move_in_out), 'Baseboards and Trim', 'Clean baseboards, door frames, and window sills', true, 0.00, 6),
-(gen_random_uuid(), (SELECT id FROM move_in_out), 'Light Fixtures', 'Clean ceiling fans and light fixtures', true, 0.00, 7);
+(gen_random_uuid(), (SELECT id FROM move_in_out), 'Inside Appliances', 'Clean inside of oven, microwave, and refrigerator', 0.00, 5),
+(gen_random_uuid(), (SELECT id FROM move_in_out), 'Baseboards and Trim', 'Clean baseboards, door frames, and window sills', 0.00, 6),
+(gen_random_uuid(), (SELECT id FROM move_in_out), 'Light Fixtures', 'Clean ceiling fans and light fixtures', 0.00, 7);
 
 -- Insert extras
-INSERT INTO extras (id, name, description, price, duration_minutes, sort_order) VALUES
-(gen_random_uuid(), 'Inside Refrigerator', 'Deep clean inside refrigerator including shelves and drawers', 25.00, 30, 1),
-(gen_random_uuid(), 'Inside Oven', 'Clean inside oven including racks and door', 30.00, 45, 2),
-(gen_random_uuid(), 'Laundry Service', 'Wash, dry, and fold one load of laundry', 20.00, 60, 3),
-(gen_random_uuid(), 'Garage Cleaning', 'Clean garage floor and organize items', 40.00, 60, 4),
-(gen_random_uuid(), 'Patio Cleaning', 'Clean outdoor patio furniture and surfaces', 35.00, 45, 5),
-(gen_random_uuid(), 'Pet Hair Removal', 'Extra attention to pet hair on furniture and floors', 15.00, 30, 6),
-(gen_random_uuid(), 'Window Cleaning', 'Clean interior windows and window sills', 20.00, 30, 7),
-(gen_random_uuid(), 'Cabinet Organization', 'Organize kitchen cabinets and pantry', 25.00, 45, 8);
+INSERT INTO extras (id, name, description, price, sort_order) VALUES
+(gen_random_uuid(), 'Inside Refrigerator', 'Deep clean inside refrigerator including shelves and drawers', 25.00, 1),
+(gen_random_uuid(), 'Inside Oven', 'Clean inside oven including racks and door', 30.00, 2),
+(gen_random_uuid(), 'Laundry Service', 'Wash, dry, and fold one load of laundry', 20.00, 3),
+(gen_random_uuid(), 'Garage Cleaning', 'Clean garage floor and organize items', 40.00, 4),
+(gen_random_uuid(), 'Patio Cleaning', 'Clean outdoor patio furniture and surfaces', 35.00, 5),
+(gen_random_uuid(), 'Pet Hair Removal', 'Extra attention to pet hair on furniture and floors', 15.00, 6),
+(gen_random_uuid(), 'Window Cleaning', 'Clean interior windows and window sills', 20.00, 7),
+(gen_random_uuid(), 'Cabinet Organization', 'Organize kitchen cabinets and pantry', 25.00, 8);
 
--- Insert pricing rules
-INSERT INTO pricing_rules (id, name, rule_type, condition_json, price_modifier, is_percentage, is_active) VALUES
-(gen_random_uuid(), 'Bedroom Surcharge', 'bedroom', '{"min_bedrooms": 4}', 10.00, false, true),
-(gen_random_uuid(), 'Bathroom Surcharge', 'bathroom', '{"min_bathrooms": 3}', 15.00, false, true),
-(gen_random_uuid(), 'Weekly Discount', 'frequency_discount', '{"frequency": "weekly"}', 0.10, true, true),
-(gen_random_uuid(), 'Bi-weekly Discount', 'frequency_discount', '{"frequency": "biweekly"}', 0.05, true, true),
-(gen_random_uuid(), 'Service Fee', 'service_fee', '{}', 0.10, true, true);
+-- Insert frequency discounts
+INSERT INTO frequency_discounts (id, name, frequency_weeks, discount_percentage, is_active) VALUES
+(gen_random_uuid(), 'Weekly Discount', 1, 10.00, true),
+(gen_random_uuid(), 'Bi-weekly Discount', 2, 5.00, true),
+(gen_random_uuid(), 'Monthly Discount', 4, 15.00, true);
 
 -- Insert regions
-INSERT INTO regions (id, name, state, is_active) VALUES
-(gen_random_uuid(), 'Greater Sydney', 'NSW', true),
-(gen_random_uuid(), 'Melbourne Metro', 'VIC', true),
-(gen_random_uuid(), 'Brisbane Metro', 'QLD', true),
-(gen_random_uuid(), 'Perth Metro', 'WA', true);
+INSERT INTO regions (id, name, description, sort_order) VALUES
+(gen_random_uuid(), 'Greater Sydney', 'Sydney metropolitan area and surrounding suburbs', 1),
+(gen_random_uuid(), 'Melbourne Metro', 'Melbourne metropolitan area and surrounding suburbs', 2),
+(gen_random_uuid(), 'Brisbane Metro', 'Brisbane metropolitan area and surrounding suburbs', 3),
+(gen_random_uuid(), 'Perth Metro', 'Perth metropolitan area and surrounding suburbs', 4);
 
 -- Insert suburbs using CTEs to reference region IDs
 WITH regions AS (
-  SELECT id, name FROM regions ORDER BY name
+  SELECT id, name FROM regions ORDER BY sort_order
 ),
 sydney AS (
   SELECT id FROM regions WHERE name = 'Greater Sydney'
@@ -106,22 +104,31 @@ melbourne AS (
 brisbane AS (
   SELECT id FROM regions WHERE name = 'Brisbane Metro'
 )
-INSERT INTO suburbs (id, region_id, name, postcode, delivery_fee, is_active) VALUES
+INSERT INTO suburbs (id, region_id, name, postcode, sort_order) VALUES
 -- Sydney suburbs
-(gen_random_uuid(), (SELECT id FROM sydney), 'Bondi', '2026', 5.00, true),
-(gen_random_uuid(), (SELECT id FROM sydney), 'Surry Hills', '2010', 0.00, true),
-(gen_random_uuid(), (SELECT id FROM sydney), 'Paddington', '2021', 3.00, true),
-(gen_random_uuid(), (SELECT id FROM sydney), 'Newtown', '2042', 2.00, true),
-(gen_random_uuid(), (SELECT id FROM sydney), 'Manly', '2095', 8.00, true),
+(gen_random_uuid(), (SELECT id FROM sydney), 'Bondi', '2026', 1),
+(gen_random_uuid(), (SELECT id FROM sydney), 'Surry Hills', '2010', 2),
+(gen_random_uuid(), (SELECT id FROM sydney), 'Paddington', '2021', 3),
+(gen_random_uuid(), (SELECT id FROM sydney), 'Newtown', '2042', 4),
+(gen_random_uuid(), (SELECT id FROM sydney), 'Manly', '2095', 5),
 
 -- Melbourne suburbs
-(gen_random_uuid(), (SELECT id FROM melbourne), 'Fitzroy', '3065', 0.00, true),
-(gen_random_uuid(), (SELECT id FROM melbourne), 'St Kilda', '3182', 4.00, true),
-(gen_random_uuid(), (SELECT id FROM melbourne), 'Carlton', '3053', 2.00, true),
+(gen_random_uuid(), (SELECT id FROM melbourne), 'Fitzroy', '3065', 6),
+(gen_random_uuid(), (SELECT id FROM melbourne), 'St Kilda', '3182', 7),
+(gen_random_uuid(), (SELECT id FROM melbourne), 'Carlton', '3053', 8),
 
 -- Brisbane suburbs
-(gen_random_uuid(), (SELECT id FROM brisbane), 'Fortitude Valley', '4006', 0.00, true),
-(gen_random_uuid(), (SELECT id FROM brisbane), 'New Farm', '4005', 3.00, true);
+(gen_random_uuid(), (SELECT id FROM brisbane), 'Fortitude Valley', '4006', 9),
+(gen_random_uuid(), (SELECT id FROM brisbane), 'New Farm', '4005', 10);
+
+-- Insert areas for some suburbs
+WITH suburbs AS (
+  SELECT id, name FROM suburbs ORDER BY name
+)
+INSERT INTO areas (id, suburb_id, name, description, sort_order) VALUES
+(gen_random_uuid(), (SELECT id FROM suburbs WHERE name = 'Bondi'), 'Bondi Beach', 'Beachside area of Bondi', 1),
+(gen_random_uuid(), (SELECT id FROM suburbs WHERE name = 'Surry Hills'), 'Surry Hills Central', 'Central Surry Hills area', 2),
+(gen_random_uuid(), (SELECT id FROM suburbs WHERE name = 'Fitzroy'), 'Fitzroy North', 'Northern part of Fitzroy', 3);
 
 -- Note: Profiles, cleaners, cleaner_locations, availability_slots, and blog_posts 
 -- are not seeded here as they require auth.users entries. These should be created 
