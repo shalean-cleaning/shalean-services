@@ -10,18 +10,18 @@ export async function GET() {
   try {
     const supabase = createSupabaseAdmin();
     
-    // Test connection
-    const { data: testData, error: testError } = await supabase
-      .from('service_categories')
-      .select('count')
-      .limit(1);
-    
-    if (testError) {
-      return NextResponse.json({ 
-        error: 'Connection failed', 
-        details: testError.message 
-      }, { status: 500 });
-    }
+  // Test connection
+  const { error: testError } = await supabase
+    .from('service_categories')
+    .select('count')
+    .limit(1);
+  
+  if (testError) {
+    return NextResponse.json({ 
+      error: 'Connection failed', 
+      details: testError.message 
+    }, { status: 500 });
+  }
     
     // Define tables to query with their columns
     const tables = [

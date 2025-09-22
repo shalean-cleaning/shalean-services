@@ -46,9 +46,9 @@ async function displayTableData(tableName, columns = '*', orderBy = 'created_at'
     console.log(`📈 Found ${data.length} records:`);
     console.log(JSON.stringify(data, null, 2));
     
-  } catch (err) {
-    console.error(`❌ Exception fetching ${tableName}:`, err.message);
-  }
+    } catch (_err) {
+      console.error(`❌ Exception fetching ${tableName}:`, _err.message);
+    }
 }
 
 // Main function to load and display all data
@@ -59,7 +59,7 @@ async function loadSupabaseData() {
   
   // Test connection first
   try {
-    const { data, error } = await supabase.from('service_categories').select('count').limit(1);
+    const { error } = await supabase.from('service_categories').select('count').limit(1);
     if (error) {
       console.error('❌ Connection test failed:', error.message);
       return;
@@ -105,7 +105,7 @@ async function loadSupabaseData() {
       if (!error) {
         console.log(`${table.name}: ${count || 0} records`);
       }
-    } catch (err) {
+    } catch {
       console.log(`${table.name}: Error getting count`);
     }
   }

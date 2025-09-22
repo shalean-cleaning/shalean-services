@@ -85,7 +85,7 @@ async function loadSupabaseData() {
   
   // Test connection first
   try {
-    const { data, error } = await supabase.from('service_categories').select('count').limit(1);
+    const { error } = await supabase.from('service_categories').select('count').limit(1);
     if (error) {
       console.error('❌ Connection test failed:', error.message);
       return;

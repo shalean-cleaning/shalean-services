@@ -48,7 +48,7 @@ export function DataLoader() {
     }
   };
 
-  const formatValue = (value: any): string => {
+  const _formatValue = (value: any): string => {
     if (value === null || value === undefined) return 'null';
     if (typeof value === 'object') return JSON.stringify(value, null, 2);
     if (typeof value === 'boolean') return value ? 'true' : 'false';
