@@ -48,12 +48,6 @@ export function DataLoader() {
     }
   };
 
-  const _formatValue = (value: any): string => {
-    if (value === null || value === undefined) return 'null';
-    if (typeof value === 'object') return JSON.stringify(value, null, 2);
-    if (typeof value === 'boolean') return value ? 'true' : 'false';
-    return String(value);
-  };
 
   const getStatusIcon = (tableName: string) => {
     if (!data) return null;

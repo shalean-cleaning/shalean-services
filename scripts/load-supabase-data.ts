@@ -27,7 +27,7 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 // Helper function to display table data
 async function displayTableData(
-  tableName: keyof Database['public']['Tables'], 
+  tableName: string, 
   columns: string = '*', 
   orderBy: string = 'created_at'
 ) {
@@ -59,7 +59,7 @@ async function displayTableData(
 }
 
 // Helper function to get table count
-async function getTableCount(tableName: keyof Database['public']['Tables']): Promise<number> {
+async function getTableCount(tableName: string): Promise<number> {
   try {
     const { count, error } = await supabase
       .from(tableName)
@@ -99,59 +99,59 @@ async function loadSupabaseData() {
   // Load data from all tables with specific columns
   const tables = [
     { 
-      name: 'service_categories' as const, 
+      name: 'service_categories', 
       columns: 'id, name, slug, description, icon, sort_order, created_at' 
     },
     { 
-      name: 'services' as const, 
+      name: 'services', 
       columns: 'id, category_id, name, slug, description, base_price, base_price_cents, duration_minutes, sort_order, created_at' 
     },
     { 
-      name: 'service_items' as const, 
+      name: 'service_items', 
       columns: 'id, service_id, name, description, price, sort_order, created_at' 
     },
     { 
-      name: 'extras' as const, 
+      name: 'extras', 
       columns: 'id, name, slug, description, price, price_cents, sort_order, created_at' 
     },
     { 
-      name: 'regions' as const, 
+      name: 'regions', 
       columns: 'id, name, slug, description, sort_order, created_at' 
     },
     { 
-      name: 'suburbs' as const, 
+      name: 'suburbs', 
       columns: 'id, region_id, name, slug, postcode, sort_order, created_at' 
     },
     { 
-      name: 'areas' as const, 
+      name: 'areas', 
       columns: 'id, suburb_id, name, description, sort_order, created_at' 
     },
     { 
-      name: 'cleaners' as const, 
+      name: 'cleaners', 
       columns: 'id, user_id, first_name, last_name, email, phone, bio, experience_years, hourly_rate, is_available, rating, total_reviews, profile_image_url, created_at' 
     },
     { 
-      name: 'bookings' as const, 
+      name: 'bookings', 
       columns: 'id, customer_id, session_id, cleaner_id, area_id, service_id, service_slug, region_id, booking_date, start_time, end_time, status, total_price, notes, special_instructions, auto_assign, address, postcode, bedrooms, bathrooms, paystack_ref, paystack_status, created_at' 
     },
     { 
-      name: 'booking_extras' as const, 
+      name: 'booking_extras', 
       columns: 'id, booking_id, extra_id, quantity, price, created_at' 
     },
     { 
-      name: 'testimonials' as const, 
+      name: 'testimonials', 
       columns: 'id, customer_name, customer_email, rating, review_text, service_type, is_featured, is_approved, created_at' 
     },
     { 
-      name: 'blog_posts' as const, 
+      name: 'blog_posts', 
       columns: 'id, title, slug, excerpt, content, featured_image_url, author_name, author_email, is_published, published_at, created_at' 
     },
     { 
-      name: 'frequency_discounts' as const, 
+      name: 'frequency_discounts', 
       columns: 'id, name, frequency_weeks, discount_percentage, is_active, created_at' 
     },
     { 
-      name: 'profiles' as const, 
+      name: 'profiles', 
       columns: 'id, first_name, last_name, phone, avatar_url, created_at' 
     }
   ];
