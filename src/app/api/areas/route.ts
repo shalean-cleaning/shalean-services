@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // For now, we'll use suburbs as areas since the PRD mentions areas but the current schema uses suburbs
-    // This can be updated when the areas table is properly implemented
+    // Use suburbs as areas since the current implementation treats suburbs as areas
+    // The areas table exists but suburbs are being used directly
     let query = supabaseAdmin
       .from('suburbs')
       .select('id, name, postcode, delivery_fee, price_adjustment_pct, active, region_id')
@@ -42,16 +42,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
-    // Transform suburbs to areas format for PRD compliance
+    // Return suburbs directly as areas since they're being used interchangeably
     const areas = (data ?? []).map((suburb: any) => ({
       id: suburb.id,
-      slug: suburb.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown',
       name: suburb.name || 'Unknown Area',
-      price_adjustment_pct: suburb.price_adjustment_pct || 0,
-      active: suburb.active ?? true,
       postcode: suburb.postcode || '',
       delivery_fee: suburb.delivery_fee || 0,
-      region: { id: suburb.region_id, name: 'Unknown Region', state: 'Unknown' }
+      price_adjustment_pct: suburb.price_adjustment_pct || 0,
+      active: suburb.active ?? true,
+      region_id: suburb.region_id
     }));
 
     return NextResponse.json(areas, { status: 200 });

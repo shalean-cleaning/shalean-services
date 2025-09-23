@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase-client'
-import { BookingInsert, BookingUpdate, BookingStatus } from './database.types'
+import { BookingInsert, BookingUpdate, BookingStatus, Booking } from './database.types'
 
 const supabase = createClient()
 
 /**
  * Create a new booking with DRAFT status
  */
-export async function createDraftBooking(bookingData: BookingInsert) {
+export async function createDraftBooking(bookingData: BookingInsert): Promise<Booking> {
   const { data, error } = await supabase
     .from('bookings')
     .insert({
@@ -18,6 +18,10 @@ export async function createDraftBooking(bookingData: BookingInsert) {
 
   if (error) {
     throw new Error(`Failed to create draft booking: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new Error('Failed to create draft booking - no data returned')
   }
 
   return data

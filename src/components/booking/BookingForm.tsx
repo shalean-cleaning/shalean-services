@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createDraftBooking, finalizeBooking, autoAssignCleaner } from '@/lib/booking-utils'
 import { useAuth } from '@/hooks/useAuth'
-import { Service, Region, Suburb } from '@/lib/database.types'
+import { Service, Region } from '@/lib/database.types'
 
 interface BookingFormProps {
   onBookingCreated?: (bookingId: string) => void
@@ -39,7 +39,7 @@ export function BookingForm({ onBookingCreated }: BookingFormProps) {
   // Data for dropdowns
   const [services, setServices] = useState<Service[]>([])
   const [regions, setRegions] = useState<Region[]>([])
-  const [suburbs, setSuburbs] = useState<Suburb[]>([])
+  const [areas, setAreas] = useState<any[]>([])
   const [dataLoading, setDataLoading] = useState(true)
 
   const { user, loading: authLoading } = useAuth()
@@ -77,6 +77,9 @@ export function BookingForm({ onBookingCreated }: BookingFormProps) {
           ])
           setServices(servicesData.services || [])
           setRegions(regionsData || [])
+        } else {
+          console.error('Failed to fetch data:', { servicesRes: servicesRes.status, regionsRes: regionsRes.status })
+          setError('Failed to load form data')
         }
       } catch (err) {
         console.error('Error fetching data:', err)
@@ -89,23 +92,27 @@ export function BookingForm({ onBookingCreated }: BookingFormProps) {
     fetchData()
   }, [])
 
-  // Fetch suburbs when region changes
+  // Fetch areas when region changes
   useEffect(() => {
     if (formData.region_id) {
-      const fetchSuburbs = async () => {
+      const fetchAreas = async () => {
         try {
-          const response = await fetch(`/api/suburbs?region_id=${formData.region_id}`)
+          const response = await fetch(`/api/areas?region_id=${formData.region_id}`)
           if (response.ok) {
             const data = await response.json()
-            setSuburbs(data || [])
+            setAreas(data || [])
+          } else {
+            console.error('Failed to fetch areas:', response.status)
+            setAreas([])
           }
         } catch (err) {
-          console.error('Error fetching suburbs:', err)
+          console.error('Error fetching areas:', err)
+          setAreas([])
         }
       }
-      fetchSuburbs()
+      fetchAreas()
     } else {
-      setSuburbs([])
+      setAreas([])
     }
   }, [formData.region_id])
 
@@ -246,7 +253,7 @@ export function BookingForm({ onBookingCreated }: BookingFormProps) {
             <option value="">Select a service</option>
             {services.map(service => (
               <option key={service.id} value={service.id}>
-                {service.name} - ${service.base_price}
+                {service.name} - ${service.base_fee || 0}
               </option>
             ))}
           </select>
@@ -288,9 +295,9 @@ export function BookingForm({ onBookingCreated }: BookingFormProps) {
             disabled={!formData.region_id}
           >
             <option value="">Select a suburb</option>
-            {suburbs.map(suburb => (
-              <option key={suburb.id} value={suburb.id}>
-                {suburb.name} {suburb.postcode && `(${suburb.postcode})`}
+            {areas.map(area => (
+              <option key={area.id} value={area.id}>
+                {area.name} {area.postcode && `(${area.postcode})`}
               </option>
             ))}
           </select>
