@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createDraftBooking, finalizeBooking, autoAssignCleaner } from '@/lib/booking-utils'
 import { useAuth } from '@/hooks/useAuth'
-import { validateBookingData } from '@/lib/validations/booking'
 import { Service, Region, Suburb } from '@/lib/database.types'
 
 interface BookingFormProps {
