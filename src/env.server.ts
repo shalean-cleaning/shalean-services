@@ -44,7 +44,7 @@ export const env = new Proxy({} as z.infer<typeof ServerEnv>, {
             NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
           });
           
-          // Convert to full schema with fallbacks
+          // Convert to full schema with fallbacks for build time only
           _env = {
             SUPABASE_SERVICE_ROLE_KEY: buildEnv.SUPABASE_SERVICE_ROLE_KEY || 'build-time-fallback',
             PAYSTACK_SECRET_KEY: buildEnv.PAYSTACK_SECRET_KEY,
