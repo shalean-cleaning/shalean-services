@@ -23,15 +23,15 @@ async function ensureMinimalData(supabase: any) {
           name: 'Standard Cleaning',
           slug: 'standard-cleaning',
           description: 'Regular home cleaning service',
-          base_fee: 100.00,
-          active: true
+          base_price_cents: 10000, // R100.00 in cents
+          base_price: 100.00
         },
         {
           name: 'Deep Cleaning',
           slug: 'deep-cleaning',
           description: 'Intensive cleaning service',
-          base_fee: 150.00,
-          active: true
+          base_price_cents: 15000, // R150.00 in cents
+          base_price: 150.00
         }
       ];
 
@@ -55,15 +55,15 @@ async function ensureMinimalData(supabase: any) {
           name: 'Inside Fridge',
           slug: 'inside-fridge',
           description: 'Clean and sanitize fridge interior',
-          price_cents: 2000,
-          active: true
+          price_cents: 2000, // R20.00 in cents
+          price: 20.00
         },
         {
           name: 'Inside Oven',
           slug: 'inside-oven',
           description: 'Clean oven interior',
-          price_cents: 2500,
-          active: true
+          price_cents: 2500, // R25.00 in cents
+          price: 25.00
         }
       ];
 
@@ -94,10 +94,10 @@ export async function GET() {
         name,
         slug,
         description,
-        base_fee,
+        base_price_cents,
+        base_price,
         active
       `)
-      .eq('active', true)
       .order('name');
     
     if (svcsErr) {
@@ -110,8 +110,7 @@ export async function GET() {
     try {
       const { data: ex, error: exErr } = await supabase
         .from('extras')
-        .select('id,name,description,price,active')
-        .eq('active', true)
+        .select('id,name,description,price_cents,price')
         .order('name');
       
       if (exErr) {
@@ -126,13 +125,17 @@ export async function GET() {
 
     // Normalize services data
     const servicesNormalized = (svcs ?? []).map(s => {
-      const price = s.base_fee != null ? Number(s.base_fee) : 0;
-      const cents = Math.round(price * 100);
+      // Use base_price_cents if available, otherwise calculate from base_price
+      const cents = s.base_price_cents != null ? Number(s.base_price_cents) : 
+                   (s.base_price != null ? Math.round(Number(s.base_price) * 100) : 0);
+      const price = cents / 100;
+      
       return { 
         ...s, 
         base_price_cents: cents, 
-        base_price: price, // For backward compatibility
-        base_fee: price,
+        base_price: price,
+        base_fee: price, // For backward compatibility
+        active: s.active ?? true, // Default to true if not set
         // Default pricing values (these should come from a pricing rules table in the future)
         per_bedroom: 20, // $20 per additional bedroom
         per_bathroom: 15, // $15 per additional bathroom
