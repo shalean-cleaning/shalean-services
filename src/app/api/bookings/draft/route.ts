@@ -61,7 +61,7 @@ async function handleDraftPost(request: Request): Promise<NextResponse> {
     // Parse request body
     try {
       requestData = await request.json()
-    } catch (parseError) {
+    } catch {
       logger.apiResponse(endpoint, 'POST', requestId, 400, { error: 'Invalid JSON' });
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }

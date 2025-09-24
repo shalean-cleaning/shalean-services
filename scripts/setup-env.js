@@ -18,8 +18,6 @@ if (!fs.existsSync(envExamplePath)) {
   process.exit(1);
 }
 
-const envExampleContent = fs.readFileSync(envExamplePath, 'utf8');
-
 // Create .env.local with local development values
 const envLocalContent = `# Shalean Services Local Development Environment
 # This file is for local development only - never commit to version control

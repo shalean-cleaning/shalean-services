@@ -7,12 +7,14 @@ const supabase = createClient()
  * Create a new booking with DRAFT status
  */
 export async function createDraftBooking(bookingData: BookingInsert): Promise<Booking> {
-  const { data, error } = await supabase
+  const insertData: BookingInsert = {
+    ...bookingData,
+    status: 'DRAFT'
+  }
+  
+  const { data, error } = await (supabase as any)
     .from('bookings')
-    .insert({
-      ...bookingData,
-      status: 'DRAFT' as BookingStatus
-    })
+    .insert(insertData)
     .select()
     .single()
 
@@ -31,9 +33,14 @@ export async function createDraftBooking(bookingData: BookingInsert): Promise<Bo
  * Update a booking (only if it's in DRAFT or READY_FOR_PAYMENT status)
  */
 export async function updateDraftBooking(bookingId: string, updates: BookingUpdate) {
-  const { data, error } = await supabase
+  const updateData: BookingUpdate = {
+    ...updates,
+    updated_at: new Date().toISOString()
+  }
+  
+  const { data, error } = await (supabase as any)
     .from('bookings')
-    .update(updates)
+    .update(updateData)
     .eq('id', bookingId)
     .eq('status', 'DRAFT')
     .select()
@@ -55,12 +62,15 @@ export async function finalizeBooking(bookingId: string, customerDetails: {
   bedrooms: number
   bathrooms: number
 }) {
-  const { data, error } = await supabase
+  const updateData: BookingUpdate = {
+    ...customerDetails,
+    status: 'READY_FOR_PAYMENT',
+    updated_at: new Date().toISOString()
+  }
+  
+  const { data, error } = await (supabase as any)
     .from('bookings')
-    .update({
-      ...customerDetails,
-      status: 'READY_FOR_PAYMENT' as BookingStatus
-    })
+    .update(updateData)
     .eq('id', bookingId)
     .eq('status', 'DRAFT')
     .select()
@@ -77,7 +87,7 @@ export async function finalizeBooking(bookingId: string, customerDetails: {
  * Auto-assign a cleaner to a booking
  */
 export async function autoAssignCleaner(bookingId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .rpc('auto_assign_cleaner_simple', { booking_id_val: bookingId })
 
   if (error) {
@@ -96,7 +106,7 @@ export async function getAvailableCleaners(
   endTime: string,
   suburbId: string
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .rpc('get_available_cleaners', {
       booking_date_val: bookingDate,
       start_time_val: startTime,
@@ -115,7 +125,7 @@ export async function getAvailableCleaners(
  * Get booking details with all related information
  */
 export async function getBookingDetails(bookingId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('booking_details_view')
     .select('*')
     .eq('id', bookingId)
@@ -132,7 +142,7 @@ export async function getBookingDetails(bookingId: string) {
  * Get booking items with service information
  */
 export async function getBookingItems(bookingId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('booking_items_view')
     .select('*')
     .eq('booking_id', bookingId)
@@ -148,7 +158,7 @@ export async function getBookingItems(bookingId: string) {
  * Check if a booking is editable by the current user
  */
 export async function isBookingEditable(bookingId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .rpc('is_booking_editable_by_customer', { booking_id: bookingId })
 
   if (error) {
@@ -184,9 +194,14 @@ export async function getUserBookings(status?: BookingStatus) {
  * Update booking status
  */
 export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
-  const { data, error } = await supabase
+  const updateData: BookingUpdate = {
+    status,
+    updated_at: new Date().toISOString()
+  }
+  
+  const { data, error } = await (supabase as any)
     .from('bookings')
-    .update({ status })
+    .update(updateData)
     .eq('id', bookingId)
     .select()
     .single()
