@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BookingForm } from '@/components/booking/BookingForm'
+import { MultiStepBookingForm } from '@/components/booking/MultiStepBookingForm'
 import { getUserBookings, getBookingDetails } from '@/lib/booking-utils'
 import { Booking, BookingDetailsView } from '@/lib/database.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,10 +72,10 @@ export default function EnhancedBookingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Enhanced Booking System
+            Multi-Step Booking System
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Test the new booking features including DRAFT status, auto-assign, and customer details.
+            Experience our enhanced 4-step booking process: Service → Rooms & Extras → Location & Time → Cleaner Selection.
           </p>
         </div>
 
@@ -84,10 +84,10 @@ export default function EnhancedBookingPage() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Create New Booking</CardTitle>
+                <CardTitle>4-Step Booking Process</CardTitle>
               </CardHeader>
               <CardContent>
-                <BookingForm 
+                <MultiStepBookingForm 
                   onBookingCreated={handleBookingCreated}
                 />
               </CardContent>
