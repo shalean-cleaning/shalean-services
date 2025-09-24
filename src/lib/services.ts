@@ -1,7 +1,6 @@
 import 'server-only';
 import { Service } from "@/lib/database.types";
 import { logger } from "@/lib/logger";
-import { createSupabaseServer } from "@/lib/supabase/server";
 
 // Extended service type with additional computed fields
 export type ServiceWithPricing = Service & {
